@@ -62,7 +62,7 @@ public sealed class AeroDiscordPresence : MonoBehaviour
             }
             if (_retryAt >= 0f && Time.unscaledTime < _retryAt) return;
             _dialing = true;
-            ThreadPool.QueueUserWorkItem(_ => Dial());
+            ThreadPool.QueueUserWorkItem(DialWorkItem);
             return;
         }
 
@@ -76,6 +76,9 @@ public sealed class AeroDiscordPresence : MonoBehaviour
     }
 
     public void OnDestroy() => Drop();
+
+    [HideFromIl2Cpp]
+    private void DialWorkItem(object _) => Dial();
 
     [HideFromIl2Cpp]
     private void Dial()

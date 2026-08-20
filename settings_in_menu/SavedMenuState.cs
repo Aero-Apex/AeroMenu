@@ -256,7 +256,8 @@ public static int GetColorIdByName(string name)
             return -1;
         }
 
-private IEnumerator AttemptShapeshiftFrame(PlayerControl target, PlayerControl morphInto)
+[HideFromIl2Cpp]
+        private IEnumerator AttemptShapeshiftFrame(PlayerControl target, PlayerControl morphInto)
         {
             if (target == null || morphInto == null || PlayerControl.LocalPlayer == null || AmongUsClient.Instance == null) yield break;
 
@@ -282,7 +283,8 @@ private IEnumerator AttemptShapeshiftFrame(PlayerControl target, PlayerControl m
             ShowNotification($"<color=#ca08ff>[MORPH]</color> <b>{target.Data.PlayerName}</b> morphed into <b>{morphInto.Data.PlayerName}</b>!");
         }
 
-private IEnumerator MassMorphCoroutine()
+[HideFromIl2Cpp]
+        private IEnumerator MassMorphCoroutine()
         {
             if (AmongUsClient.Instance == null || !AmongUsClient.Instance.AmHost || PlayerControl.AllPlayerControls == null) yield break;
 

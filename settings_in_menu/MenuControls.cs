@@ -123,6 +123,7 @@ private static void UpdateCachedSidebarAccent(GUIStyle style, Color color)
             style.hover.textColor = color;
         }
 
+        [HideFromIl2Cpp]
         private void UpdateMenuGradientTex(Texture2D tex, Color left, Color right, float radius, ref Color[] pixels, ref float[] alpha)
         {
             int width = tex.width;

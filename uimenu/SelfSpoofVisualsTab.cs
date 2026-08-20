@@ -955,7 +955,8 @@ private void CompleteLocalTasks()
             catch { }
         }
 
-private IEnumerator CompleteLocalTasksCoroutine(List<NormalPlayerTask> tasks)
+[HideFromIl2Cpp]
+        private IEnumerator CompleteLocalTasksCoroutine(List<NormalPlayerTask> tasks)
         {
             completeLocalTasksRunning = true;
             int done = 0;

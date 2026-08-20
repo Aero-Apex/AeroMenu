@@ -115,7 +115,8 @@ private bool DrawCustomRpcInputButton(float width)
             return clicked;
         }
 
-private void DrawSabotageButton(string label, ref bool state, Action<bool> toggleAction, Color accent, float width = 0f, float height = 30f)
+[HideFromIl2Cpp]
+        private void DrawSabotageButton(string label, ref bool state, Action<bool> toggleAction, Color accent, float width = 0f, float height = 30f)
         {
             GUIStyle style = CreateClippedButtonStyle(state ? activeTabStyle : btnStyle);
             Color oldBackground = GUI.backgroundColor;

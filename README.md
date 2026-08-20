@@ -1,6 +1,6 @@
-ё<div align="center">
+<div align="center">
 
-# Elysium Mod Menu (EMM) - Among Us
+# Aero Menu - Among Us
 
 **Among Us mod menu with local visual, host, lobby and moderation tools.**
 
@@ -8,16 +8,13 @@
   <img src="https://img.shields.io/badge/Among%20Us-Mod%20Menu-4b5563?style=flat-square" alt="Among Us Mod Menu">
   <img src="https://img.shields.io/badge/IL2CPP-BepInEx-374151?style=flat-square" alt="BepInEx IL2CPP">
   <img src="https://img.shields.io/badge/C%23-.NET%206-512BD4?style=flat-square&logo=csharp&logoColor=white" alt="C#">
-  <img src="https://img.shields.io/badge/Version-1.4.5-a855f7?style=flat-square" alt="Version 1.4.5">
-  <img src="https://img.shields.io/github/downloads/Wextikit/ElysiumModMenu/total?style=flat-square&label=Downloads&color=2563eb" alt="Downloads">
+  <img src="https://img.shields.io/badge/Version-v1-a855f7?style=flat-square" alt="Version v1">
+  <img src="https://img.shields.io/github/downloads/Aero-Apex/AeroMenu/total?style=flat-square&label=Downloads&color=2563eb" alt="Downloads">
 </p>
 
 <p>
-  <a href="https://github.com/Wextikit/ElysiumModMenu/releases/latest">
+  <a href="https://github.com/Aero-Apex/AeroMenu/releases/latest">
     <img src="https://img.shields.io/badge/Download-Latest%20Release-2ea44f?style=for-the-badge&logo=github&logoColor=white" alt="Download">
-  </a>
-  <a href="https://discord.gg/ZP8MgMcB8C">
-    <img src="https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord">
   </a>
 </p>
 
@@ -25,7 +22,7 @@
 
 ## About
 
-Elysium is a BepInEx IL2CPP mod menu for Among Us.
+Aero Menu is a BepInEx IL2CPP mod menu for Among Us.
 
 It uses a simple IMGUI interface and includes local visual tools, player utilities, lobby controls, host features, cosmetics, moderation tools and other experimental options.
 
@@ -52,7 +49,7 @@ Not every feature works the same way.
 | Type | Effect |
 | :--- | :--- |
 | **Local** | Visible only on your client |
-| **Profile** | Changes local Elysium or Among Us settings |
+| **Profile** | Changes local Aero Menu or Among Us settings |
 | **RPC** | Sends an action through the game and may be visible to other players |
 | **Host** | Requires lobby host and may affect other players |
 
@@ -91,16 +88,16 @@ Among Us/
 
 Launch the game once and close it after reaching the main menu.
 
-### 3. Install Elysium
+### 3. Install Aero Menu
 
-Download `ElysiumModMenu.dll` from:
+Download `AeroMenu.dll` from:
 
-[Latest Release](https://github.com/Wextikit/ElysiumModMenu/releases/latest)
+[Latest Release](https://github.com/Aero-Apex/AeroMenu/releases/latest)
 
 Place it here:
 
 ```text
-Among Us/BepInEx/plugins/ElysiumModMenu.dll
+Among Us/BepInEx/plugins/AeroMenu.dll
 ```
 
 ### 4. Open the menu
@@ -117,11 +114,11 @@ On some keyboards:
 Fn + Insert
 ```
 
-The key can be changed later.
+The key can be changed later in the menu.
 
 ## Linux / Steam Deck
 
-Install BepInEx and Elysium normally, then add this to Steam launch options:
+Install BepInEx and Aero Menu normally, then add this to Steam launch options:
 
 ```text
 WINEDLLOVERRIDES="winhttp.dll=n,b" %command%
@@ -132,26 +129,29 @@ WINEDLLOVERRIDES="winhttp.dll=n,b" %command%
 Replace the old:
 
 ```text
-BepInEx/plugins/ElysiumModMenu.dll
+BepInEx/plugins/AeroMenu.dll
 ```
 
 with the DLL from the newest release.
 
-Your Elysium configuration is stored separately and normally remains unchanged.
+Your Aero Menu configuration is stored separately and normally remains unchanged.
 
 ## Config files
 
 ```text
-Among Us/ElysiumModMenu/ElysiumModMenu.cfg
-Among Us/ElysiumModMenu/ElysiumModMenuBanList.txt
-Among Us/ElysiumModMenu/ElysiumBotBanList.txt
-Among Us/ElysiumModMenu/ElysiumPlatformBanList.txt
-Among Us/ElysiumModMenu/ElysiumFriendEspIgnore.txt
+Among Us/AeroMenu/AeroMenu.cfg
+Among Us/AeroMenu/AeroMenuBanList.txt
+Among Us/AeroMenu/AeroBotBanList.txt
+Among Us/AeroMenu/AeroPlatformBanList.txt
+Among Us/AeroMenu/AeroFriendEspIgnore.txt
+Among Us/AeroMenu/AeroPlayerHistory.txt
+Among Us/AeroMenu/AeroWhiteList.txt
+Among Us/AeroMenu/ChatLog.txt
 ```
 
 ## Cosmetics
 
-Elysium includes local cosmetic options such as:
+Aero Menu includes local cosmetic options such as:
 
 - Unlock All except Cosmicubes
 - Unlock Cosmicubes
@@ -169,19 +169,11 @@ These options do **not** give permanent server-side purchases, currency or accou
 
 ### Menu customization
 
-<img width="960" alt="Elysium menu customization" src="docs/screenshots/menu-customization.png" />
+<img width="960" alt="Aero Menu customization" src="docs/screenshots/menu-customization.png" />
 
 ### Visuals / ESP
 
-<img width="960" alt="Elysium visuals and ESP" src="docs/screenshots/visuals-esp.png" />
-
-### Older screenshots
-
-<img width="1919" alt="Elysium Mod Menu screenshot" src="https://github.com/user-attachments/assets/e295ce9d-557e-4420-8f57-37f8b79e47b1" />
-
-<img width="1919" alt="Elysium Mod Menu screenshot" src="https://github.com/user-attachments/assets/e1cc97d3-edfb-46d4-9049-0fcd95be5226" />
-
-<img width="1919" alt="Elysium Mod Menu screenshot" src="https://github.com/user-attachments/assets/e9062d61-424a-471f-a739-ec4508858cc0" />
+<img width="960" alt="Aero Menu visuals and ESP" src="docs/screenshots/visuals-esp.png" />
 
 </details>
 
@@ -191,7 +183,7 @@ These options do **not** give permanent server-side purchases, currency or accou
 <summary><strong>Menu does not open</strong></summary>
 
 - Make sure you installed **BepInEx IL2CPP**, not Mono.
-- Check that `ElysiumModMenu.dll` is directly inside `BepInEx/plugins/`.
+- Check that `AeroMenu.dll` is directly inside `BepInEx/plugins/`.
 - Check the BepInEx console/log for errors.
 - Try `Insert` or `Fn + Insert`.
 - Make sure another overlay is not using the same key.
@@ -203,7 +195,7 @@ These options do **not** give permanent server-side purchases, currency or accou
 
 Among Us updates can break BepInEx interop or change game APIs.
 
-Check the newest Elysium release and update BepInEx if necessary.
+Check the newest Aero Menu release and update BepInEx if necessary.
 
 </details>
 
@@ -220,18 +212,14 @@ Some features are available only during a specific game state.
 
 Report bugs here:
 
-[GitHub Issues](https://github.com/Wextikit/ElysiumModMenu/issues)
-
-For general discussion and previews:
-
-[Elysium Discord](https://discord.gg/ZP8MgMcB8C)
+[GitHub Issues](https://github.com/Aero-Apex/AeroMenu/issues)
 
 ## Build
 
 The project targets **.NET 6**.
 
 ```powershell
-dotnet build .\ElysiumModMenu.slnx -c Release
+dotnet build .\AeroMenu.slnx -c Release
 ```
 
 Local Among Us and BepInEx assemblies are resolved through `AmongUsDir`.
@@ -243,29 +231,29 @@ Local Among Us and BepInEx assemblies are resolved through `AmongUsDir`.
 | Steam  / itch.io                     |        ✅ Supported        |
 | Epic Games/xbox pc/Microsoft store   |        ✅ Supported        |
 | Linux / Steam Deck (Proton)          |        ✅ Supported        |
-| Cracked versions                     | ⚠️ May work (unsupported) |
+| Cracked versions                     |        ✅ Supported        |
 | iOS / iPadOS / Android               |      ❌ Not supported      |
 | PlayStation / Xbox / Nintendo Switch |      ❌ Not supported      |
 
 ## Usage
 
-Please use Elysium responsibly.
+Please use Aero Menu responsibly.
 
-* Use Elysium only in private lobbies with players who are aware that mods are being used.
+* Use Aero Menu only in private lobbies with players who are aware that mods are being used.
 * Some features are local, while others may affect the current lobby or require host permissions.
 * If you accidentally join a public lobby, disable or unload the mod before continuing to play.
 
 ## Disclaimer
 
-Elysium Mod Menu is an unofficial third-party modification for Among Us.
+Aero Menu is an unofficial third-party modification for Among Us.
 
 The project is not affiliated with, endorsed by, sponsored by or approved by Innersloth LLC. Among Us and its related trademarks and assets belong to their respective owners.
 
-Elysium Mod Menu is intended for use in **private lobbies only**.
+Aero Menu is intended for use in **private lobbies only**.
 
 The software is provided **as-is**, without any warranty.
 
-By installing or using Elysium Mod Menu, you accept full responsibility for how you use it and for any consequences that may result, including account restrictions, bans, kicks, crashes, lost progress, corrupted files, game instability or incompatibility with future updates.
+By installing or using Aero Menu, you accept full responsibility for how you use it and for any consequences that may result, including account restrictions, bans, kicks, crashes, lost progress, corrupted files, game instability or incompatibility with future updates.
 
 The developer is **not responsible for any consequences, damage or misuse resulting from the use of this software**.
 
@@ -275,9 +263,7 @@ Support is not provided for harassment, disruption of public games, unauthorized
 
 Licensed under the [GNU General Public License v3.0](LICENSE).
 
-Developed and maintained by **Meowchelo**.
-
-## Inspiration :3
+## Inspiration
 
 - [EHR](https://github.com/Gurge44/EndlessHostRoles) - [Gurge44](https://github.com/Gurge44)
 - [MalumMenu](https://github.com/scp222thj/MalumMenu) - [scp222thj](https://github.com/scp222thj)

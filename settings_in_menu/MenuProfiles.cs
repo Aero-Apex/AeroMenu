@@ -141,7 +141,8 @@ private static string UnpackProfileString(string text)
             catch { return ""; }
         }
 
-private void WriteMenuProfileConfig(StreamWriter writer)
+[HideFromIl2Cpp]
+        private void WriteMenuProfileConfig(StreamWriter writer)
         {
             writer.WriteLine("cfg.SpoofedLevel=" + PackProfileString(Plugin.SpoofedLevel.Value));
             writer.WriteLine("cfg.EnableLevelSpoofConfig=" + Plugin.EnableLevelSpoofConfig.Value);

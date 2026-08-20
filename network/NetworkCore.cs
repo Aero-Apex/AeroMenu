@@ -349,6 +349,7 @@ public class ModPlayer : MonoBehaviour
                 return a != b.player;
             }
 
+            [HideFromIl2Cpp]
             public override bool Equals(object o)
             {
                 return base.Equals(o);

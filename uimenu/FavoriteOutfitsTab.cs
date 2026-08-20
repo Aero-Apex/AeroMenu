@@ -64,16 +64,19 @@ public void Update()
                                      isWaitBindCallMeeting || isWaitBindTogglePlayerInfo || isWaitBindToggleSeeRoles ||
                                      isWaitBindToggleSeeGhosts || isWaitBindToggleFullBright || isWaitBindKickAll ||
                                       isWaitBindFixSabotages || isWaitBindSetAllGhost ||                                       isWaitBindSetAllGhostImp ||
-                                      isWaitBindReviveAll || isWaitBindToggleAutoFix || isWaitBindCopyCode;
+isWaitBindReviveAll || isWaitBindToggleAutoFix || isWaitBindCopyCode;
+
+            bool gameBlockingInput = (HudManager.Instance != null && HudManager.Instance.Chat != null && HudManager.Instance.Chat.IsOpenOrOpening)
+                                     || Minigame.Instance != null;
 
             KeyCode activeMenuKey = menuToggleKey == KeyCode.None ? KeyCode.Insert : menuToggleKey;
-            if (!isTypingOrBinding && Input.GetKeyDown(activeMenuKey))
+            if (!isTypingOrBinding && !gameBlockingInput && Input.GetKeyDown(activeMenuKey))
             {
                 showMenu = !showMenu;
                 if (!showMenu) SaveConfig();
             }
 
-            if (!isTypingOrBinding)
+            if (!isTypingOrBinding && !gameBlockingInput)
             {
                 if (bindMassMorph != KeyCode.None && Input.GetKeyDown(bindMassMorph))
                 {

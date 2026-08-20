@@ -179,7 +179,7 @@ private static bool LocalPlayerHasTaskForConsole(global::Console console)
             return false;
         }
 
-private static bool TaskAcceptsConsole(object task, global::Console console)
+internal static bool TaskAcceptsConsole(object task, global::Console console)
         {
             if (task == null || console == null) return false;
 

@@ -55,6 +55,35 @@ namespace AeroMenu
         }
     }
 
+    [HarmonyPatch(typeof(global::Console), nameof(global::Console.Use))]
+    public static class AutoCompleteTaskConsoleUsePatch
+    {
+        public static bool Prefix(global::Console __instance)
+        {
+            if (!AeroMenuGUI.autoCompleteTasks) return true;
+            try
+            {
+                PlayerControl local = PlayerControl.LocalPlayer;
+                if (local == null || local.myTasks == null || local.Data == null || local.Data.IsDead) return true;
+                if (__instance == null) return true;
+
+                foreach (PlayerTask task in local.myTasks)
+                {
+                    if (task == null || !(task is NormalPlayerTask normal)) continue;
+                    if (normal.taskStep >= normal.MaxStep) continue;
+                    if (AeroMenuGUI.TaskAcceptsConsole(task, __instance))
+                    {
+                        if (AeroMenuGUI.AutoCompleteStartedTask(normal))
+                            return false;
+                    }
+                }
+
+                return true;
+            }
+            catch { return true; }
+        }
+    }
+
     [HarmonyPatch(typeof(Minigame), nameof(Minigame.Begin))]
     public static class AutoCompleteTaskBeginPatch
     {

@@ -588,7 +588,8 @@ private static bool HasGameOptions()
             catch { return false; }
         }
 
-private float DrawGameFloatRow(string label, float width, float min, float max, float step, string suffix, params string[] names)
+[HideFromIl2Cpp]
+        private float DrawGameFloatRow(string label, float width, float min, float max, float step, string suffix, params string[] names)
         {
             if (!TryGetGameFloat(out float val, names))
             {
@@ -603,7 +604,8 @@ private float DrawGameFloatRow(string label, float width, float min, float max, 
             return next;
         }
 
-private int DrawGameIntRow(string label, float width, int min, int max, int step, params string[] names)
+[HideFromIl2Cpp]
+        private int DrawGameIntRow(string label, float width, int min, int max, int step, params string[] names)
         {
             if (!TryGetGameInt(out int val, names))
             {
@@ -620,7 +622,8 @@ private int DrawGameIntRow(string label, float width, int min, int max, int step
             return next;
         }
 
-private void DrawGameBoolRow(string label, int width, params string[] names)
+[HideFromIl2Cpp]
+        private void DrawGameBoolRow(string label, int width, params string[] names)
         {
             if (!TryGetGameBool(out bool val, names))
             {

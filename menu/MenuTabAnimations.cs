@@ -1,5 +1,6 @@
 #nullable disable
 using System.Collections.Generic;
+using Il2CppInterop.Runtime.Attributes;
 using UnityEngine;
 
 namespace AeroMenu
@@ -14,6 +15,7 @@ namespace AeroMenu
 
         private readonly Dictionary<string, MultiTabAnim> multiTabAnims = new Dictionary<string, MultiTabAnim>();
 
+        [HideFromIl2Cpp]
         private MultiTabAnim GetMultiTabAnim(string key)
         {
             if (!multiTabAnims.TryGetValue(key, out MultiTabAnim anim))
