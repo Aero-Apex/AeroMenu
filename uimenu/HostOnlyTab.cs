@@ -116,6 +116,8 @@ public static bool isEditingLevel = false;
 
 public static bool isEditingName = false;
 
+public static bool isEditingSearch = false;
+
 public static bool isEditingFriendCode = false;
 
 public static bool isEditingLocalFriendCode = false;

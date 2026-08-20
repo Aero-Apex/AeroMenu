@@ -209,7 +209,11 @@ isWaitBindReviveAll || isWaitBindToggleAutoFix || isWaitBindCopyCode;
             }
             TickRgbTaskBar();
 
-            if (wasShowMenu && !showMenu) SaveConfig();
+            if (wasShowMenu && !showMenu)
+            {
+                isEditingSearch = false;
+                SaveConfig();
+            }
             wasShowMenu = showMenu;
 
             if (settingsDirty)

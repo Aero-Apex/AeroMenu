@@ -150,9 +150,15 @@ namespace AeroMenu
                 }
 
                 GUILayout.BeginHorizontal();
-                searchTabQuery = GUILayout.TextField(searchTabQuery, searchFieldStyle, GUILayout.Height(28));
+                string fieldText = string.IsNullOrEmpty(searchTabQuery) ? " " : searchTabQuery;
+                if (isEditingSearch) fieldText += "|";
+                if (GUILayout.Button(fieldText, searchFieldStyle, GUILayout.Height(28), GUILayout.ExpandWidth(true)))
+                    isEditingSearch = !isEditingSearch;
                 if (GUILayout.Button(L("RESET", "СБРОС"), btnStyle, GUILayout.Height(28), GUILayout.Width(70f)))
+                {
                     searchTabQuery = "";
+                    isEditingSearch = false;
+                }
                 GUILayout.EndHorizontal();
                 GUILayout.Space(4);
 

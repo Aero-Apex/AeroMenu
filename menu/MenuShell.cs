@@ -59,7 +59,7 @@ public void OnGUI()
             if (!stylesInited || windowStyle == null || safeLineStyle == null || sliderStyle == null || sliderThumbStyle == null || knobStyle == null)
                 InitStyles();
 
-            bool isTyping = isEditingName || isEditingLevel || isEditingFriendCode || isEditingLocalFriendCode || isEditingDeviceId || isEditingGhostChatColor || isEditingBan || isEditingFpsLimit || isEditingBugRoomTimedAutoRun;
+            bool isTyping = isEditingName || isEditingLevel || isEditingFriendCode || isEditingLocalFriendCode || isEditingDeviceId || isEditingGhostChatColor || isEditingBan || isEditingFpsLimit || isEditingBugRoomTimedAutoRun || isEditingSearch;
             bool isCustomSpoofRpcEditing = customSpoofRpcInputFocused && selectedSpoofMenuIndex == spoofMenuNames.Length - 1;
             bool isBinding = isWaitingForBind || isWaitBindMassMorph || isWaitBindSpawnLobby || isWaitBindDespawnLobby ||
                   isWaitBindCloseMeeting || isWaitBindInstaStart || isWaitBindEndCrew || isWaitBindEndImp ||
@@ -82,7 +82,7 @@ public void OnGUI()
                     {
                         ApplyBugRoomTimedAutoRunInput();
                     }
-                    isEditingName = isEditingLevel = isEditingFriendCode = isEditingLocalFriendCode = isEditingDeviceId = isEditingGhostChatColor = isEditingBan = isEditingBugRoomTimedAutoRun = false;
+                    isEditingName = isEditingLevel = isEditingFriendCode = isEditingLocalFriendCode = isEditingDeviceId = isEditingGhostChatColor = isEditingBan = isEditingBugRoomTimedAutoRun = isEditingSearch = false;
                     customSpoofRpcInputFocused = false;
                     ResetAllBindWaits();
                     e.Use();
@@ -157,6 +157,7 @@ public void OnGUI()
                     else if (isEditingGhostChatColor && HandleClipboardShortcut(e, ref ghostChatColorHex, 10)) { ghostChatColorHex = FilterGhostChatColorInput(ghostChatColorHex); }
                     else if (isEditingFpsLimit && HandleClipboardShortcut(e, ref fpsLimitInput, 3)) { fpsLimitInput = FilterFpsLimitInput(fpsLimitInput); }
                     else if (isEditingBugRoomTimedAutoRun && HandleClipboardShortcut(e, ref bugRoomTimedAutoRunInput, 2)) { bugRoomTimedAutoRunInput = FilterMinuteInput(bugRoomTimedAutoRunInput); }
+                    else if (isEditingSearch && HandleClipboardShortcut(e, ref searchTabQuery, 80)) { }
                     else if (e.keyCode == KeyCode.Backspace)
                     {
                         if (isEditingBan && banInput.Length > 0) { banInput = banInput.Substring(0, banInput.Length - 1); }
@@ -168,6 +169,7 @@ public void OnGUI()
                         if (isEditingGhostChatColor && ghostChatColorHex.Length > 0) { ghostChatColorHex = ghostChatColorHex.Substring(0, ghostChatColorHex.Length - 1); }
                         if (isEditingFpsLimit && fpsLimitInput.Length > 0) { fpsLimitInput = fpsLimitInput.Substring(0, fpsLimitInput.Length - 1); }
                         if (isEditingBugRoomTimedAutoRun && bugRoomTimedAutoRunInput.Length > 0) { bugRoomTimedAutoRunInput = bugRoomTimedAutoRunInput.Substring(0, bugRoomTimedAutoRunInput.Length - 1); }
+                        if (isEditingSearch && searchTabQuery.Length > 0) { searchTabQuery = searchTabQuery.Substring(0, searchTabQuery.Length - 1); }
                         e.Use();
                     }
                     else if ((e.keyCode == KeyCode.Return || e.keyCode == KeyCode.KeypadEnter) && isEditingFpsLimit)
@@ -178,6 +180,11 @@ public void OnGUI()
                     else if ((e.keyCode == KeyCode.Return || e.keyCode == KeyCode.KeypadEnter) && isEditingBugRoomTimedAutoRun)
                     {
                         ApplyBugRoomTimedAutoRunInput();
+                        e.Use();
+                    }
+                    else if ((e.keyCode == KeyCode.Return || e.keyCode == KeyCode.KeypadEnter) && isEditingSearch)
+                    {
+                        isEditingSearch = false;
                         e.Use();
                     }
                     else if (e.character != 0 && e.character != '\n' && e.character != '\r')
@@ -191,6 +198,7 @@ public void OnGUI()
                         if (isEditingGhostChatColor) { ghostChatColorHex = FilterGhostChatColorInput((ghostChatColorHex ?? "") + e.character); }
                         if (isEditingFpsLimit && e.character >= '0' && e.character <= '9') { fpsLimitInput = FilterFpsLimitInput((fpsLimitInput ?? "") + e.character); }
                         if (isEditingBugRoomTimedAutoRun && e.character >= '0' && e.character <= '9') { bugRoomTimedAutoRunInput = FilterMinuteInput((bugRoomTimedAutoRunInput ?? "") + e.character); }
+                        if (isEditingSearch && searchTabQuery.Length < 80) { searchTabQuery += e.character; }
                         e.Use();
                     }
                 }
