@@ -631,25 +631,25 @@ private void TrackAnimatedSidebarHighlight(int tab, Rect rect)
                 GUIStyle topBtn = topSidebarStyle;
                 GUIStyle topBtnOn = activeTopSidebarStyle;
                 float topW = GetMenuVisibleWidth() - 8f;
-                float btnW = Mathf.Max(18f, Mathf.Floor((topW - 6f) / 4f));
+                float btnW = Mathf.Max(18f, Mathf.Floor((topW - 4f) / 3f));
 
-                GUILayout.BeginArea(new Rect(4f, 32f, topW, 45f));
+                GUILayout.BeginArea(new Rect(4f, 32f, topW, 68f));
                 try
                 {
-                    for (int row = 0; row < 2; row++)
+                    for (int row = 0; row < 3; row++)
                     {
                         GUILayout.BeginHorizontal(GUILayout.Height(20f));
                         try
                         {
-                            for (int col = 0; col < 4; col++)
+                            for (int col = 0; col < 3; col++)
                             {
-                                int i = row * 4 + col;
+                                int i = row * 3 + col;
                                 if (i >= tabNames.Length) break;
                                 string nm = tabNames[i];
                                 if (nm.Length > 4) nm = nm.Substring(0, 4);
                                 if (GUILayout.Button(nm, i == targetTabIndex ? topBtnOn : topBtn, GUILayout.Width(btnW), GUILayout.Height(19f)))
                                     SetMenuTab(i);
-                                if (col < 3) GUILayout.Space(2f);
+                                if (col < 2) GUILayout.Space(2f);
                             }
                         }
                         finally { GUILayout.EndHorizontal(); }
@@ -657,8 +657,8 @@ private void TrackAnimatedSidebarHighlight(int tab, Rect rect)
                 }
                 finally { GUILayout.EndArea(); }
 
-                bodyY = 80f + ((1f - tabEase) * 6f);
-                bodyH = windowRect.height - 88f;
+                bodyY = 103f + ((1f - tabEase) * 6f);
+                bodyH = windowRect.height - 111f;
             }
 
             DrawMenuCharacter(bodyX, bodyY, bodyW, bodyH, bodyAlpha);
