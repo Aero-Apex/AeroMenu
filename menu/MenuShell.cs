@@ -1,4 +1,4 @@
-﻿#nullable disable
+#nullable disable
 #pragma warning disable CS0162, CS0108, CS0219, CS0661, CS0660, CS8632, CS0168, CS0659
 using AmongUs.Data.Player;
 using AmongUs.GameOptions;
@@ -686,7 +686,7 @@ private void TrackAnimatedSidebarHighlight(int tab, Rect rect)
                             else if (tabToDraw == 5) DrawHostOnlyTab();
                             else if (tabToDraw == 6) DrawVotekickTab();
                             else if (tabToDraw == 7) DrawMenuTab();
-                            else if (tabToDraw == 8) { try { DrawSearchTab(); } catch (System.Exception ex) { GUILayout.Label("Search error: " + ex.Message); } }
+                            else if (tabToDraw == 8) { try { DrawSearchTab(); } catch (System.Exception ex) { Plugin.Instance?.Log?.LogError("SearchTab error: " + ex); GUILayout.Label("Search error [" + ex.GetType().Name + "]: " + ex.Message); } }
                         }
                         finally { GUILayout.EndVertical(); }
 

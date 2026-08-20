@@ -109,6 +109,17 @@ namespace AeroMenu
             return sb.ToString();
         }
 
+        private static bool TryGetFeatureValue(SearchableFeature f, out bool v)
+        {
+            v = false;
+            try { v = (bool)f.field.GetValue(null); return true; }
+            catch (System.Exception ex)
+            {
+                Plugin.Instance?.Log?.LogError("SearchTab: GetValue failed for " + f.rawName + ": " + ex);
+                return false;
+            }
+        }
+
         private void DrawSearchTab()
         {
             EnsureSearchFeatures();
@@ -162,7 +173,8 @@ namespace AeroMenu
                 List<SearchableFeature> matches = new List<SearchableFeature>();
                 foreach (SearchableFeature f in searchFeatures)
                 {
-                    bool v = (bool)f.field.GetValue(null);
+                    bool v;
+                    if (!TryGetFeatureValue(f, out v)) continue;
                     if (searchFilterMode == 1 && !v) continue;
                     if (searchFilterMode == 2 && v) continue;
                     if (q.Length > 0 && !f.label.ToLowerInvariant().Contains(q) && !f.rawName.ToLowerInvariant().Contains(q)) continue;
@@ -187,12 +199,13 @@ namespace AeroMenu
                             GUILayout.Label(f.category, menuSectionTitleStyle, GUILayout.Height(18));
                         }
 
-                        bool current = (bool)f.field.GetValue(null);
+                        bool current;
+                        if (!TryGetFeatureValue(f, out current)) continue;
                         bool next = DrawToggle(current, f.label, 0);
                         if (next != current)
                         {
-                            f.field.SetValue(null, next);
-                            settingsDirty = true;
+                            try { f.field.SetValue(null, next); settingsDirty = true; }
+                            catch (System.Exception ex) { Plugin.Instance?.Log?.LogError("SearchTab: SetValue failed for " + f.rawName + ": " + ex); }
                         }
                     }
 
