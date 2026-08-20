@@ -20,6 +20,7 @@ namespace AeroMenu
             public string label;
             public string rawName;
             public string category;
+            public int targetTab = -1;
         }
 
         private static readonly string[] searchCategories = new string[]
@@ -72,6 +73,21 @@ namespace AeroMenu
                     if (c != 0) return c;
                     return string.Compare(a.label, b.label, StringComparison.OrdinalIgnoreCase);
                 });
+
+                searchFeatures.Add(new SearchableFeature
+                {
+                    field = null,
+                    rawName = "floodLobby",
+                    label = "Flood Lobby",
+                    category = "LOBBY",
+                    targetTab = 3
+                });
+                searchFeatures.Sort((a, b) =>
+                {
+                    int c = string.Compare(a.category, b.category, StringComparison.OrdinalIgnoreCase);
+                    if (c != 0) return c;
+                    return string.Compare(a.label, b.label, StringComparison.OrdinalIgnoreCase);
+                });
             }
             catch
             {
@@ -112,6 +128,7 @@ namespace AeroMenu
         private static bool TryGetFeatureValue(SearchableFeature f, out bool v)
         {
             v = false;
+            if (f.field == null) { v = true; return true; }
             try { v = (bool)f.field.GetValue(null); return true; }
             catch (System.Exception ex)
             {
@@ -203,6 +220,16 @@ namespace AeroMenu
                             currentCategory = f.category;
                             GUILayout.Space(2);
                             GUILayout.Label(f.category, menuSectionTitleStyle, GUILayout.Height(18));
+                        }
+
+                        if (f.field == null)
+                        {
+                            if (GUILayout.Button(f.label + "  >", btnStyle, GUILayout.Height(24)))
+                            {
+                                SetMenuTab(f.targetTab);
+                                isEditingSearch = false;
+                            }
+                            continue;
                         }
 
                         bool current;
