@@ -310,13 +310,21 @@ isWaitBindReviveAll || isWaitBindToggleAutoFix || isWaitBindCopyCode;
                     catch { }
                 }
 
-                if (customChatSpamEnabled)
+                if (customChatSpamEnabled || customChatFloodEnabled)
                 {
                     customChatSpamTimer += Time.deltaTime;
                     if (customChatSpamTimer >= customChatSpamDelay)
                     {
                         customChatSpamTimer = 0f;
-                        TrySendCustomChatMessage(customChatMessage);
+                        if (customChatFloodEnabled)
+                        {
+                            for (int i = 0; i < customChatFloodCount; i++)
+                                TrySendCustomChatMessage(customChatMessage);
+                        }
+                        else
+                        {
+                            TrySendCustomChatMessage(customChatMessage);
+                        }
                     }
                 }
                 else

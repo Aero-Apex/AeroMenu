@@ -774,7 +774,11 @@ public static string customChatMessage = "test";
 
 public static bool customChatSpamEnabled = false;
 
+public static bool customChatFloodEnabled = false;
+
 public static float customChatSpamDelay = 2.1f;
+
+public static int customChatFloodCount = 50;
 
 public static bool customChatInputFocused = false;
 

@@ -478,6 +478,7 @@ private void ResetSlidersToDefault()
             selectedMapSpawnIdx = 0f;
             chatHistoryLimit = 80;
             customChatSpamDelay = 2.1f;
+            customChatFloodCount = 50;
             autoChatEveryoneDelay = 2.5f;
             engineSpeed = 1f;
             walkSpeed = 1f;

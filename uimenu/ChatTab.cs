@@ -257,6 +257,23 @@ private void DrawChatSettingsContent()
             GUILayout.EndHorizontal();
 
             GUILayout.Space(10);
+
+            GUILayout.BeginHorizontal(GUILayout.Height(30));
+            if (GUILayout.Button("-", btnStyle, GUILayout.Width(30), GUILayout.Height(30)))
+                customChatFloodCount = Mathf.Clamp(customChatFloodCount - 5, 5, 100);
+            GUILayout.Label($"<b>x{customChatFloodCount}</b>", toggleLabelStyle11, GUILayout.Width(52), GUILayout.Height(30));
+            if (GUILayout.Button("+", btnStyle, GUILayout.Width(30), GUILayout.Height(30)))
+                customChatFloodCount = Mathf.Clamp(customChatFloodCount + 5, 5, 100);
+            GUILayout.Space(10);
+            if (GUILayout.Button(L("Flood Chat", "Флуд чата"), customChatFloodEnabled ? activeTabStyle : btnStyle, GUILayout.Width(150), GUILayout.Height(30)))
+            {
+                customChatFloodEnabled = !customChatFloodEnabled;
+                if (customChatFloodEnabled) customChatSpamEnabled = false;
+            }
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+
+            GUILayout.Space(10);
             GUILayout.EndVertical();
 
             GUILayout.Space(10);
