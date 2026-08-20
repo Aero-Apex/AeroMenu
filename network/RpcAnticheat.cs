@@ -1,0 +1,699 @@
+#nullable disable
+#pragma warning disable CS0162, CS0108, CS0219, CS0661, CS0660, CS8632, CS0168, CS0659
+using AmongUs.Data.Player;
+using AmongUs.GameOptions;
+using AmongUs.InnerNet.GameDataMessages;
+using BepInEx;
+using BepInEx.Configuration;
+using BepInEx.Unity.IL2CPP;
+using BepInEx.Unity.IL2CPP.Utils;
+using BepInEx.Unity.IL2CPP.Utils.Collections;
+using AeroMenu;
+using HarmonyLib;
+using Hazel;
+using Il2CppInterop.Runtime.Attributes;
+using Il2CppInterop.Runtime.Injection;
+using Il2CppInterop.Runtime.InteropTypes.Arrays;
+using InnerNet;
+using RewiredConsts;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http;
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Text;
+using System.Text.RegularExpressions;
+using TMPro;
+using UnityEngine;
+using UnityEngine.AddressableAssets;
+using UnityEngine.Events;
+using UnityEngine.Playables;
+using UnityEngine.ResourceManagement.AsyncOperations;
+using UnityEngine.UI;
+using static AeroMenu.AeroMenuGUI;
+using static Rewired.UI.ControlMapper.ControlMapper;
+using Color = UnityEngine.Color;
+using Object = UnityEngine.Object;
+using Vector3 = UnityEngine.Vector3;
+
+namespace AeroMenu
+{
+    public partial class AeroMenuGUI : MonoBehaviour
+    {
+private struct AntiCheatDisconnectNotice
+        {
+            public string PlayerName;
+            public string Reason;
+            public bool Ban;
+            public float RegisteredAt;
+        }
+
+private static readonly Dictionary<int, AntiCheatDisconnectNotice> pendingAntiCheatDisconnectNotices = new Dictionary<int, AntiCheatDisconnectNotice>();
+
+private static readonly HashSet<int> ventExploitBannedOwners = new HashSet<int>();
+
+public static void RegisterAntiCheatDisconnectNotice(int clientId, string playerName, string reason, bool ban)
+        {
+            try
+            {
+                PruneAntiCheatDisconnectNotices();
+
+                string cleanName = string.IsNullOrWhiteSpace(playerName) ? $"Client {clientId}" : playerName;
+                string cleanReason = string.IsNullOrWhiteSpace(reason) ? "Unknown" : reason;
+
+                pendingAntiCheatDisconnectNotices[clientId] = new AntiCheatDisconnectNotice
+                {
+                    PlayerName = cleanName,
+                    Reason = cleanReason,
+                    Ban = ban,
+                    RegisteredAt = Time.realtimeSinceStartup
+                };
+
+                ShowNotification(BuildAntiCheatDisconnectNotification(cleanName, cleanReason, ban));
+            }
+            catch { }
+        }
+
+private static void PruneAntiCheatDisconnectNotices()
+        {
+            try
+            {
+                if (pendingAntiCheatDisconnectNotices.Count == 0) return;
+
+                float now = Time.realtimeSinceStartup;
+                List<int> stale = null;
+                foreach (var pair in pendingAntiCheatDisconnectNotices)
+                {
+                    if (now - pair.Value.RegisteredAt > 20f)
+                    {
+                        if (stale == null) stale = new List<int>();
+                        stale.Add(pair.Key);
+                    }
+                }
+
+                if (stale == null) return;
+                for (int i = 0; i < stale.Count; i++)
+                    pendingAntiCheatDisconnectNotices.Remove(stale[i]);
+            }
+            catch { }
+        }
+
+private static bool TryConsumeAntiCheatDisconnectNotice(PlayerControl player, out string message)
+        {
+            message = null;
+            try
+            {
+                if (player == null) return false;
+
+                int clientId = (int)player.OwnerId;
+                if (!pendingAntiCheatDisconnectNotices.TryGetValue(clientId, out AntiCheatDisconnectNotice notice))
+                    return false;
+
+                pendingAntiCheatDisconnectNotices.Remove(clientId);
+                message = BuildAntiCheatDisconnectGameMessage(notice.PlayerName, notice.Reason, notice.Ban);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+private static string BuildAntiCheatDisconnectNotification(string playerName, string reason, bool ban)
+        {
+            string action = ban ? "Banned" : "Kicked";
+            return $"<color=#FF4444>[AERO ANTICHEAT]</color> {action}: <b>{playerName}</b>\nReason: {reason}";
+        }
+
+private static string BuildAntiCheatDisconnectGameMessage(string playerName, string reason, bool ban)
+        {
+            string action = ban ? "Banned" : "Kicked";
+            return $"<color=#FF4444>[AERO ANTICHEAT]</color> {action}: <b>{playerName}</b>\nReason: {reason}";
+        }
+
+[HarmonyPatch(typeof(HudManager), nameof(HudManager.NotifyOfDisconnect))]
+        public static class HudManager_NotifyOfDisconnect_AntiCheatNotice_Patch
+        {
+            public static bool Prefix(HudManager __instance, PlayerControl pc)
+            {
+                try
+                {
+                    if (!TryConsumeAntiCheatDisconnectNotice(pc, out string message))
+                        return true;
+
+                    if (__instance != null && __instance.Notifier != null)
+                    {
+                        __instance.Notifier.AddDisconnectMessage(message);
+                    }
+
+                    return false;
+                }
+                catch
+                {
+                    return true;
+                }
+            }
+        }
+
+public static class AeroAnticheat
+        {
+            public static void Flag(PlayerControl player, string reason)
+            {
+                if (player == null || player.Data == null || player == PlayerControl.LocalPlayer) return;
+                if (AeroMenuGUI.IsProtectedFromAnticheat(player)) return;
+
+                string pName = player.Data.PlayerName ?? "Unknown";
+
+                int mode = AeroMenuGUI.punishmentMode;
+
+                if (mode == 1)
+                {
+                    AeroMenuGUI.ShowNotification($"<color=#FF0000>[ANTICHEAT]</color> <b>{pName}</b>: {reason}");
+                }
+
+                if (AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost)
+                {
+                    if (mode == 2)
+                    {
+                        AeroMenuGUI.RegisterAntiCheatDisconnectNotice(player.OwnerId, pName, reason, false);
+                        AmongUsClient.Instance.KickPlayer(player.OwnerId, false);
+                    }
+                    else if (mode == 3)
+                    {
+                        string fc = string.IsNullOrEmpty(player.Data.FriendCode) ? "Unknown" : player.Data.FriendCode;
+                        string puid = "Unknown";
+                        try
+                        {
+                            var client = AmongUsClient.Instance.GetClientFromCharacter(player);
+                            if (client != null) puid = GetPlayerPuid(player);
+                        }
+                        catch { }
+
+                        AeroMenuGUI.AddToBanList(fc, puid, pName, $"Anticheat: {reason}");
+
+                        AeroMenuGUI.RegisterAntiCheatDisconnectNotice(player.OwnerId, pName, reason, true);
+                        AmongUsClient.Instance.KickPlayer(player.OwnerId, true);
+                    }
+                }
+            }
+        }
+
+[HarmonyPatch(typeof(PlayerPhysics), "RpcBootFromVent")]
+        public static class Anticheat_RpcBootFromVent_Patch
+        {
+            public static bool Prefix(PlayerPhysics __instance)
+            {
+                if (!AeroMenuGUI.blockSpoofRPC) return true;
+
+                try
+                {
+                    if (__instance == null || __instance.myPlayer == null) return true;
+                    if (!__instance.myPlayer.inVent) return false;
+                }
+                catch { }
+
+                return true;
+            }
+        }
+
+[HarmonyPatch(typeof(CustomNetworkTransform), nameof(CustomNetworkTransform.HandleRpc))]
+        public static class Anticheat_BlockServerTeleports_Patch
+        {
+            public static bool Prefix(CustomNetworkTransform __instance, byte callId)
+            {
+                if (!AeroMenuGUI.blockServerTeleports) return true;
+                if (callId != (byte)RpcCalls.SnapTo) return true;
+                try
+                {
+                    if (__instance != null && __instance.myPlayer == PlayerControl.LocalPlayer)
+                        return false;
+                }
+                catch { }
+                return true;
+            }
+        }
+
+private static bool BlockVentKickRpc(ShipStatus ship, byte callId, Hazel.MessageReader reader)
+        {
+            if (!AeroMenuGUI.blockVentKickExploit) return false;
+            if (AmongUsClient.Instance == null) return false;
+            if (callId != (byte)RpcCalls.UpdateSystem || reader == null) return false;
+
+            MessageReader copy = null;
+            try
+            {
+                copy = MessageReader.Get(reader);
+                SystemTypes system = (SystemTypes)copy.ReadByte();
+                PlayerControl plr = copy.ReadNetObject<PlayerControl>();
+                if (system != SystemTypes.Ventilation) return false;
+
+                if (!AmongUsClient.Instance.AmHost)
+                {
+                    string name = plr != null && plr.Data != null ? plr.Data.PlayerName : "Unknown";
+                    ShowNotification($"<color=#FF4444>[ANTICHEAT]</color> Blocked vent kick from <b>{name}</b>");
+                    return true;
+                }
+
+                if (plr == null || plr == PlayerControl.LocalPlayer) return false;
+
+                copy.ReadUInt16();
+                VentilationSystem.Operation op = (VentilationSystem.Operation)copy.ReadByte();
+                copy.ReadByte();
+                if (op != VentilationSystem.Operation.BootImpostors) return false;
+
+                int owner = AeroNetGuard.NetworkGuard.ResolveCurrentRpcSenderClientId(ship, callId);
+                if (owner < 0 && plr.Data != null) owner = plr.Data.ClientId;
+                if (owner < 0) owner = plr.OwnerId;
+                if (owner < 0) return true;
+
+                if (!IsProtectedFromAnticheat(owner))
+                    BanVentExploitOwner(plr, owner, "Non-host vent kick exploit");
+
+                return true;
+            }
+            catch { return false; }
+            finally { try { copy?.Recycle(); } catch { } }
+        }
+
+private static string GetVentRoomLabel(ushort ventId)
+        {
+            try
+            {
+                ShipStatus ship = ShipStatus.Instance;
+                if (ship == null || ship.AllVents == null) return $"Vent #{ventId}";
+
+                Vent vent = null;
+                for (int i = 0; i < ship.AllVents.Count; i++)
+                {
+                    Vent v = ship.AllVents[i];
+                    if (v != null && v.Id == ventId)
+                    {
+                        vent = v;
+                        break;
+                    }
+                }
+
+                if (vent == null) return $"Vent #{ventId}";
+
+                Vector3 pos = vent.transform.position;
+                if (ship.AllRooms != null)
+                {
+                    PlainShipRoom bestRoom = null;
+                    float best = float.MaxValue;
+
+                    foreach (PlainShipRoom room in ship.AllRooms)
+                    {
+                        if (room == null || room.roomArea == null) continue;
+                        Bounds b = room.roomArea.bounds;
+                        if (b.size.sqrMagnitude < 0.01f) continue;
+
+                        Vector3 p = b.ClosestPoint(pos);
+                        float d = (p - pos).sqrMagnitude * 1000f;
+                        float c = (b.center - pos).sqrMagnitude;
+                        float s = b.size.sqrMagnitude * 0.01f;
+                        float score = d + c + s;
+
+                        if (score < best)
+                        {
+                            best = score;
+                            bestRoom = room;
+                        }
+                    }
+
+                    if (bestRoom != null)
+                    {
+                        string label = GetRoomTeleportLabel(bestRoom.RoomId);
+                        if (!string.IsNullOrWhiteSpace(label)) return label;
+                    }
+                }
+            }
+            catch { }
+
+            return $"Vent #{ventId}";
+        }
+
+private static void BanVentExploitOwner(PlayerControl plr, int owner, string reason)
+        {
+            try
+            {
+                if (ventExploitBannedOwners.Contains(owner)) return;
+                ventExploitBannedOwners.Add(owner);
+                AeroNetGuard.NetworkGuard.BanClient(owner, "Vent kick exploit", reason);
+            }
+            catch { }
+        }
+
+[HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.HandleRpc))]
+        public static class Anticheat_PlayerControl_RPC
+        {
+            private static readonly Dictionary<byte, Queue<float>> chatRpcTimes = new Dictionary<byte, Queue<float>>();
+            private static readonly Dictionary<byte, Queue<float>> meetingRpcTimes = new Dictionary<byte, Queue<float>>();
+            private static readonly HashSet<byte> lobbyGameRpcs = new HashSet<byte>
+            {
+                (byte)RpcCalls.MurderPlayer,
+                (byte)RpcCalls.ReportDeadBody,
+                (byte)RpcCalls.StartMeeting,
+                (byte)RpcCalls.EnterVent,
+                (byte)RpcCalls.ExitVent,
+                (byte)RpcCalls.Shapeshift,
+                (byte)RpcCalls.ProtectPlayer
+            };
+
+            private static bool IsFlooded(Dictionary<byte, Queue<float>> map, byte playerId, int maxCalls, float windowSeconds)
+            {
+                float now = Time.unscaledTime;
+                if (!map.TryGetValue(playerId, out Queue<float> times))
+                {
+                    times = new Queue<float>();
+                    map[playerId] = times;
+                }
+
+                times.Enqueue(now);
+                while (times.Count > 0 && now - times.Peek() > windowSeconds)
+                    times.Dequeue();
+
+                return times.Count > maxCalls;
+            }
+
+            public static bool Prefix(PlayerControl __instance, byte callId, Hazel.MessageReader reader)
+            {
+                if (__instance != null && __instance != PlayerControl.LocalPlayer && __instance.Data != null && AeroMenuGUI.enablePasosLimit)
+                {
+                }
+
+                if (!AeroMenuGUI.blockSpoofRPC &&
+                    !AeroMenuGUI.blockSabotageRPC &&
+                    !AeroMenuGUI.blockGameRpcInLobby &&
+                    !AeroMenuGUI.blockChatFloodRpc &&
+                    !AeroMenuGUI.blockMeetingFloodRpc) return true;
+                if (__instance == null || __instance == PlayerControl.LocalPlayer || __instance.Data == null) return true;
+
+                if (AeroMenuGUI.blockMeetingFloodRpc &&
+                    (callId == (byte)RpcCalls.StartMeeting || callId == (byte)RpcCalls.ReportDeadBody) &&
+                    (MeetingHud.Instance != null || ExileController.Instance != null))
+                {
+                    try
+                    {
+                        Plugin.Instance?.Log?.LogWarning((object)$"[ANTICHEAT] blocked duplicate meeting RPC from {__instance.Data.PlayerName}: {(RpcCalls)callId}");
+                    }
+                    catch { }
+                    return false;
+                }
+
+                int oldPos = reader.Position;
+                bool isCheat = false;
+                string cheatReason = "";
+
+                try
+                {
+                    if (AeroMenuGUI.blockGameRpcInLobby &&
+                        AmongUsClient.Instance != null &&
+                        !AmongUsClient.Instance.IsGameStarted &&
+                        lobbyGameRpcs.Contains(callId))
+                    {
+                        isCheat = true;
+                        cheatReason = $"Game RPC in lobby ({((RpcCalls)callId)})";
+                    }
+
+                    if (!isCheat && AeroMenuGUI.blockChatFloodRpc &&
+                        (callId == (byte)RpcCalls.SendChat || callId == (byte)RpcCalls.SendQuickChat))
+                    {
+                        if (IsFlooded(chatRpcTimes, __instance.PlayerId, AeroMenuGUI.chatRpcLimit, AeroMenuGUI.chatRpcWindow))
+                        {
+                            isCheat = true;
+                            cheatReason = "Chat RPC flood";
+                        }
+                    }
+
+       
+                    if (!isCheat && AeroMenuGUI.enableQuickChatEmptyGuard &&
+                        callId == (byte)RpcCalls.SendQuickChat)
+                    {
+                        int qcPos = reader.Position;
+                        int zeroRun = 0, zeroMax = 0, scanned = 0;
+                        while (reader.Position < reader.Length && scanned < 4096)
+                        {
+                            scanned++;
+                            if (reader.ReadByte() == 0) { zeroRun++; if (zeroRun > zeroMax) zeroMax = zeroRun; }
+                            else zeroRun = 0;
+                        }
+                        reader.Position = qcPos;
+
+                        if (zeroMax >= 8)
+                        {
+                            if (AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost &&
+                                __instance != null && __instance != PlayerControl.LocalPlayer &&
+                                __instance.OwnerId != AmongUsClient.Instance.HostId)
+                            {
+                                try
+                                {
+                                    if (AeroMenuGUI.IsProtectedFromAnticheat(__instance))
+                                        return false;
+
+                                    bool qcBan = AeroMenuGUI.banQuickChatEmptySpammer;
+                                    string qcName = (__instance.Data != null && !string.IsNullOrEmpty(__instance.Data.PlayerName))
+                                        ? __instance.Data.PlayerName : $"Client {__instance.OwnerId}";
+                                    if (qcBan)
+                                    {
+                                        string qcFc = (__instance.Data != null && !string.IsNullOrEmpty(__instance.Data.FriendCode))
+                                            ? __instance.Data.FriendCode : "Unknown";
+                                        string qcPuid = "Unknown";
+                                        try
+                                        {
+                                            var qcClient = AmongUsClient.Instance.GetClientFromCharacter(__instance);
+                                            if (qcClient != null) qcPuid = AeroMenuGUI.GetPlayerPuid(__instance);
+                                        }
+                                        catch { }
+                                        AeroMenuGUI.AddToBanList(qcFc, qcPuid, qcName, "QuickChat Empty spam (anti-crash)");
+                                    }
+                                    AeroMenuGUI.RegisterAntiCheatDisconnectNotice(__instance.OwnerId, qcName, "QuickChat spam", qcBan);
+                                    AmongUsClient.Instance.KickPlayer(__instance.OwnerId, qcBan);
+                                }
+                                catch { }
+                            }
+                            return false; 
+                        }
+                    }
+
+                    if (!isCheat && AeroMenuGUI.blockMeetingFloodRpc &&
+                        (callId == (byte)RpcCalls.StartMeeting || callId == (byte)RpcCalls.ReportDeadBody))
+                    {
+                        if (IsFlooded(meetingRpcTimes, __instance.PlayerId, AeroMenuGUI.meetingRpcLimit, AeroMenuGUI.meetingRpcWindow))
+                        {
+                            isCheat = true;
+                            cheatReason = "Meeting RPC flood";
+                        }
+                    }
+
+                    if (!isCheat && AeroMenuGUI.blockSpoofRPC)
+                    {
+                        if (callId == (byte)RpcCalls.SetColor)
+                        {
+                            uint netId = reader.ReadUInt32();
+                            byte color = reader.ReadByte();
+                            if (color >= Palette.PlayerColors.Length) { isCheat = true; cheatReason = $"Invalid Color ID ({color})"; }
+                        }
+                        else if (callId == (byte)RpcCalls.SetName || callId == (byte)RpcCalls.CheckName)
+                        {
+                            uint netId = callId == (byte)RpcCalls.SetName ? reader.ReadUInt32() : 0;
+                            string reqName = reader.ReadString();
+                            if (reqName.Length > 12) { isCheat = true; cheatReason = "Name length too long"; }
+                            if (reqName.Contains("<")) { isCheat = true; cheatReason = "HTML Tags in name"; }
+                        }
+                        else if (callId == (byte)RpcCalls.SetScanner)
+                        {
+                            bool scanning = reader.ReadBoolean();
+                            if (scanning && RoleManager.IsImpostorRole(__instance.Data.RoleType))
+                            { isCheat = true; cheatReason = "Scanner activated as Impostor"; }
+                        }
+                        else if (callId == (byte)RpcCalls.PlayAnimation)
+                        {
+                            byte anim = reader.ReadByte();
+                            if (RoleManager.IsImpostorRole(__instance.Data.RoleType))
+                            { isCheat = true; cheatReason = "Task Animation as Impostor"; }
+                        }
+                        else if (callId == (byte)RpcCalls.EnterVent || callId == (byte)RpcCalls.ExitVent)
+                        {
+                            if (!__instance.Data.IsDead && __instance.Data.Role != null && !__instance.Data.Role.CanVent)
+                            { isCheat = true; cheatReason = "Vent without vent ability"; }
+
+                            if (GameManager.Instance != null && GameManager.Instance.IsHideAndSeek() && RoleManager.IsImpostorRole(__instance.Data.RoleType))
+                            { isCheat = true; cheatReason = "Venting as Seeker in H&S"; }
+                        }
+                    }
+
+                    if (!isCheat && AeroMenuGUI.blockSabotageRPC)
+                    {
+                        if (callId == (byte)RpcCalls.ReportDeadBody)
+                        {
+                            if (GameManager.Instance != null && GameManager.Instance.IsHideAndSeek())
+                            { isCheat = true; cheatReason = "Reported body in H&S"; }
+                        }
+                        else if (callId == (byte)RpcCalls.SetStartCounter)
+                        {
+                            reader.ReadPackedInt32();
+                            sbyte counter = reader.ReadSByte();
+
+                            if (__instance.OwnerId != AmongUsClient.Instance.HostId && counter != -1)
+                            { isCheat = true; cheatReason = "Start counter changed by non-host"; }
+                        }
+                    }
+                }
+                catch { }
+
+                reader.Position = oldPos;
+
+                if (isCheat)
+                {
+                    AeroAnticheat.Flag(__instance, cheatReason);
+                    return false;
+                }
+
+                return true;
+            }
+        }
+
+[HarmonyPatch(typeof(ShipStatus), nameof(ShipStatus.HandleRpc))]
+        public static class Anticheat_ShipStatus_RPC
+        {
+            public static bool Prefix(ShipStatus __instance, byte callId, Hazel.MessageReader reader)
+            {
+                if (BlockVentKickRpc(__instance, callId, reader)) return false;
+                if (!AeroMenuGUI.blockSabotageRPC) return true;
+
+                int oldPos = reader.Position;
+                bool isCheat = false;
+                string cheatReason = "";
+                PlayerControl sender = null;
+
+                try
+                {
+                    if (callId == (byte)RpcCalls.UpdateSystem)
+                    {
+                        SystemTypes system = (SystemTypes)reader.ReadByte();
+                        sender = reader.ReadNetObject<PlayerControl>();
+
+                        if (sender != null && !sender.AmOwner)
+                        {
+                            if (system == SystemTypes.Sabotage)
+                            {
+                                SystemTypes sabSystem = (SystemTypes)reader.ReadByte();
+                                if (sender.Data != null && !RoleManager.IsImpostorRole(sender.Data.RoleType))
+                                { isCheat = true; cheatReason = "Triggered Sabotage as Crewmate"; }
+                            }
+                        }
+                    }
+                    else if (callId == (byte)RpcCalls.CloseDoorsOfType)
+                    {
+                        if (GameManager.Instance != null && GameManager.Instance.IsHideAndSeek())
+                        { isCheat = true; cheatReason = "Closed doors in H&S"; }
+                    }
+                }
+                catch { }
+
+                reader.Position = oldPos;
+
+                if (isCheat && sender != null && sender != PlayerControl.LocalPlayer)
+                {
+                    AeroAnticheat.Flag(sender, cheatReason);
+                    return false;
+                }
+
+                return true;
+            }
+        }
+
+public static bool autoChatEveryone = false;
+
+public static bool pendingAutoMeeting = false;
+
+[HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.CheckColor))]
+        public static class AllowDuplicateColors_CheckColor_Patch
+        {
+            private static bool applyingDuplicateColor;
+
+            public static bool Prefix(PlayerControl __instance, byte bodyColor)
+            {
+                if (applyingDuplicateColor || !AeroMenuGUI.allowDuplicateColors ||
+                    __instance == null || AmongUsClient.Instance == null || !AmongUsClient.Instance.AmHost ||
+                    bodyColor == byte.MaxValue)
+                    return true;
+
+                try
+                {
+                    applyingDuplicateColor = true;
+                    __instance.RpcSetColor(bodyColor);
+                    return false;
+                }
+                catch { return true; }
+                finally { applyingDuplicateColor = false; }
+            }
+        }
+
+[HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.Start))]
+        public static class Anticheat_Platform_Check
+        {
+            public static void Postfix(PlayerControl __instance)
+            {
+                if ((!AeroMenuGUI.blockSpoofRPC && !AeroMenuGUI.autoBanPlatformSpoof && !AeroMenuGUI.banCustomPlatformsFromTxt) ||
+                    __instance == null || __instance == PlayerControl.LocalPlayer) return;
+
+                try
+                {
+                    var clientData = AmongUsClient.Instance.GetClientFromCharacter(__instance);
+                    if (clientData == null || clientData.PlatformData == null) return;
+
+                    if (AeroMenuGUI.banCustomPlatformsFromTxt &&
+                        MatchesPlatformBanTxt(clientData, out string customPlatformName, out string token))
+                    {
+                        HostBanForPlatform(__instance, $"Custom platform TXT match '{token}' ({customPlatformName})");
+                        return;
+                    }
+
+                    var platform = clientData.PlatformData;
+                    string pName = platform.PlatformName;
+                    ulong xuid = platform.XboxPlatformId;
+                    ulong psid = platform.PsnPlatformId;
+
+                    bool isValid = true;
+
+                    switch (platform.Platform)
+                    {
+                        case Platforms.StandaloneEpicPC:
+                        case Platforms.StandaloneSteamPC:
+                        case Platforms.StandaloneMac:
+                        case Platforms.StandaloneItch:
+                        case Platforms.IPhone:
+                        case Platforms.Android:
+                            isValid = (pName == "TESTNAME" && xuid == 0 && psid == 0);
+                            break;
+                        case Platforms.StandaloneWin10:
+                            isValid = (pName == "TESTNAME" && xuid != 0 && psid == 0);
+                            break;
+                        case Platforms.Xbox:
+                            isValid = (pName != "TESTNAME" && pName.Length >= 3 && xuid != 0 && psid == 0);
+                            break;
+                        case Platforms.Playstation:
+                            isValid = (pName != "TESTNAME" && xuid == 0 && psid != 0);
+                            break;
+                        case Platforms.Switch:
+                            isValid = (pName != "TESTNAME" && xuid == 0 && psid == 0);
+                            break;
+                    }
+
+                    if (!isValid)
+                    {
+                        string reason = $"Platform Spoof detected ({platform.Platform})";
+                        if (AeroMenuGUI.autoBanPlatformSpoof)
+                            HostBanForPlatform(__instance, reason);
+                        else if (AeroMenuGUI.blockSpoofRPC)
+                            AeroAnticheat.Flag(__instance, reason);
+                    }
+                }
+                catch { }
+            }
+        }
+    }
+}
