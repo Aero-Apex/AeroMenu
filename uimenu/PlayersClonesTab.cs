@@ -54,7 +54,7 @@ namespace AeroMenu
             string host = NetworkedClones.Ready() ? "<color=#55FF88>READY</color>" : "<color=#FF6666>HOST ONLY</color>";
             PlayerControl target = GetSelectedCloneTarget();
 
-            GUILayout.BeginVertical(menuCardStyle, GUILayout.Width(w), GUILayout.Height(414f));
+            GUILayout.BeginVertical(menuCardStyle, GUILayout.Width(w), GUILayout.Height(448f));
             try
             {
                 DrawMenuSectionHeader("CLONES");
@@ -169,6 +169,27 @@ namespace AeroMenu
                     string msg = NetworkedClones.FormationOf(target, cloneFormationIdx, cloneFormationCount, cloneFormationWidth);
                     ShowNotification("<color=#AA77FF>[CLONES]</color> " + msg);
                 }
+
+                GUILayout.Space(6);
+                DrawMenuSectionHeader("FLOOD LOBBY");
+
+                GUILayout.BeginHorizontal(GUILayout.Width(innerW));
+                try
+                {
+                    if (GUILayout.Button(L("Flood Lobby", "ФЛУД ЛОББИ"), activeTabStyle, GUILayout.Width(innerW), GUILayout.Height(25f)))
+                    {
+                        PlayerControl me = PlayerControl.LocalPlayer;
+                        if (me == null || me.transform == null)
+                        {
+                            ShowNotification("<color=#FF5555>[FLOOD]</color> No local player.");
+                            return;
+                        }
+
+                        string msg = NetworkedClones.FormationOf(me, 1, cloneFormationCount, 1f);
+                        ShowNotification("<color=#AA77FF>[FLOOD]</color> " + msg);
+                    }
+                }
+                finally { GUILayout.EndHorizontal(); }
             }
             finally { GUILayout.EndVertical(); }
         }
