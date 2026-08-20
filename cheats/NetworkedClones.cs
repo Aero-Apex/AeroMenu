@@ -75,6 +75,15 @@ namespace AeroMenu
             return false;
         }
 
+        [HarmonyPatch(typeof(GameData), nameof(GameData.PlayerCount), MethodType.Getter)]
+        internal static class GameData_PlayerCount_CloneCount_Patch
+        {
+            internal static void Postfix(ref int __result)
+            {
+                __result += NetworkedClones.Live;
+            }
+        }
+
         internal static void Tick(bool menuOpen)
         {
             float now = Time.unscaledTime;
