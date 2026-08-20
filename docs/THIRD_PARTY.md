@@ -10,5 +10,5 @@ The detailed radar images in `resources/radar_realistic_*.png` are resized versi
 - [The Airship map](https://among-us.fandom.com/wiki/File:The_Airship_map.png)
 - [The Fungle map](https://among-us.fandom.com/wiki/File:The_Fungle_map.png)
 
-Among Us and its visual assets are property of InnerSloth LLC. ElysiumModMenu
+Among Us and its visual assets are property of InnerSloth LLC. AeroMenu
 is not affiliated with or endorsed by InnerSloth LLC.

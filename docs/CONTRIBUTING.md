@@ -1,6 +1,6 @@
 ﻿# Contributing
 
-Thank you for your interest in contributing to ElysiumModMenu.
+Thank you for your interest in contributing to AeroMenu.
 
 Before contributing:
 
