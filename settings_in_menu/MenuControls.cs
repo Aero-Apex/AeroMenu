@@ -1125,6 +1125,24 @@ private void DrawGeneralTab()
 
             GUILayout.Space(8);
 
+            GUILayout.BeginVertical(menuCardStyle);
+            DrawMenuSectionHeader(L("QUICK TOGGLES", "БЫСТРЫЕ ПЕРЕКЛЮЧЕНИЯ"));
+            GUILayout.BeginHorizontal();
+            bool prevInvisible = InvisibleSelf.enabled;
+            bool newInvisible = DrawToggle(InvisibleSelf.enabled, "Invisible", 140);
+            if (newInvisible != prevInvisible)
+                ShowNotification("<color=#AA77FF>[SELF]</color> " + InvisibleSelf.SetEnabled(newInvisible));
+            GUILayout.Space(16);
+            bool prevNoCd = noKillCooldownHostOnly;
+            noKillCooldownHostOnly = DrawToggle(noKillCooldownHostOnly, "Kill Cooldown 0", 140);
+            if (prevNoCd != noKillCooldownHostOnly) settingsDirty = true;
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+            GUILayout.Label(L("Invisible also lives in SELF → MOVEMENT.", "Invisible также находится в SELF → MOVEMENT."), menuDescStyle);
+            GUILayout.EndVertical();
+
+            GUILayout.Space(8);
+
             BeginMultiTabContent("general", out Matrix4x4 oldMatrix, out Color oldColor);
             try
             {
