@@ -566,6 +566,7 @@ private void ResetSlidersToDefault()
             autoSaveInterval = 30f;
             defaultMenuTab = 0;
             customAccentHex = "";
+            InvisibleSelf.enabled = false;
             autoChatEveryoneDelay = 2.5f;
             engineSpeed = 1f;
             walkSpeed = 1f;

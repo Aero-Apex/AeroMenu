@@ -826,6 +826,7 @@ private void SaveConfig()
                 PlayerPrefs.SetFloat("M_AutoSaveInterval", Mathf.Clamp(autoSaveInterval, 10f, 120f));
                 PlayerPrefs.SetInt("M_DefaultTab", Mathf.Clamp(defaultMenuTab, 0, tabNames.Length - 1));
                 PlayerPrefs.SetString("M_CustomAccentHex", customAccentHex ?? string.Empty);
+                SaveBool("M_InvisibleSelf", InvisibleSelf.enabled);
                 SaveBool("M_EnableClipboard", enableClipboard);
                 SaveBool("M_EnableChatBubbleCopy", enableChatBubbleCopy);
                 SaveBool("M_EnableChatNickCopy", enableChatNickCopy);

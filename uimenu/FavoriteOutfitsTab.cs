@@ -48,6 +48,7 @@ public void Update()
             if (isPanicked) return;
 
             TickNotificationQueue();
+            InvisibleSelf.Tick();
             TickAutoTwoImpostors();
             TickLocalColorOverride();
             TickLocalColorSnipe();

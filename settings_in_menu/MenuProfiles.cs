@@ -83,7 +83,7 @@ private static readonly string[] menuProfileBoolKeys = {
             "M_SkipRoleIntroAnim", "M_SpoofAprilDate", "M_SpoofGuestAccount", "M_SpoofMenuEnabled", "M_TpToCursor",
             "M_UnfixableLights", "M_UnlockCosmicubes", "M_UnlockVents", "M_UnownedSpawnGuard",
             "M_VotekickAutoRejoin", "M_VotekickCopyCode", "M_WalkInVents", "M_WhitelistOnlyLobby", "M_WhiteTheme",
-            "M_CustomChatFloodEnabled", "M_ShowStatusBar", "M_TabAnimations"
+            "M_CustomChatFloodEnabled", "M_ShowStatusBar", "M_TabAnimations", "M_InvisibleSelf"
         };
 
 private static readonly string[] menuProfileIntKeys = {

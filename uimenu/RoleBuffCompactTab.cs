@@ -62,6 +62,11 @@ private void DrawPlayerMovementCompact(float columnWidth)
             GUILayout.EndHorizontal();
 
             GUILayout.Space(4);
+            bool prevInvisible = InvisibleSelf.enabled;
+            bool newInvisible = DrawCompactToggle(InvisibleSelf.enabled, "Invisible", controlWidth);
+            if (newInvisible != prevInvisible)
+                ShowNotification("<color=#AA77FF>[SELF]</color> " + InvisibleSelf.SetEnabled(newInvisible));
+            GUILayout.Space(1);
             tpToCursor = DrawCompactToggle(tpToCursor, "TP To Cursor", controlWidth);
             GUILayout.Space(1);
             dragToCursor = DrawCompactToggle(dragToCursor, "Drag To Cursor", controlWidth);

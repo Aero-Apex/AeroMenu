@@ -201,6 +201,7 @@ private void LoadConfig()
                 autoSaveInterval = Mathf.Clamp(LoadFloat("M_AutoSaveInterval", autoSaveInterval), 10f, 120f);
                 defaultMenuTab = Mathf.Clamp(LoadInt("M_DefaultTab", defaultMenuTab), 0, tabNames.Length - 1);
                 customAccentHex = PlayerPrefs.GetString("M_CustomAccentHex", string.Empty);
+                InvisibleSelf.enabled = LoadBool("M_InvisibleSelf", InvisibleSelf.enabled);
                 enableClipboard = LoadBool("M_EnableClipboard", enableClipboard);
                 enableChatBubbleCopy = LoadBool("M_EnableChatBubbleCopy", enableChatBubbleCopy);
                 enableChatNickCopy = LoadBool("M_EnableChatNickCopy", enableChatNickCopy);
