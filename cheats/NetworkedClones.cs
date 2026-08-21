@@ -190,9 +190,7 @@ namespace AeroMenu
             try
             {
                 if (!AutoClearBeforeGame) return;
-                AmongUsClient net = AmongUsClient.Instance;
-                if (net == null || !net.AmHost) return;
-                ClearAll();
+                Forget();
             }
             catch { }
         }
@@ -473,6 +471,8 @@ namespace AeroMenu
                 net.Spawn(cl.Cast<InnerNetObject>(), Owner, SpawnFlags.None);
                 cl.transform.position = pos;
 
+                try { if (cl.NetTransform != null) cl.NetTransform.SnapTo(new Vector2(pos.x, pos.y)); } catch { }
+
                 if (cl.Collider != null) cl.Collider.enabled = false;
                 if (cl.MyPhysics != null) cl.MyPhysics.enabled = false;
                 if (cl.NetTransform != null) ((Behaviour)cl.NetTransform).enabled = false;
@@ -513,7 +513,9 @@ namespace AeroMenu
                 {
                     if (obj == null || obj.OwnerId != Owner) continue;
                     PlayerControl pc = obj.GetComponent<PlayerControl>();
-                    if (pc != null) toKill.Add(pc);
+                    if (pc == null) continue;
+                    if (AeroBots.IsBot(pc)) continue;
+                    toKill.Add(pc);
                 }
 
                 foreach (PlayerControl pc in toKill)

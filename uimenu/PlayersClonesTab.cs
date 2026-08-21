@@ -54,7 +54,7 @@ namespace AeroMenu
             string host = NetworkedClones.Ready() ? "<color=#55FF88>READY</color>" : "<color=#FF6666>HOST ONLY</color>";
             PlayerControl target = GetSelectedCloneTarget();
 
-            GUILayout.BeginVertical(menuCardStyle, GUILayout.Width(w), GUILayout.Height(448f));
+            GUILayout.BeginVertical(menuCardStyle, GUILayout.Width(w), GUILayout.Height(540f));
             try
             {
                 DrawMenuSectionHeader("CLONES");
@@ -188,6 +188,25 @@ namespace AeroMenu
                         string msg = NetworkedClones.FormationOf(me, 1, cloneFormationCount, 1f);
                         ShowNotification("<color=#AA77FF>[FLOOD]</color> " + msg);
                     }
+                }
+                finally { GUILayout.EndHorizontal(); }
+
+                GUILayout.Space(6);
+                DrawMenuSectionHeader("BOTS");
+
+                GUILayout.Label($"Bots: <color=#{GetMenuAccentHex(false)}>{AeroBots.Count}</color>", st, GUILayout.Width(innerW), GUILayout.Height(20f));
+
+                GUILayout.BeginHorizontal(GUILayout.Width(innerW));
+                try
+                {
+                    if (GUILayout.Button(L("+1 Bot", "+1 БОТ"), btnStyle, GUILayout.Width((innerW - 8f) * 0.34f), GUILayout.Height(25f)))
+                        ShowNotification("<color=#FFAA55>[BOTS]</color> " + AeroBots.AddBots(1));
+                    GUILayout.Space(4);
+                    if (GUILayout.Button(L("+5 Bots", "+5 БОТОВ"), btnStyle, GUILayout.Width((innerW - 8f) * 0.33f), GUILayout.Height(25f)))
+                        ShowNotification("<color=#FFAA55>[BOTS]</color> " + AeroBots.AddBots(5));
+                    GUILayout.Space(4);
+                    if (GUILayout.Button(L("Clear", "УБРАТЬ"), btnStyle, GUILayout.Width((innerW - 8f) * 0.33f), GUILayout.Height(25f)))
+                        AeroBots.ClearAllBots();
                 }
                 finally { GUILayout.EndHorizontal(); }
             }
