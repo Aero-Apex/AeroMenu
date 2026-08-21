@@ -401,6 +401,20 @@ private void UpdateMenuTrackTex(Texture2D tex, Color color)
             safeLineStyle = new GUIStyle();
             safeLineStyle.normal.background = texSafeLine;
 
+            Texture2D texStatusBarBg = MakeRoundedTex(8, new Color(0f, 0f, 0f, 0.45f), 0f);
+            statusBarBgStyle = new GUIStyle();
+            statusBarBgStyle.normal.background = texStatusBarBg;
+
+            statusBarLeftStyle = new GUIStyle();
+            statusBarLeftStyle.fontSize = 10;
+            statusBarLeftStyle.fontStyle = FontStyle.Normal;
+            statusBarLeftStyle.alignment = TextAnchor.MiddleLeft;
+            statusBarLeftStyle.richText = true;
+            statusBarLeftStyle.normal.textColor = new Color(1f, 1f, 1f, 0.6f);
+
+            statusBarRightStyle = new GUIStyle(statusBarLeftStyle);
+            statusBarRightStyle.alignment = TextAnchor.MiddleRight;
+
             windowStyle = new GUIStyle();
             windowStyle.normal.background = texWindowBg;
             windowStyle.normal.textColor = accent;

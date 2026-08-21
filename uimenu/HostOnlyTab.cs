@@ -989,6 +989,8 @@ private GUIStyle menuBgStyle, menuCharacterStyle, menuCloseButtonStyle, sidebarC
 
 private GUIStyle topSidebarStyle, activeTopSidebarStyle, microMenuHintStyle, compactSubTabStyle, compactActiveSubTabStyle;
 
+private GUIStyle statusBarBgStyle, statusBarLeftStyle, statusBarRightStyle;
+
 private GUIStyle hostSubTabStyle10, activeHostSubTabStyle10, hostSubTabStyle11, activeHostSubTabStyle11;
 
 private readonly float[] hostSubTabWidths = new float[5];

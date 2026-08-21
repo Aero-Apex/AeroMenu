@@ -753,38 +753,31 @@ private void TrackAnimatedSidebarHighlight(int tab, Rect rect)
 
         private void DrawStatusBar()
         {
-            if (!showStatusBar) return;
+            if (!showStatusBar || statusBarBgStyle == null || statusBarLeftStyle == null) return;
 
-            float h = 20f;
-            Rect bar = new Rect(1f, windowRect.height - h - 1f, windowRect.width - 2f, h);
+            try
+            {
+                float h = 20f;
+                Rect bar = new Rect(1f, windowRect.height - h - 1f, windowRect.width - 2f, h);
 
-            Color old = GUI.color;
-            GUI.color = new Color(0f, 0f, 0f, 0.35f);
-            GUI.DrawTexture(bar, Texture2D.whiteTexture);
-            GUI.color = old;
+                GUI.Box(bar, GUIContent.none, statusBarBgStyle);
 
-            string keyName = menuToggleKey == KeyCode.None ? "INSERT" : menuToggleKey.ToString().ToUpperInvariant();
-            bool savedRecently = Time.unscaledTime - lastSavedAt < 2.5f;
+                string keyName = menuToggleKey == KeyCode.None ? "INSERT" : menuToggleKey.ToString().ToUpperInvariant();
+                bool savedRecently = Time.unscaledTime - lastSavedAt < 2.5f;
 
-            string leftText = (statusBarText ?? string.Empty);
-            if (leftText.Length == 0) leftText = "{key} — toggle menu";
-            leftText = leftText.Replace("{key}", keyName).Replace("{version}", Plugin.DisplayVersion);
+                string leftText = (statusBarText ?? string.Empty);
+                if (leftText.Length == 0) leftText = "{key} — toggle menu";
+                leftText = leftText.Replace("{key}", keyName).Replace("{version}", Plugin.DisplayVersion);
 
-            GUIStyle leftStyle = new GUIStyle();
-            leftStyle.fontSize = 10;
-            leftStyle.fontStyle = FontStyle.Normal;
-            leftStyle.alignment = TextAnchor.MiddleLeft;
-            leftStyle.richText = true;
-            leftStyle.normal.textColor = new Color(1f, 1f, 1f, 0.55f);
-            GUI.Label(new Rect(bar.x + 10f, bar.y + 3f, bar.width * 0.6f, h - 4f), leftText, leftStyle);
+                GUI.Label(new Rect(bar.x + 10f, bar.y + 3f, bar.width * 0.6f, h - 4f), leftText, statusBarLeftStyle);
 
-            GUIStyle rightStyle = new GUIStyle(leftStyle);
-            rightStyle.alignment = TextAnchor.MiddleRight;
-            string rightText = savedRecently
-                ? "<color=#7CFC98>Saved ✓</color>"
-                : $"AeroMenu {Plugin.DisplayVersion}";
-            GUI.Label(new Rect(bar.x + bar.width * 0.4f, bar.y + 3f, bar.width * 0.6f - 10f, h - 4f),
-                rightText, rightStyle);
+                string rightText = savedRecently
+                    ? "<color=#7CFC98>Saved ✓</color>"
+                    : "AeroMenu " + Plugin.DisplayVersion;
+                GUI.Label(new Rect(bar.x + bar.width * 0.4f, bar.y + 3f, bar.width * 0.6f - 10f, h - 4f),
+                    rightText, statusBarRightStyle);
+            }
+            catch { }
         }
 
 private void DrawMenuCharacter(float bodyX, float bodyY, float bodyW, float bodyH, float alpha)
