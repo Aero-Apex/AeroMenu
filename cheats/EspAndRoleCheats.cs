@@ -249,20 +249,6 @@ namespace AeroMenu
             }
         }
 
-[HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.invisibilityAlpha), MethodType.Setter)]
-        public static class PlayerControl_InvisibilityAlpha_SeePhantoms_Patch
-        {
-            public static void Prefix(PlayerControl __instance, ref float __0)
-            {
-                if (AeroMenuGUI.seePhantoms &&
-                    PlayerControl_SetRoleInvisibility_SeePhantoms_Patch.IsVanished(__instance) &&
-                    (PlayerControl.LocalPlayer == null || __instance.PlayerId != PlayerControl.LocalPlayer.PlayerId))
-                {
-                    __0 = 0.5f;
-                }
-            }
-        }
-
 [HarmonyPatch(typeof(PlayerPhysics), nameof(PlayerPhysics.LateUpdate))]
         public static class PlayerVisuals_LateUpdate_Patch
         {
