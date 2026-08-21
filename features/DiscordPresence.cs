@@ -14,12 +14,14 @@ namespace AeroMenu;
 // Discord Rich Presence for AeroMenu
 public sealed class AeroDiscordPresence : MonoBehaviour
 {
-    // ⚠️ Замени на Application ID своего Discord-приложения (Discord Developer Portal).
-    private const long AppId = 1524895268028547163L;
+    // Discord Application ID shown as the game title in Rich Presence.
+    // Change it in BepInEx/config/AeroMenu.cfg (AeroMenu.Discord -> AppId) with your own
+    // application ID from https://discord.com/developers/applications
+    internal static long AppId = 1524895268028547163L;
     private const float Tick = 2f;
 
-    // ⚠️ Ключ (asset key) картинки из Discord Developer Portal -> Rich Presence -> Art Assets.
-    private const string LargeImageKey = "aero_menu";
+    // Image asset key from your Discord application's Rich Presence Art Assets.
+    internal static string LargeImageKey = "aero_menu";
     private const string SmallImageKey = null; // маленькая иконка (нет второго ассета - отключена)
 
     private NamedPipeClientStream _pipe;

@@ -51,6 +51,8 @@ namespace AeroMenu
         public static string AeroFolder = "";
         public static ConfigFile MenuConfig;
         public static ConfigEntry<float> RpcSpoofDelayConfig;
+    public static ConfigEntry<long> DiscordAppIdConfig;
+    public static ConfigEntry<string> DiscordImageKeyConfig;
         public static ConfigEntry<KeyCode> MenuKeybind;
         public static ConfigEntry<string> SpoofedLevel;
         public static ConfigEntry<bool> EnableLevelSpoofConfig;
@@ -143,6 +145,10 @@ namespace AeroMenu
             ThrottleDefaultLogsConfig = MenuConfig.Bind("AeroMenu.Diagnostics", "ThrottleDefaultLogs", true, "Legacy compatibility setting. DetailedLogsEnabled now controls routine log output.");
             DetailedLogsEnabledConfig = MenuConfig.Bind("AeroMenu.Diagnostics", "DetailedLogsEnabled", false, "Enables verbose Unity/BepInEx Message, Info and Debug output. Warnings and errors are always shown.");
             ShowEspFriendCodeConfig = MenuConfig.Bind("AeroMenu.Visuals", "ShowEspFriendCode", true, "Show Friend Code in ESP player info.");
+            DiscordAppIdConfig = MenuConfig.Bind("AeroMenu.Discord", "AppId", 1524895268028547163L, "Discord Application ID shown as the game title in Rich Presence. Create your own app at discord.com/developers/applications and paste its Application ID here.");
+            DiscordImageKeyConfig = MenuConfig.Bind("AeroMenu.Discord", "LargeImageKey", "aero_menu", "Rich Presence large image asset key from your Discord application's Art Assets.");
+            AeroDiscordPresence.AppId = DiscordAppIdConfig.Value;
+            AeroDiscordPresence.LargeImageKey = DiscordImageKeyConfig.Value;
             MenuConfig.Save();
             AeroMenuGUI.detailedLogsEnabled = DetailedLogsEnabledConfig.Value;
             RepeatedLogFilter.Install();
