@@ -1097,19 +1097,25 @@ public static void InitializeKillCooldownOnRoundStart()
         {
             public static void Prefix()
             {
-                if (AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost && AeroMenuGUI.enablePreGameRoleForce)
+                try
                 {
-                    foreach (PlayerControl target in PlayerControl.AllPlayerControls)
+                    if (AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost && AeroMenuGUI.enablePreGameRoleForce)
                     {
-                        if (target == null || target.Data == null || target.Data.Disconnected) continue;
-                        if (AeroMenuGUI.TryGetForcedRole(target, out RoleTypes role))
+                        foreach (PlayerControl target in PlayerControl.AllPlayerControls)
                         {
-                            if (target.Data.RoleType != role) target.RpcSetRole(role);
+                            if (target == null || target.Data == null || target.Data.Disconnected) continue;
+                            if (NetworkedClones.IsClone(target)) continue;
+                            if (target.Data.Role == null) continue;
+                            if (AeroMenuGUI.TryGetForcedRole(target, out RoleTypes role))
+                            {
+                                if (target.Data.RoleType != role) target.RpcSetRole(role);
+                            }
+                            else if (AeroMenuGUI.IsForcedImp(target) && !target.Data.Role.IsImpostor)
+                                target.RpcSetRole(RoleTypes.Impostor);
                         }
-                        else if (AeroMenuGUI.IsForcedImp(target) && target.Data.Role != null && !target.Data.Role.IsImpostor)
-                            target.RpcSetRole(RoleTypes.Impostor);
                     }
                 }
+                catch { }
             }
         }
 

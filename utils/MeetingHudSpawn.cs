@@ -129,6 +129,8 @@ private static void HideMenuForMeeting()
                 isEditingBan = false;
                 isEditingFpsLimit = false;
                 isEditingBugRoomTimedAutoRun = false;
+                isEditingDeviceId = false;
+                isEditingSearch = false;
                 customSpoofRpcInputFocused = false;
             }
             catch { }

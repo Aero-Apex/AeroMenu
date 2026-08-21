@@ -517,6 +517,14 @@ private void SetMenuTab(int tab)
             scrollPosition = Vector2.zero;
         }
 
+        internal static void ClearAllEditingFlags()
+        {
+            isEditingName = isEditingLevel = isEditingFriendCode = isEditingLocalFriendCode =
+            isEditingDeviceId = isEditingGhostChatColor = isEditingBan = isEditingFpsLimit =
+            isEditingBugRoomTimedAutoRun = isEditingSearch = false;
+            customSpoofRpcInputFocused = false;
+        }
+
 private void DrawAnimatedSidebarHighlight()
         {
             if (!tabHighlightReady || activeTabStyle == null) return;

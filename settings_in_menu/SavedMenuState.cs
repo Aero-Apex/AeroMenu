@@ -813,6 +813,10 @@ private void SaveConfig()
                 SaveBool("M_AllowLinksAndSymbols", allowLinksAndSymbols);
                 SaveBool("M_EnableChatHistory", enableChatHistory);
                 PlayerPrefs.SetInt("M_ChatHistoryLimit", chatHistoryLimit);
+                SaveBool("M_CustomChatFloodEnabled", customChatFloodEnabled);
+                PlayerPrefs.SetInt("M_CustomChatFloodCount", Mathf.Clamp(customChatFloodCount, 5, 100));
+                PlayerPrefs.SetInt("M_CloneFormationCount", Mathf.Clamp(cloneFormationCount, 1, NetworkedClones.MaxCloneCount));
+                PlayerPrefs.SetFloat("M_CloneFormationWidth", Mathf.Clamp(cloneFormationWidth, 0.25f, 5f));
                 SaveBool("M_EnableClipboard", enableClipboard);
                 SaveBool("M_EnableChatBubbleCopy", enableChatBubbleCopy);
                 SaveBool("M_EnableChatNickCopy", enableChatNickCopy);
@@ -1240,6 +1244,7 @@ private void DrawBugRoomTimedAutoRun(float innerWidth)
             if (!isEditingBugRoomTimedAutoRun) bugRoomTimedAutoRunInput = bugRoomTimedAutoRunMinutes.ToString();
             if (DrawBugRoomMinuteInput())
             {
+                ClearAllEditingFlags();
                 isEditingBugRoomTimedAutoRun = true;
                 bugRoomTimedAutoRunInput = string.Empty;
             }

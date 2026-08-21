@@ -131,7 +131,7 @@ private void LoadConfig()
                 ApplyTelemetryPreference();
                 ApplyFpsLimit();
                 autoKickBugs = LoadBool("M_AutoKickBugs", autoKickBugs);
-                if (PlayerPrefs.HasKey("M_AutoKickTimer")) autoKickTimer = PlayerPrefs.GetFloat("M_AutoKickTimer");
+                if (PlayerPrefs.HasKey("M_AutoKickTimer")) autoKickTimer = Mathf.Clamp(PlayerPrefs.GetFloat("M_AutoKickTimer"), 1f, 15f);
                 disableVoteKicks = LoadBool("M_DisableVoteKicks", disableVoteKicks);
                 banVoteKickVoters = LoadBool("M_BanVoteKickVoters", banVoteKickVoters);
                 votekickAutoRejoin = LoadBool("M_VotekickAutoRejoin", votekickAutoRejoin);
@@ -188,8 +188,10 @@ private void LoadConfig()
                 allowLinksAndSymbols = LoadBool("M_AllowLinksAndSymbols", allowLinksAndSymbols);
                 enableChatHistory = LoadBool("M_EnableChatHistory", enableChatHistory);
                 chatHistoryLimit = Mathf.Clamp(LoadInt("M_ChatHistoryLimit", chatHistoryLimit), 5, 300);
-                if (chatHistoryLimit <= 20)
-                    chatHistoryLimit = 80;
+                customChatFloodEnabled = LoadBool("M_CustomChatFloodEnabled", customChatFloodEnabled);
+                customChatFloodCount = Mathf.Clamp(LoadInt("M_CustomChatFloodCount", customChatFloodCount), 5, 100);
+                cloneFormationCount = Mathf.Clamp(LoadInt("M_CloneFormationCount", cloneFormationCount), 1, NetworkedClones.MaxCloneCount);
+                cloneFormationWidth = Mathf.Clamp(LoadFloat("M_CloneFormationWidth", cloneFormationWidth), 0.25f, 5f);
                 enableClipboard = LoadBool("M_EnableClipboard", enableClipboard);
                 enableChatBubbleCopy = LoadBool("M_EnableChatBubbleCopy", enableChatBubbleCopy);
                 enableChatNickCopy = LoadBool("M_EnableChatNickCopy", enableChatNickCopy);
@@ -310,12 +312,12 @@ private void LoadConfig()
                 AutoHostAutoRunDelaySeconds = Mathf.Clamp(LoadFloat("M_AutoHostAutoRunDelaySeconds", AutoHostAutoRunDelaySeconds), 0.25f, 10f);
                 BugroomScoutEnabled = LoadBool("M_BugroomScoutEnabled", BugroomScoutEnabled);
                 autoGhostAfterStart = LoadBool("M_AutoGhostAfterStart", autoGhostAfterStart);
-                if (PlayerPrefs.HasKey("M_AutoHostMinPlayers")) AutoHostMinPlayers = PlayerPrefs.GetInt("M_AutoHostMinPlayers");
-                if (PlayerPrefs.HasKey("M_AutoHostStartDelaySeconds")) AutoHostStartDelaySeconds = PlayerPrefs.GetFloat("M_AutoHostStartDelaySeconds");
-                if (PlayerPrefs.HasKey("M_AutoHostFastStartPlayers")) AutoHostFastStartPlayers = PlayerPrefs.GetInt("M_AutoHostFastStartPlayers");
-                if (PlayerPrefs.HasKey("M_AutoHostFastStartDelaySeconds")) AutoHostFastStartDelaySeconds = PlayerPrefs.GetFloat("M_AutoHostFastStartDelaySeconds");
-                if (PlayerPrefs.HasKey("M_WalkSpeed")) walkSpeed = PlayerPrefs.GetFloat("M_WalkSpeed");
-                if (PlayerPrefs.HasKey("M_EngineSpeed")) engineSpeed = PlayerPrefs.GetFloat("M_EngineSpeed");
+                if (PlayerPrefs.HasKey("M_AutoHostMinPlayers")) AutoHostMinPlayers = Mathf.Clamp(PlayerPrefs.GetInt("M_AutoHostMinPlayers"), 1, 15);
+                if (PlayerPrefs.HasKey("M_AutoHostStartDelaySeconds")) AutoHostStartDelaySeconds = Mathf.Clamp(PlayerPrefs.GetFloat("M_AutoHostStartDelaySeconds"), 0f, 180f);
+                if (PlayerPrefs.HasKey("M_AutoHostFastStartPlayers")) AutoHostFastStartPlayers = Mathf.Clamp(PlayerPrefs.GetInt("M_AutoHostFastStartPlayers"), 0, 15);
+                if (PlayerPrefs.HasKey("M_AutoHostFastStartDelaySeconds")) AutoHostFastStartDelaySeconds = Mathf.Clamp(PlayerPrefs.GetFloat("M_AutoHostFastStartDelaySeconds"), 0f, 60f);
+                if (PlayerPrefs.HasKey("M_WalkSpeed")) walkSpeed = Mathf.Clamp(PlayerPrefs.GetFloat("M_WalkSpeed"), 1f, 30f);
+                if (PlayerPrefs.HasKey("M_EngineSpeed")) engineSpeed = Mathf.Clamp(PlayerPrefs.GetFloat("M_EngineSpeed"), 1f, 555f);
                 for (int i = 0; i < favoriteOutfitSlots.Length; i++)
                     favoriteOutfitSlots[i] = PlayerPrefs.GetString($"M_FavoriteOutfit_{i}", string.Empty);
                 enableBackground = LoadBool("M_EnableBackground", enableBackground);

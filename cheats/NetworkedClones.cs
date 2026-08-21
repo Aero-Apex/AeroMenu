@@ -80,6 +80,7 @@ namespace AeroMenu
         {
             internal static void Postfix(ref int __result)
             {
+                if (LobbyBehaviour.Instance == null) return;
                 __result += NetworkedClones.Live;
             }
         }
@@ -169,10 +170,14 @@ namespace AeroMenu
 
         internal static void ClearBeforeGame()
         {
-            if (!AutoClearBeforeGame) return;
-            AmongUsClient net = AmongUsClient.Instance;
-            if (net == null || !net.AmHost) return;
-            ClearAll();
+            try
+            {
+                if (!AutoClearBeforeGame) return;
+                AmongUsClient net = AmongUsClient.Instance;
+                if (net == null || !net.AmHost) return;
+                ClearAll();
+            }
+            catch { }
         }
 
         internal static int ClearLastFigure()

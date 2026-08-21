@@ -676,12 +676,7 @@ private static void TryAutoBanCustomPlatformsTick()
         [HideFromIl2Cpp]
         private static void ResetIdentityEditors()
         {
-            isEditingName = false;
-            isEditingLevel = false;
-            isEditingFriendCode = false;
-            isEditingLocalFriendCode = false;
-            isEditingDeviceId = false;
-            isEditingGhostChatColor = false;
+            ClearAllEditingFlags();
         }
 
         [HideFromIl2Cpp]

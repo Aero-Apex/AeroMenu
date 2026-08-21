@@ -235,8 +235,8 @@ private void DrawAntiCheatTab()
 
             if (DrawPseudoInputButton(banValue, isEditingBan, 25f, 46))
             {
+                ClearAllEditingFlags();
                 isEditingBan = !isEditingBan;
-                isEditingGhostChatColor = false;
                 ResetAllBindWaits();
             }
 

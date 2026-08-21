@@ -48,16 +48,6 @@ private int currentSelfSubTab = 0;
 
 private string[] selfSubTabs = { "SPOOF", "ROLES", "MOVEMENT", "CHAT" };
 
-public static bool fakeStartCounterTroll = false;
-
-public static bool fakeStartCounterCustom = false;
-
-public static string fakeStartInput = "69";
-
-public static bool isEditingFakeStart = false;
-
-public static float customStartTimer = -1f;
-
 public static bool localRainbow = false;
 
 public static List<byte> rainbowPlayers = new List<byte>();

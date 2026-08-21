@@ -67,7 +67,7 @@ private static readonly string[] menuProfileBoolKeys = {
             "M_EnableClipboard", "M_EnableColorCommand", "M_EnableCustomNotifs", "M_EnableExtendedChat",
             "M_EnableFastChat", "M_EnableLevelSpoof", "M_EnableMenuScaleInput", "M_EspShimmerMode",
             "M_ExtendedLobby", "M_Freecam", "M_FullBright", "M_GuestExtraFeatures",
-            "M_GlitchRoomBypassShield", "M_GlitchRoomGodMode", "M_HardMenu", "M_HideRadarInMeeting", "M_HostAutoKillRandom", "M_HostAutoKillTarget",
+            "M_GlitchRoomBypassShield", "M_GlitchRoomGodMode", "M_GlitchRoomGodModeAll", "M_HardMenu", "M_HideRadarInMeeting", "M_HostAutoKillRandom", "M_HostAutoKillTarget",
             "M_KillWhileVanishedHostOnly", "M_LimitFps", "M_LobbyAllColor", "M_LobbyRainbowAll",
             "M_LocalAlwaysRed", "M_LocalFakeFCEnabled", "M_LocalFortegreen", "M_LocalNameSpoof", "M_LocalSnipeColor", "M_LockRadar", "M_LogAllRPCs",
             "M_MalformedPacketGuard", "M_MoreLobbyInfo", "M_NeverEndGame", "M_NoClip",
@@ -82,7 +82,8 @@ private static readonly string[] menuProfileBoolKeys = {
             "M_ShowReplay", "M_ShowTracers", "M_ShowWatermarkInfo", "M_SkipKillAnimation",
             "M_SkipRoleIntroAnim", "M_SpoofAprilDate", "M_SpoofGuestAccount", "M_SpoofMenuEnabled", "M_TpToCursor",
             "M_UnfixableLights", "M_UnlockCosmicubes", "M_UnlockVents", "M_UnownedSpawnGuard",
-            "M_VotekickAutoRejoin", "M_VotekickCopyCode", "M_WalkInVents", "M_WhitelistOnlyLobby", "M_WhiteTheme"
+            "M_VotekickAutoRejoin", "M_VotekickCopyCode", "M_WalkInVents", "M_WhitelistOnlyLobby", "M_WhiteTheme",
+            "M_CustomChatFloodEnabled"
         };
 
 private static readonly string[] menuProfileIntKeys = {
@@ -93,11 +94,13 @@ private static readonly string[] menuProfileIntKeys = {
             "M_BndReviveAll", "M_BndSetAllGhost", "M_BndSetAllGhostImp", "M_BndSpawn",
             "M_BndToggleCameraZoom", "M_BndToggleFreecam", "M_BndToggleFullBright", "M_BndToggleNoClip",
             "M_BndTogglePlayerInfo", "M_BndToggleSeeGhosts", "M_BndToggleSeeRoles", "M_BndToggleTracers",
+            "M_BndToggleAutoFix", "M_BndCopy",
             "M_BugRoomTimedAutoRunMinutes", "M_ChatHistoryLimit", "M_CurrentAutoHostSubTab", "M_CurrentGeneralInfoSubTab",
             "M_CurrentGeneralSubTab", "M_CurrentHostOnlySubTab", "M_CurrentPlayersSubTab", "M_CurrentSabotageSubTab",
             "M_CurrentSelfSubTab", "M_CurrentTab", "M_CurrentVisualsSubTab", "M_FpsLimit",
             "M_HostAutoKillRate", "M_HostAutoKillTargetId", "M_LobbyAllColorId", "M_LocalSnipeColorId", "M_MenuToggleKey",
-            "M_PunishmentMode", "M_SelectedSpoofMenuIndex", "M_TargetTab"
+            "M_PunishmentMode", "M_SelectedSpoofMenuIndex", "M_TargetTab",
+            "M_CustomChatFloodCount", "M_CloneFormationCount"
         };
 
 private static readonly string[] menuProfileFloatKeys = {
@@ -105,7 +108,8 @@ private static readonly string[] menuProfileFloatKeys = {
             "M_BugRoomAutoAngelIntervalSeconds", "M_EngineSpeed", "M_MenuScale", "M_MenuWindowH",
             "M_MenuWindowW", "M_MenuWindowX", "M_MenuWindowY", "M_RadarAlpha",
             "M_RadarScale", "M_RadarX", "M_RadarY", "M_ReplaySeconds",
-            "M_ReplayX", "M_ReplayY", "M_WalkSpeed"
+            "M_ReplayX", "M_ReplayY", "M_WalkSpeed",
+            "M_CloneFormationWidth"
         };
 
 private static readonly string[] menuProfileStringKeys = {

@@ -258,12 +258,8 @@ private void DrawMenuTab()
             {
                 isEditingFpsLimit = true;
                 fpsLimitInput = string.Empty;
-                isEditingName = false;
-                isEditingLevel = false;
-                isEditingFriendCode = false;
-                isEditingLocalFriendCode = false;
-                isEditingGhostChatColor = false;
-                isEditingBan = false;
+                ClearAllEditingFlags();
+                isEditingFpsLimit = true;
                 ResetAllBindWaits();
             }
             GUILayout.FlexibleSpace();
@@ -312,8 +308,8 @@ private void DrawMenuTab()
             {
                 if (DrawCustomRpcInputButton(spoofNameWidth))
                 {
+                    ClearAllEditingFlags();
                     customSpoofRpcInputFocused = true;
-                    isEditingName = isEditingLevel = isEditingFriendCode = isEditingLocalFriendCode = isEditingGhostChatColor = isEditingBan = false;
                     ResetAllBindWaits();
                 }
             }
@@ -479,6 +475,9 @@ private void ResetSlidersToDefault()
             chatHistoryLimit = 80;
             customChatSpamDelay = 2.1f;
             customChatFloodCount = 50;
+            customChatFloodEnabled = false;
+            cloneFormationCount = 8;
+            cloneFormationWidth = 1f;
             autoChatEveryoneDelay = 2.5f;
             engineSpeed = 1f;
             walkSpeed = 1f;
@@ -504,7 +503,7 @@ private void ResetSlidersToDefault()
             AutoHostStartDelaySeconds = 15f;
             AutoHostFastStartPlayers = 13;
             AutoHostFastStartDelaySeconds = 5f;
-            punishmentMode = 0;
+            punishmentMode = 1;
 
             showPlayerInfo = false;
             showEspBoxes = false;

@@ -170,7 +170,10 @@ namespace AeroMenu
                 string fieldText = string.IsNullOrEmpty(searchTabQuery) ? " " : searchTabQuery;
                 if (isEditingSearch) fieldText += "|";
                 if (GUILayout.Button(fieldText, searchFieldStyle, GUILayout.Height(28), GUILayout.ExpandWidth(true)))
-                    isEditingSearch = !isEditingSearch;
+                {
+                    ClearAllEditingFlags();
+                    isEditingSearch = true;
+                }
                 if (GUILayout.Button(L("RESET", "СБРОС"), btnStyle, GUILayout.Height(28), GUILayout.Width(70f)))
                 {
                     searchTabQuery = "";
@@ -227,6 +230,11 @@ namespace AeroMenu
                             if (GUILayout.Button(f.label + "  >", btnStyle, GUILayout.Height(24)))
                             {
                                 SetMenuTab(f.targetTab);
+                                if (f.rawName == "floodLobby")
+                                {
+                                    SetMultiTab("players", ref currentPlayersSubTab, 2, playersSubTabs.Length);
+                                    ResetPlayersTabScrolls();
+                                }
                                 isEditingSearch = false;
                             }
                             continue;

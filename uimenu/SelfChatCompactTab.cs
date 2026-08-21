@@ -215,13 +215,9 @@ private void DrawChatSettingsCompact(float columnWidth)
                 {
                     if (DrawPseudoInputButton(ghostChatColorHex, isEditingGhostChatColor, 24f, 16))
                     {
+                        ClearAllEditingFlags();
                         isEditingGhostChatColor = !isEditingGhostChatColor;
                         if (isEditingGhostChatColor) ghostChatColorHex = FilterGhostChatColorInput(ghostChatColorHex);
-                        isEditingName = false;
-                        isEditingLevel = false;
-                        isEditingFriendCode = false;
-                        isEditingLocalFriendCode = false;
-                        isEditingBan = false;
                         ResetAllBindWaits();
                     }
                     GUILayout.Space(5);
@@ -334,16 +330,12 @@ private void DrawGhostChatColorControl(float width)
             GUILayout.Label(L("Ghost Chat:", "Чат призраков:"), toggleLabelStyle11, GUILayout.Width(74), GUILayout.Height(24));
             if (DrawPseudoInputButton(ghostChatColorHex, isEditingGhostChatColor, 24f, 16))
             {
+                ClearAllEditingFlags();
                 isEditingGhostChatColor = !isEditingGhostChatColor;
                 if (isEditingGhostChatColor)
                 {
                     ghostChatColorHex = FilterGhostChatColorInput(ghostChatColorHex);
                 }
-                isEditingName = false;
-                isEditingLevel = false;
-                isEditingFriendCode = false;
-                isEditingLocalFriendCode = false;
-                isEditingBan = false;
                 ResetAllBindWaits();
             }
             if (GUILayout.Button(L("Apply", "Применить"), btnStyle, GUILayout.Width(48), GUILayout.Height(24)))

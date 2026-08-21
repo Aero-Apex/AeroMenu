@@ -70,7 +70,7 @@ private void TryKillAuraTick()
             if (localPlayer == null || localPlayer.Data == null || localPlayer.Data.Role == null) return;
             if (localPlayer.Data.IsDead) return;
             if (!RoleManager.IsImpostorRole(localPlayer.Data.RoleType) && !localPlayer.Data.Role.IsImpostor) return;
-            if (MeetingHud.Instance != null) return;
+            if (MeetingHud.Instance != null || IntroCutscene.Instance != null || ExileController.Instance != null) return;
             if (localPlayer.inVent || localPlayer.onLadder || localPlayer.inMovingPlat) return;
 
             bool hostCooldownBypass = AmongUsClient.Instance.AmHost && (noKillCooldownHostOnly || noAbilityCooldown);

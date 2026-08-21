@@ -48,7 +48,7 @@ namespace AeroMenu
         {
             public static bool Prefix(RoleManager __instance)
             {
-                AeroMenuGUI.EnsureAutoTwoImpostorsForRoleSelection();
+                try { AeroMenuGUI.EnsureAutoTwoImpostorsForRoleSelection(); } catch { }
                 if (!AeroMenuGUI.enablePreGameRoleForce ||
                     AmongUsClient.Instance == null ||
                     !AmongUsClient.Instance.AmHost ||

@@ -48,7 +48,6 @@ public void Update()
             if (isPanicked) return;
 
             TickNotificationQueue();
-            TickFakeStartCounter();
             TickAutoTwoImpostors();
             TickLocalColorOverride();
             TickLocalColorSnipe();
@@ -56,6 +55,7 @@ public void Update()
             NetworkedClones.Tick(showMenu);
 
             bool isTypingOrBinding = isEditingName || isEditingLevel || isEditingFriendCode || isEditingLocalFriendCode || isEditingGhostChatColor || isEditingBan || customChatInputFocused ||
+                                     isEditingDeviceId || isEditingFpsLimit || isEditingBugRoomTimedAutoRun || isEditingSearch ||
                                      isWaitingForBind || isWaitBindMassMorph || isWaitBindSpawnLobby ||
                                      isWaitBindDespawnLobby || isWaitBindCloseMeeting || isWaitBindInstaStart ||
                                      isWaitBindEndCrew || isWaitBindEndImp || isWaitBindEndImpDC || isWaitBindEndHnsDC ||
@@ -712,32 +712,6 @@ private static void TickFollowPlayer()
 
                 local.NetTransform.RpcSnapTo(pos);
                 nextFollowPlayerRpcAt = Time.unscaledTime + 0.08f;
-            }
-            catch { }
-        }
-
-        private static void TickFakeStartCounter()
-        {
-            if (customStartTimer > 0f || (!fakeStartCounterTroll && !fakeStartCounterCustom)) return;
-
-            try
-            {
-                if (AmongUsClient.Instance == null || !AmongUsClient.Instance.AmHost || PlayerControl.LocalPlayer == null) return;
-                GameStartManager manager = GameStartManager.Instance;
-                if (manager == null) return;
-
-                if (fakeStartCounterTroll)
-                {
-                    sbyte[] values = { -123, -111, -100, -69, -67, -52, -42, 0, 42, 52, 67, 69, 100, 111, 123 };
-                    sbyte value = values[UnityEngine.Random.Range(0, values.Length)];
-                    PlayerControl.LocalPlayer.RpcSetStartCounter(value);
-                    manager.SetStartCounter(value);
-                }
-                else if (int.TryParse(fakeStartInput, out int custom))
-                {
-                    PlayerControl.LocalPlayer.RpcSetStartCounter(custom);
-                    manager.SetStartCounter((sbyte)Mathf.Clamp(custom, -128, 127));
-                }
             }
             catch { }
         }

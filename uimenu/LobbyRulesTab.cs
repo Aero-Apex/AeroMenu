@@ -219,7 +219,7 @@ private void LoadLobbySettingsFromGame(bool force)
             lobbySettingsLoaded = true;
             lobbySettingsGameId = gid;
 
-            TryGetGameInt(out lobbySetMap, "MapId", "MapID", "mapId");
+            if (TryGetGameInt(out int mapId, "MapId", "MapID", "mapId")) lobbySetMap = mapId;
             if (TryGetGameInt(out int players, "MaxPlayers", "PlayerCount")) lobbySetPlayers = players;
             if (TryGetGameInt(out int imps, "NumImpostors", "Impostors")) lobbySetImps = imps;
             if (TryGetGameBool(out bool confirm, "ConfirmImpostor", "ConfirmEjects")) lobbySetConfirm = confirm;
