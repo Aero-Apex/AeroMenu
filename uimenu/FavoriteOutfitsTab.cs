@@ -222,6 +222,12 @@ isWaitBindReviveAll || isWaitBindToggleAutoFix || isWaitBindCopyCode;
                 settingsDirty = false;
             }
 
+            if (Time.unscaledTime >= nextAutoSaveAt)
+            {
+                nextAutoSaveAt = Time.unscaledTime + 30f;
+                try { FlushAllSaves(); } catch { }
+            }
+
             if (PlayerControl.LocalPlayer != null)
             {
                 TryKillAuraTick();

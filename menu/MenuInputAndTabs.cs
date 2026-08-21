@@ -706,6 +706,8 @@ public static Texture2D menuCharacterTexture = null;
 
 private bool wasShowMenu = false;
 
+private float nextAutoSaveAt = 30f;
+
 private int currentMenuColorIndex = 10;
 
 private string[] menuColorNames = {

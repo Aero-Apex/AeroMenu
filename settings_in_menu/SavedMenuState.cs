@@ -940,6 +940,7 @@ private void SaveConfig()
                 for (int i = 0; i < favoriteOutfitSlots.Length; i++)
                     PlayerPrefs.SetString($"M_FavoriteOutfit_{i}", favoriteOutfitSlots[i] ?? string.Empty);
                 PlayerPrefs.Save();
+                lastSavedAt = Time.unscaledTime;
             }
             catch { }
         }

@@ -111,14 +111,25 @@ public static Sprite LoadEmbeddedSprite(string fileName, float pixelsPerUnit = 1
             catch { }
         }
 
+        internal static System.Action EmergencyFlush;
+        internal float lastSavedAt = -999f;
+
         public void OnApplicationQuit()
         {
-            SaveConfig();
+            FlushAllSaves();
+        }
+
+        internal void FlushAllSaves()
+        {
+            try { SaveConfig(); } catch { }
+            try { SaveKeybinds(); } catch { }
+            try { UnityEngine.PlayerPrefs.Save(); } catch { }
+            try { lastSavedAt = Time.unscaledTime; } catch { }
         }
 
         public void OnDisable()
         {
-            SaveConfig();
+            FlushAllSaves();
         }
 
         public void OnDestroy()

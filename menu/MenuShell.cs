@@ -585,7 +585,7 @@ private void TrackAnimatedSidebarHighlight(int tab, Rect rect)
                 }
                 GUILayout.Label(microMenu ? "Aero" : menuTitleText, titleStyle);
                 GUILayout.FlexibleSpace();
-                if (GUILayout.Button("-", menuCloseButtonStyle)) showMenu = false;
+                if (GUILayout.Button("✕", menuCloseButtonStyle)) { showMenu = false; FlushAllSaves(); }
             }
             finally { GUILayout.EndHorizontal(); }
 
@@ -714,8 +714,41 @@ private void TrackAnimatedSidebarHighlight(int tab, Rect rect)
             }
             finally { GUILayout.EndArea(); }
 
+            DrawStatusBar();
+
             GUI.color = Color.white;
             GUI.DragWindow(new Rect(0, 0, 10000, 30));
+        }
+
+        private void DrawStatusBar()
+        {
+            float h = 20f;
+            Rect bar = new Rect(1f, windowRect.height - h - 1f, windowRect.width - 2f, h);
+
+            Color old = GUI.color;
+            GUI.color = new Color(0f, 0f, 0f, 0.35f);
+            GUI.DrawTexture(bar, Texture2D.whiteTexture);
+            GUI.color = old;
+
+            string keyName = menuToggleKey == KeyCode.None ? "INSERT" : menuToggleKey.ToString().ToUpperInvariant();
+            bool savedRecently = Time.unscaledTime - lastSavedAt < 2.5f;
+
+            GUIStyle leftStyle = new GUIStyle();
+            leftStyle.fontSize = 10;
+            leftStyle.fontStyle = FontStyle.Normal;
+            leftStyle.alignment = TextAnchor.MiddleLeft;
+            leftStyle.richText = true;
+            leftStyle.normal.textColor = new Color(1f, 1f, 1f, 0.55f);
+            GUI.Label(new Rect(bar.x + 10f, bar.y + 3f, bar.width * 0.6f, h - 4f),
+                $"<b>{keyName}</b> — toggle menu", leftStyle);
+
+            GUIStyle rightStyle = new GUIStyle(leftStyle);
+            rightStyle.alignment = TextAnchor.MiddleRight;
+            string rightText = savedRecently
+                ? "<color=#7CFC98>Saved ✓</color>"
+                : $"AeroMenu {Plugin.DisplayVersion}";
+            GUI.Label(new Rect(bar.x + bar.width * 0.4f, bar.y + 3f, bar.width * 0.6f - 10f, h - 4f),
+                rightText, rightStyle);
         }
 
 private void DrawMenuCharacter(float bodyX, float bodyY, float bodyW, float bodyH, float alpha)

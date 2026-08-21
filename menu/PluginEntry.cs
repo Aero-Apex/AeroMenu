@@ -161,11 +161,17 @@ namespace AeroMenu
             var guiObject = new GameObject("AeroMenu_Object");
             UnityEngine.Object.DontDestroyOnLoad(guiObject);
             guiObject.hideFlags = HideFlags.HideAndDontSave;
-            guiObject.AddComponent<AeroMenuGUI>();
+            AeroMenuGUI guiComp = guiObject.AddComponent<AeroMenuGUI>();
             guiObject.AddComponent<AeroNetGuard.NetworkGuardDriver>();
             guiObject.AddComponent<AeroDiscordPresence>();
 
             modClass = AddComponent<ModPlayer>();
+
+            AeroMenuGUI.EmergencyFlush = () => { try { guiComp.FlushAllSaves(); } catch { } };
+            AppDomain.CurrentDomain.ProcessExit += (s, e) =>
+            {
+                try { AeroMenuGUI.EmergencyFlush?.Invoke(); } catch { }
+            };
 
             var harmony = new Harmony("com.aeromenu.harmony");
             harmony.PatchAll();
