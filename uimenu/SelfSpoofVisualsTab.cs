@@ -1234,7 +1234,7 @@ public static bool IsCursorOverMenu()
         {
             try
             {
-                if (!showMenu || !hardMenu) return false;
+                if (!showMenu) return false;
                 ClampMenuWindowToScreen();
                 Vector2 guiPos = new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y);
                 return windowRect.Contains(guiPos);

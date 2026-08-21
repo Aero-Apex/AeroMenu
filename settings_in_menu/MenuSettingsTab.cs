@@ -146,12 +146,6 @@ private void DrawMenuTab()
             GUILayout.Label(L("Shows only PING / FPS / Host when watermark is off.", "Показывает только PING / FPS / хоста, когда вотермарк выключен."), menuDescStyle);
             GUILayout.Space(8);
 
-            bool prevHardMenu = hardMenu;
-            hardMenu = DrawToggle(hardMenu, L("Solid Menu (block game clicks)", "РўРІРµСЂРґРѕРµ РјРµРЅСЋ (Р±Р»РѕРє РєР»РёРєРѕРІ РїРѕ РёРіСЂРµ)"), 260);
-            if (prevHardMenu != hardMenu) menuPrefsChanged = true;
-            GUILayout.Label(L("When on, clicks over the menu stay in the menu so you can't misclick the game behind it.", "РљРѕРіРґР° РІРєР»СЋС‡РµРЅРѕ, РєР»РёРєРё РїРѕ РјРµРЅСЋ РѕСЃС‚Р°СЋС‚СЃСЏ РІ РјРµРЅСЋ вЂ” РІС‹ РЅРµ РїСЂРѕРјР°С…РЅС‘С‚РµСЃСЊ РїРѕ РёРіСЂРµ Р·Р° РЅРёРј."), menuDescStyle);
-            GUILayout.Space(8);
-
             bool prevAutoCopyCode = autoCopyCodeAndLeave;
             autoCopyCodeAndLeave = DrawToggle(autoCopyCodeAndLeave, "Copy Code On Disconnect", 260);
             if (prevAutoCopyCode != autoCopyCodeAndLeave) menuPrefsChanged = true;
@@ -755,7 +749,6 @@ private void ResetSlidersToDefault()
             enableBackground = false;
             showWatermark = true;
             showWatermarkInfo = true;
-            hardMenu = false;
             rgbMenuText = false;
             boldMenuText = true;
             EnableCustomNotifs = true;
