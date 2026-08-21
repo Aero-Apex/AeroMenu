@@ -80,19 +80,36 @@ namespace AeroMenu
         {
             internal static void Postfix(ref int __result)
             {
-                if (LobbyBehaviour.Instance == null) return;
-                __result += NetworkedClones.Live;
+                try
+                {
+                    if (LobbyBehaviour.Instance == null) return;
+                    __result += NetworkedClones.Live;
+                }
+                catch { }
             }
+        }
+
+        internal static bool InLobby()
+        {
+            try
+            {
+                return AmongUsClient.Instance != null
+                    && AmongUsClient.Instance.GameState == InnerNetClient.GameStates.Joined
+                    && LobbyBehaviour.Instance != null;
+            }
+            catch { return false; }
         }
 
         internal static void Tick(bool menuOpen)
         {
             float now = Time.unscaledTime;
 
-            if (ClickMode && !menuOpen && Ready() && Camera.main != null)
+            bool canSpawn = InLobby();
+
+            if (ClickMode && !menuOpen && canSpawn && Ready() && Camera.main != null)
                 Clicks();
 
-            if (pend.Count > 0 && now >= spawnGate && Ready())
+            if (pend.Count > 0 && canSpawn && now >= spawnGate && Ready())
             {
                 CloneJob j = pend.Dequeue();
                 spawnGate = now + 0.14f;
@@ -592,6 +609,12 @@ namespace AeroMenu
     internal static class NetworkedClonesLobbyPatch
     {
         public static void Postfix() => NetworkedClones.Forget();
+    }
+
+    [HarmonyPatch(typeof(AmongUsClient), nameof(AmongUsClient.StartGame))]
+    internal static class NetworkedClonesStartGamePatch
+    {
+        public static void Prefix() => NetworkedClones.ClearBeforeGame();
     }
 
     [HarmonyPatch(typeof(IntroCutscene), "CoBegin")]
