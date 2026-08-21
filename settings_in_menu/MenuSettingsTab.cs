@@ -291,6 +291,90 @@ private void DrawMenuTab()
             GUILayout.EndVertical();
 
             GUILayout.BeginVertical(menuCardStyle);
+            DrawMenuSectionHeader(L("INTERFACE", "ИНТЕРФЕЙС"));
+
+            bool prevStatusBar = showStatusBar;
+            showStatusBar = DrawToggle(showStatusBar, "Status Bar", 260);
+            if (prevStatusBar != showStatusBar) menuPrefsChanged = true;
+            GUILayout.Label(L("Bottom bar of the menu. Supports {key} and {version} placeholders.", "Нижняя панель меню. Поддерживает подстановки {key} и {version}."), menuDescStyle);
+            GUILayout.Space(6);
+
+            if (!isEditingStatusText) statusTextEdit = statusBarText ?? string.Empty;
+            if (DrawPseudoInputButton(statusTextEdit, isEditingStatusText, 24f, 40))
+            {
+                ClearAllEditingFlags();
+                isEditingStatusText = true;
+                statusTextEdit = statusBarText ?? string.Empty;
+            }
+            GUILayout.Space(6);
+
+            float prevOpacity = menuOpacity;
+            menuOpacity = GUILayout.HorizontalSlider(menuOpacity, 0.5f, 1f, sliderStyle, sliderThumbStyle, GUILayout.Width(260));
+            if (Mathf.Abs(prevOpacity - menuOpacity) > 0.001f) menuPrefsChanged = true;
+            GUILayout.Label(L($"Menu Opacity: {menuOpacity * 100f:0}%", $"Прозрачность меню: {menuOpacity * 100f:0}%"), menuDescStyle);
+            GUILayout.Space(6);
+
+            float prevRound = menuCornerRoundness;
+            menuCornerRoundness = GUILayout.HorizontalSlider(menuCornerRoundness, 0f, 16f, sliderStyle, sliderThumbStyle, GUILayout.Width(260));
+            if (Mathf.Abs(prevRound - menuCornerRoundness) > 0.01f) menuPrefsChanged = true;
+            GUILayout.Label(L($"Corner Roundness: {menuCornerRoundness:0}px", $"Скругление углов: {menuCornerRoundness:0}px"), menuDescStyle);
+            GUILayout.Space(6);
+
+            int prevFont = menuFontOffset;
+            menuFontOffset = Mathf.RoundToInt(GUILayout.HorizontalSlider(menuFontOffset, -2f, 4f, sliderStyle, sliderThumbStyle, GUILayout.Width(260)));
+            if (prevFont != menuFontOffset) { ApplyFontOffset(); menuPrefsChanged = true; }
+            GUILayout.Label(L($"Font Size Offset: {menuFontOffset:+0;-0;0}", $"Размер шрифта: {menuFontOffset:+0;-0;0}"), menuDescStyle);
+            GUILayout.Space(6);
+
+            bool prevAnims = tabAnimationsEnabled;
+            tabAnimationsEnabled = DrawToggle(tabAnimationsEnabled, "Tab Animations", 260);
+            if (prevAnims != tabAnimationsEnabled) menuPrefsChanged = true;
+            GUILayout.Space(6);
+
+            float prevAutoSave = autoSaveInterval;
+            autoSaveInterval = Mathf.Round(GUILayout.HorizontalSlider(autoSaveInterval, 10f, 120f, sliderStyle, sliderThumbStyle, GUILayout.Width(260)) / 5f) * 5f;
+            if (Mathf.Abs(prevAutoSave - autoSaveInterval) > 0.1f) menuPrefsChanged = true;
+            GUILayout.Label(L($"Autosave Interval: {autoSaveInterval:0}s", $"Интервал автосохранения: {autoSaveInterval:0}с"), menuDescStyle);
+            GUILayout.Space(6);
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(L("Default Tab", "Вкладка при открытии"), toggleLabelStyle, GUILayout.Height(24), GUILayout.Width(110));
+            if (GUILayout.Button("<", btnStyle, GUILayout.Width(28), GUILayout.Height(24)))
+            {
+                defaultMenuTab--; if (defaultMenuTab < 0) defaultMenuTab = tabNames.Length - 1;
+                menuPrefsChanged = true;
+            }
+            GUILayout.Label(tabNames[Mathf.Clamp(defaultMenuTab, 0, tabNames.Length - 1)], centeredActiveTabStyle != null ? centeredActiveTabStyle : activeTabStyle, GUILayout.Width(90), GUILayout.Height(24));
+            if (GUILayout.Button(">", btnStyle, GUILayout.Width(28), GUILayout.Height(24)))
+            {
+                defaultMenuTab++; if (defaultMenuTab >= tabNames.Length) defaultMenuTab = 0;
+                menuPrefsChanged = true;
+            }
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+            GUILayout.Space(6);
+
+            if (!isEditingAccentHex) accentHexEdit = customAccentHex ?? string.Empty;
+            GUILayout.BeginHorizontal();
+            if (DrawPseudoInputButton(accentHexEdit, isEditingAccentHex, 24f, 30))
+            {
+                ClearAllEditingFlags();
+                isEditingAccentHex = true;
+                accentHexEdit = customAccentHex ?? string.Empty;
+            }
+            if (GUILayout.Button(L("APPLY", "ПРИМЕНИТЬ"), btnStyle, GUILayout.Width(70), GUILayout.Height(24)))
+            {
+                customAccentHex = accentHexEdit;
+                ApplyCustomAccentHex();
+                settingsDirty = true;
+            }
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+            GUILayout.Label(L("Custom accent color as hex (e.g. AA77FF). Leave empty to use presets.", "Свой цвет акцента в hex (например AA77FF). Оставь пустым для пресетов."), menuDescStyle);
+
+            GUILayout.EndVertical();
+
+            GUILayout.BeginVertical(menuCardStyle);
             DrawMenuSectionHeader(L("SPOOF MENU IDENTITY", "РџРћР”РњР•РќРђ РњР•РќР®"));
             bool prevSpoofMenuEnabled = SpoofMenuEnabled;
             SpoofMenuEnabled = DrawToggle(SpoofMenuEnabled, "Enable Fake RPC", 260);
@@ -478,6 +562,16 @@ private void ResetSlidersToDefault()
             customChatFloodEnabled = false;
             cloneFormationCount = 8;
             cloneFormationWidth = 1f;
+            showStatusBar = true;
+            statusBarText = "{key} — toggle menu";
+            menuOpacity = 1f;
+            menuCornerRoundness = 12f;
+            menuFontOffset = 0;
+            ApplyFontOffset();
+            tabAnimationsEnabled = true;
+            autoSaveInterval = 30f;
+            defaultMenuTab = 0;
+            customAccentHex = "";
             autoChatEveryoneDelay = 2.5f;
             engineSpeed = 1f;
             walkSpeed = 1f;

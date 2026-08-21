@@ -817,6 +817,15 @@ private void SaveConfig()
                 PlayerPrefs.SetInt("M_CustomChatFloodCount", Mathf.Clamp(customChatFloodCount, 5, 100));
                 PlayerPrefs.SetInt("M_CloneFormationCount", Mathf.Clamp(cloneFormationCount, 1, NetworkedClones.MaxCloneCount));
                 PlayerPrefs.SetFloat("M_CloneFormationWidth", Mathf.Clamp(cloneFormationWidth, 0.25f, 5f));
+                SaveBool("M_ShowStatusBar", showStatusBar);
+                PlayerPrefs.SetString("M_StatusBarText", statusBarText ?? string.Empty);
+                PlayerPrefs.SetFloat("M_MenuOpacity", Mathf.Clamp(menuOpacity, 0.5f, 1f));
+                PlayerPrefs.SetFloat("M_CornerRoundness", Mathf.Clamp(menuCornerRoundness, 0f, 16f));
+                PlayerPrefs.SetInt("M_FontOffset", Mathf.Clamp(menuFontOffset, -2, 4));
+                SaveBool("M_TabAnimations", tabAnimationsEnabled);
+                PlayerPrefs.SetFloat("M_AutoSaveInterval", Mathf.Clamp(autoSaveInterval, 10f, 120f));
+                PlayerPrefs.SetInt("M_DefaultTab", Mathf.Clamp(defaultMenuTab, 0, tabNames.Length - 1));
+                PlayerPrefs.SetString("M_CustomAccentHex", customAccentHex ?? string.Empty);
                 SaveBool("M_EnableClipboard", enableClipboard);
                 SaveBool("M_EnableChatBubbleCopy", enableChatBubbleCopy);
                 SaveBool("M_EnableChatNickCopy", enableChatNickCopy);

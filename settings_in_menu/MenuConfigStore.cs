@@ -192,6 +192,15 @@ private void LoadConfig()
                 customChatFloodCount = Mathf.Clamp(LoadInt("M_CustomChatFloodCount", customChatFloodCount), 5, 100);
                 cloneFormationCount = Mathf.Clamp(LoadInt("M_CloneFormationCount", cloneFormationCount), 1, NetworkedClones.MaxCloneCount);
                 cloneFormationWidth = Mathf.Clamp(LoadFloat("M_CloneFormationWidth", cloneFormationWidth), 0.25f, 5f);
+                showStatusBar = LoadBool("M_ShowStatusBar", showStatusBar);
+                statusBarText = PlayerPrefs.GetString("M_StatusBarText", "{key} — toggle menu");
+                menuOpacity = Mathf.Clamp(LoadFloat("M_MenuOpacity", menuOpacity), 0.5f, 1f);
+                menuCornerRoundness = Mathf.Clamp(LoadFloat("M_CornerRoundness", menuCornerRoundness), 0f, 16f);
+                menuFontOffset = Mathf.Clamp(LoadInt("M_FontOffset", menuFontOffset), -2, 4);
+                tabAnimationsEnabled = LoadBool("M_TabAnimations", tabAnimationsEnabled);
+                autoSaveInterval = Mathf.Clamp(LoadFloat("M_AutoSaveInterval", autoSaveInterval), 10f, 120f);
+                defaultMenuTab = Mathf.Clamp(LoadInt("M_DefaultTab", defaultMenuTab), 0, tabNames.Length - 1);
+                customAccentHex = PlayerPrefs.GetString("M_CustomAccentHex", string.Empty);
                 enableClipboard = LoadBool("M_EnableClipboard", enableClipboard);
                 enableChatBubbleCopy = LoadBool("M_EnableChatBubbleCopy", enableChatBubbleCopy);
                 enableChatNickCopy = LoadBool("M_EnableChatNickCopy", enableChatNickCopy);

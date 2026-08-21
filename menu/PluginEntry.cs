@@ -43,8 +43,8 @@ namespace AeroMenu
     [BepInPlugin("com.aeromenu.menu", "AeroMenu", Plugin.PluginVersion)]
     public class Plugin : BasePlugin
     {
-        public const string PluginVersion = "1.0.0";
-        public const string DisplayVersion = "v1";
+        public const string PluginVersion = "1.0.1";
+        public const string DisplayVersion = "v1.0.1";
         public static ModPlayer modClass;
 
         public static Plugin Instance { get; private set; } = null!;

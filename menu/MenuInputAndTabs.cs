@@ -708,6 +708,20 @@ private bool wasShowMenu = false;
 
 private float nextAutoSaveAt = 30f;
 
+public static bool showStatusBar = true;
+public static string statusBarText = "{key} — toggle menu";
+public static float menuOpacity = 1f;
+public static float menuCornerRoundness = 12f;
+public static int menuFontOffset = 0;
+public static bool tabAnimationsEnabled = true;
+public static float autoSaveInterval = 30f;
+public static int defaultMenuTab = 0;
+public static string customAccentHex = "";
+
+public static string statusTextEdit = "";
+
+public static string accentHexEdit = "";
+
 private int currentMenuColorIndex = 10;
 
 private string[] menuColorNames = {

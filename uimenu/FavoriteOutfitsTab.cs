@@ -73,7 +73,11 @@ isWaitBindReviveAll || isWaitBindToggleAutoFix || isWaitBindCopyCode;
             if (!isTypingOrBinding && !gameBlockingInput && Input.GetKeyDown(activeMenuKey))
             {
                 showMenu = !showMenu;
-                if (!showMenu) SaveConfig();
+                if (showMenu)
+                {
+                    if (defaultMenuTab >= 0 && defaultMenuTab < tabNames.Length) SetMenuTab(defaultMenuTab);
+                }
+                else SaveConfig();
             }
 
             if (!isTypingOrBinding && !gameBlockingInput)
@@ -224,7 +228,7 @@ isWaitBindReviveAll || isWaitBindToggleAutoFix || isWaitBindCopyCode;
 
             if (Time.unscaledTime >= nextAutoSaveAt)
             {
-                nextAutoSaveAt = Time.unscaledTime + 30f;
+                nextAutoSaveAt = Time.unscaledTime + Mathf.Clamp(autoSaveInterval, 10f, 120f);
                 try { FlushAllSaves(); } catch { }
             }
 

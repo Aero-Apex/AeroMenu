@@ -83,7 +83,7 @@ private static readonly string[] menuProfileBoolKeys = {
             "M_SkipRoleIntroAnim", "M_SpoofAprilDate", "M_SpoofGuestAccount", "M_SpoofMenuEnabled", "M_TpToCursor",
             "M_UnfixableLights", "M_UnlockCosmicubes", "M_UnlockVents", "M_UnownedSpawnGuard",
             "M_VotekickAutoRejoin", "M_VotekickCopyCode", "M_WalkInVents", "M_WhitelistOnlyLobby", "M_WhiteTheme",
-            "M_CustomChatFloodEnabled"
+            "M_CustomChatFloodEnabled", "M_ShowStatusBar", "M_TabAnimations"
         };
 
 private static readonly string[] menuProfileIntKeys = {
@@ -100,7 +100,7 @@ private static readonly string[] menuProfileIntKeys = {
             "M_CurrentSelfSubTab", "M_CurrentTab", "M_CurrentVisualsSubTab", "M_FpsLimit",
             "M_HostAutoKillRate", "M_HostAutoKillTargetId", "M_LobbyAllColorId", "M_LocalSnipeColorId", "M_MenuToggleKey",
             "M_PunishmentMode", "M_SelectedSpoofMenuIndex", "M_TargetTab",
-            "M_CustomChatFloodCount", "M_CloneFormationCount"
+            "M_CustomChatFloodCount", "M_CloneFormationCount", "M_FontOffset", "M_DefaultTab"
         };
 
 private static readonly string[] menuProfileFloatKeys = {
@@ -109,11 +109,12 @@ private static readonly string[] menuProfileFloatKeys = {
             "M_MenuWindowW", "M_MenuWindowX", "M_MenuWindowY", "M_RadarAlpha",
             "M_RadarScale", "M_RadarX", "M_RadarY", "M_ReplaySeconds",
             "M_ReplayX", "M_ReplayY", "M_WalkSpeed",
-            "M_CloneFormationWidth"
+            "M_CloneFormationWidth", "M_MenuOpacity", "M_CornerRoundness", "M_AutoSaveInterval"
         };
 
 private static readonly string[] menuProfileStringKeys = {
-            "M_CustomSpoofRpcInput", "M_DeviceId", "M_LobbyWhitelist", "M_LocalFakeFC", "M_SpoofName"
+            "M_CustomSpoofRpcInput", "M_DeviceId", "M_LobbyWhitelist", "M_LocalFakeFC", "M_SpoofName",
+            "M_StatusBarText", "M_CustomAccentHex"
         };
 
 private string MenuProfileDir()

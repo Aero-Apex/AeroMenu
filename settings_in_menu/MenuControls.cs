@@ -314,7 +314,11 @@ private void UpdateMenuTrackTex(Texture2D tex, Color color)
             Color headerText = RgbMenuTextActive() ? accent : (isLightTheme ? new Color(0.15f, 0.15f, 0.15f, 1f) : accent);
             Color inputBgCol = isLightTheme ? new Color(1f, 1f, 1f, 0.86f) : new Color(0.08f, 0.08f, 0.08f, 0.85f);
 
-            texWindowBg = MakeRoundedTex(64, darkBg, 12f);
+            float round = Mathf.Clamp(menuCornerRoundness, 0f, 16f);
+            float opacity = Mathf.Clamp(menuOpacity, 0.35f, 1f);
+            darkBg.a *= opacity;
+
+            texWindowBg = MakeRoundedTex(64, darkBg, round);
             texSidebarBg = MakeRoundedTex(64, sidebarBg, 0f);
             texBoxBg = MakeRoundedTex(64, boxBg, 0f);
             texBtnBg = MakeRoundedTex(64, btnCol, 6f);
@@ -330,11 +334,13 @@ private void UpdateMenuTrackTex(Texture2D tex, Color color)
             UpdateRoundedGradientTex(texAccent, accent, controlAccent, 6f);
             UpdateRoundedGradientTex(texSliderThumb, accent, controlAccent, 10f);
 
-            texMenuCard = MakeRoundedTex(64, isLightTheme ? new Color(1f, 1f, 1f, 0.32f) : new Color(1f, 1f, 1f, 0.045f), 12f);
+            Color cardCol = isLightTheme ? new Color(1f, 1f, 1f, 0.32f * opacity) : new Color(1f, 1f, 1f, 0.045f * opacity);
+            texMenuCard = MakeRoundedTex(64, cardCol, round);
+            int cardBorder = Mathf.Max(1, Mathf.RoundToInt(round));
 
             menuCardStyle = new GUIStyle();
             menuCardStyle.normal.background = texMenuCard;
-            menuCardStyle.border = CreateRectOffset(12, 12, 12, 12);
+            menuCardStyle.border = CreateRectOffset(cardBorder, cardBorder, cardBorder, cardBorder);
             menuCardStyle.padding = CreateRectOffset(16, 16, 14, 16);
             menuCardStyle.margin = CreateRectOffset(0, 0, 0, 12);
 
@@ -401,7 +407,8 @@ private void UpdateMenuTrackTex(Texture2D tex, Color color)
             windowStyle.fontStyle = menuTextStyle;
             windowStyle.fontSize = 14;
             windowStyle.padding = CreateRectOffset(0, 0, 0, 0);
-            windowStyle.border = CreateRectOffset(12, 12, 12, 12);
+            int winBorder = Mathf.Max(1, Mathf.RoundToInt(round));
+            windowStyle.border = CreateRectOffset(winBorder, winBorder, winBorder, winBorder);
 
             boxStyle = new GUIStyle();
             boxStyle.normal.background = texBoxBg;
@@ -541,9 +548,57 @@ private void UpdateMenuTrackTex(Texture2D tex, Color color)
             GUI.skin.horizontalScrollbarThumb.normal.background = null;
             GUI.skin.label.normal.textColor = textMain;
             GUI.skin.box.normal.textColor = textMain;
-
             InitCachedMenuStyles(isLightTheme);
+
+            BuildFontBaseline();
+            ApplyFontOffset();
+
+            appliedRoundness = menuCornerRoundness;
+            appliedOpacity = menuOpacity;
+
             stylesInited = true;
+        }
+
+        private static Dictionary<string, int> fontBaselines;
+        private static float appliedRoundness = -1f;
+        private static float appliedOpacity = -1f;
+
+        private static void BuildFontBaseline()
+        {
+            fontBaselines = new Dictionary<string, int>();
+            try
+            {
+                foreach (FieldInfo f in typeof(AeroMenuGUI).GetFields(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic))
+                {
+                    if (f.FieldType != typeof(GUIStyle)) continue;
+                    GUIStyle s = f.GetValue(null) as GUIStyle;
+                    if (s == null || s.fontSize <= 0) continue;
+                    fontBaselines[f.Name] = s.fontSize;
+                }
+            }
+            catch { }
+        }
+
+        internal static void ApplyFontOffset()
+        {
+            if (fontBaselines == null || fontBaselines.Count == 0) return;
+            try
+            {
+                foreach (KeyValuePair<string, int> kv in fontBaselines)
+                {
+                    FieldInfo f = typeof(AeroMenuGUI).GetField(kv.Key, BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+                    GUIStyle s = f?.GetValue(null) as GUIStyle;
+                    if (s == null) continue;
+                    s.fontSize = Mathf.Clamp(kv.Value + menuFontOffset, 8, 26);
+                }
+            }
+            catch { }
+        }
+
+        internal static void InvalidateStyleCaches()
+        {
+            appliedRoundness = -1f;
+            appliedOpacity = -1f;
         }
 
 private void InitCachedMenuStyles(bool isLightTheme)

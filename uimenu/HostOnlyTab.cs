@@ -108,6 +108,10 @@ public static bool isEditingName = false;
 
 public static bool isEditingSearch = false;
 
+public static bool isEditingStatusText = false;
+
+public static bool isEditingAccentHex = false;
+
 public static bool isEditingFriendCode = false;
 
 public static bool isEditingLocalFriendCode = false;

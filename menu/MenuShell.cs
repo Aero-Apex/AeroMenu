@@ -58,8 +58,10 @@ public void OnGUI()
 
             if (!stylesInited || windowStyle == null || safeLineStyle == null || sliderStyle == null || sliderThumbStyle == null || knobStyle == null)
                 InitStyles();
+            else if (appliedRoundness != menuCornerRoundness || appliedOpacity != menuOpacity)
+                InitStyles();
 
-            bool isTyping = isEditingName || isEditingLevel || isEditingFriendCode || isEditingLocalFriendCode || isEditingDeviceId || isEditingGhostChatColor || isEditingBan || isEditingFpsLimit || isEditingBugRoomTimedAutoRun || isEditingSearch;
+            bool isTyping = isEditingName || isEditingLevel || isEditingFriendCode || isEditingLocalFriendCode || isEditingDeviceId || isEditingGhostChatColor || isEditingBan || isEditingFpsLimit || isEditingBugRoomTimedAutoRun || isEditingSearch || isEditingStatusText || isEditingAccentHex;
             bool isCustomSpoofRpcEditing = customSpoofRpcInputFocused && selectedSpoofMenuIndex == spoofMenuNames.Length - 1;
             bool isBinding = isWaitingForBind || isWaitBindMassMorph || isWaitBindSpawnLobby || isWaitBindDespawnLobby ||
                   isWaitBindCloseMeeting || isWaitBindInstaStart || isWaitBindEndCrew || isWaitBindEndImp ||
@@ -82,7 +84,7 @@ public void OnGUI()
                     {
                         ApplyBugRoomTimedAutoRunInput();
                     }
-                    isEditingName = isEditingLevel = isEditingFriendCode = isEditingLocalFriendCode = isEditingDeviceId = isEditingGhostChatColor = isEditingBan = isEditingBugRoomTimedAutoRun = isEditingSearch = false;
+                    isEditingName = isEditingLevel = isEditingFriendCode = isEditingLocalFriendCode = isEditingDeviceId = isEditingGhostChatColor = isEditingBan = isEditingBugRoomTimedAutoRun = isEditingSearch = isEditingStatusText = isEditingAccentHex = false;
                     customSpoofRpcInputFocused = false;
                     ResetAllBindWaits();
                     e.Use();
@@ -158,6 +160,8 @@ public void OnGUI()
                     else if (isEditingFpsLimit && HandleClipboardShortcut(e, ref fpsLimitInput, 3)) { fpsLimitInput = FilterFpsLimitInput(fpsLimitInput); }
                     else if (isEditingBugRoomTimedAutoRun && HandleClipboardShortcut(e, ref bugRoomTimedAutoRunInput, 2)) { bugRoomTimedAutoRunInput = FilterMinuteInput(bugRoomTimedAutoRunInput); }
                     else if (isEditingSearch && HandleClipboardShortcut(e, ref searchTabQuery, 80)) { }
+                    else if (isEditingStatusText && HandleClipboardShortcut(e, ref statusBarText, 60)) { }
+                    else if (isEditingAccentHex && HandleClipboardShortcut(e, ref customAccentHex, 7)) { }
                     else if (e.keyCode == KeyCode.Backspace)
                     {
                         if (isEditingBan && banInput.Length > 0) { banInput = banInput.Substring(0, banInput.Length - 1); }
@@ -170,6 +174,8 @@ public void OnGUI()
                         if (isEditingFpsLimit && fpsLimitInput.Length > 0) { fpsLimitInput = fpsLimitInput.Substring(0, fpsLimitInput.Length - 1); }
                         if (isEditingBugRoomTimedAutoRun && bugRoomTimedAutoRunInput.Length > 0) { bugRoomTimedAutoRunInput = bugRoomTimedAutoRunInput.Substring(0, bugRoomTimedAutoRunInput.Length - 1); }
                         if (isEditingSearch && searchTabQuery.Length > 0) { searchTabQuery = searchTabQuery.Substring(0, searchTabQuery.Length - 1); }
+                        if (isEditingStatusText && statusBarText.Length > 0) { statusBarText = statusBarText.Substring(0, statusBarText.Length - 1); }
+                        if (isEditingAccentHex && customAccentHex.Length > 0) { customAccentHex = customAccentHex.Substring(0, customAccentHex.Length - 1); }
                         e.Use();
                     }
                     else if ((e.keyCode == KeyCode.Return || e.keyCode == KeyCode.KeypadEnter) && isEditingFpsLimit)
@@ -187,6 +193,13 @@ public void OnGUI()
                         isEditingSearch = false;
                         e.Use();
                     }
+                    else if ((e.keyCode == KeyCode.Return || e.keyCode == KeyCode.KeypadEnter) && (isEditingStatusText || isEditingAccentHex))
+                    {
+                        if (isEditingAccentHex) ApplyCustomAccentHex();
+                        isEditingStatusText = isEditingAccentHex = false;
+                        settingsDirty = true;
+                        e.Use();
+                    }
                     else if (e.character != 0 && e.character != '\n' && e.character != '\r')
                     {
                         if (isEditingBan) { banInput += e.character; }
@@ -199,6 +212,8 @@ public void OnGUI()
                         if (isEditingFpsLimit && e.character >= '0' && e.character <= '9') { fpsLimitInput = FilterFpsLimitInput((fpsLimitInput ?? "") + e.character); }
                         if (isEditingBugRoomTimedAutoRun && e.character >= '0' && e.character <= '9') { bugRoomTimedAutoRunInput = FilterMinuteInput((bugRoomTimedAutoRunInput ?? "") + e.character); }
                         if (isEditingSearch && searchTabQuery.Length < 80) { searchTabQuery += e.character; }
+                        if (isEditingStatusText && statusBarText.Length < 60) { statusBarText += e.character; }
+                        if (isEditingAccentHex && customAccentHex.Length < 7) { char c = char.ToUpperInvariant(e.character); if (Uri.IsHexDigit(c)) customAccentHex += c; }
                         e.Use();
                     }
                 }
@@ -521,7 +536,7 @@ private void SetMenuTab(int tab)
         {
             isEditingName = isEditingLevel = isEditingFriendCode = isEditingLocalFriendCode =
             isEditingDeviceId = isEditingGhostChatColor = isEditingBan = isEditingFpsLimit =
-            isEditingBugRoomTimedAutoRun = isEditingSearch = false;
+            isEditingBugRoomTimedAutoRun = isEditingSearch = isEditingStatusText = isEditingAccentHex = false;
             customSpoofRpcInputFocused = false;
         }
 
@@ -558,10 +573,14 @@ private void TrackAnimatedSidebarHighlight(int tab, Rect rect)
 
         private void DrawAeroMenu(int windowID)
         {
-            if (Event.current.type == EventType.Repaint && tabTransitionProgress < 1f)
+            if (tabTransitionProgress < 1f)
             {
-                tabTransitionProgress += Time.unscaledDeltaTime * 8f;
-                if (tabTransitionProgress >= 1f) { tabTransitionProgress = 1f; currentTab = targetTabIndex; }
+                if (!tabAnimationsEnabled) { tabTransitionProgress = 1f; currentTab = targetTabIndex; }
+                else if (Event.current.type == EventType.Repaint)
+                {
+                    tabTransitionProgress += Time.unscaledDeltaTime * 8f;
+                    if (tabTransitionProgress >= 1f) { tabTransitionProgress = 1f; currentTab = targetTabIndex; }
+                }
             }
 
             if (enableBackground && customMenuBg != null)
@@ -720,8 +739,22 @@ private void TrackAnimatedSidebarHighlight(int tab, Rect rect)
             GUI.DragWindow(new Rect(0, 0, 10000, 30));
         }
 
+        internal void ApplyCustomAccentHex()
+        {
+            try
+            {
+                string hex = (customAccentHex ?? string.Empty).Trim().TrimStart('#');
+                if (hex.Length != 6) return;
+                if (!ColorUtility.TryParseHtmlString("#" + hex, out Color c)) return;
+                UpdateAccentColor(c);
+            }
+            catch { }
+        }
+
         private void DrawStatusBar()
         {
+            if (!showStatusBar) return;
+
             float h = 20f;
             Rect bar = new Rect(1f, windowRect.height - h - 1f, windowRect.width - 2f, h);
 
@@ -733,14 +766,17 @@ private void TrackAnimatedSidebarHighlight(int tab, Rect rect)
             string keyName = menuToggleKey == KeyCode.None ? "INSERT" : menuToggleKey.ToString().ToUpperInvariant();
             bool savedRecently = Time.unscaledTime - lastSavedAt < 2.5f;
 
+            string leftText = (statusBarText ?? string.Empty);
+            if (leftText.Length == 0) leftText = "{key} — toggle menu";
+            leftText = leftText.Replace("{key}", keyName).Replace("{version}", Plugin.DisplayVersion);
+
             GUIStyle leftStyle = new GUIStyle();
             leftStyle.fontSize = 10;
             leftStyle.fontStyle = FontStyle.Normal;
             leftStyle.alignment = TextAnchor.MiddleLeft;
             leftStyle.richText = true;
             leftStyle.normal.textColor = new Color(1f, 1f, 1f, 0.55f);
-            GUI.Label(new Rect(bar.x + 10f, bar.y + 3f, bar.width * 0.6f, h - 4f),
-                $"<b>{keyName}</b> — toggle menu", leftStyle);
+            GUI.Label(new Rect(bar.x + 10f, bar.y + 3f, bar.width * 0.6f, h - 4f), leftText, leftStyle);
 
             GUIStyle rightStyle = new GUIStyle(leftStyle);
             rightStyle.alignment = TextAnchor.MiddleRight;
