@@ -21,11 +21,21 @@ namespace AeroMenu
                 if (lp == null || lp.Data == null || lp.Data.IsDead) return;
                 if (MeetingHud.Instance != null) return;
 
+                // server/vanilla ended the vanish (meeting, timeout, role change) -> re-request
+                if (networkedActive && !lp.shouldAppearInvisible)
+                    networkedActive = false;
+
                 if (Time.unscaledTime < nextCheck) return;
 
                 Apply(lp);
             }
             catch { }
+        }
+
+        internal static void ResetForNewRound()
+        {
+            networkedActive = false;
+            nextCheck = 0f;
         }
 
         private static void Apply(PlayerControl lp)

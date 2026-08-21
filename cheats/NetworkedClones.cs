@@ -610,13 +610,21 @@ namespace AeroMenu
     [HarmonyPatch(typeof(LobbyBehaviour), "Start")]
     internal static class NetworkedClonesLobbyPatch
     {
-        public static void Postfix() => NetworkedClones.Forget();
+        public static void Postfix()
+        {
+            NetworkedClones.Forget();
+            InvisibleSelf.ResetForNewRound();
+        }
     }
 
     [HarmonyPatch(typeof(AmongUsClient), nameof(AmongUsClient.StartGame))]
     internal static class NetworkedClonesStartGamePatch
     {
-        public static void Prefix() => NetworkedClones.ClearBeforeGame();
+        public static void Prefix()
+        {
+            NetworkedClones.ClearBeforeGame();
+            InvisibleSelf.ResetForNewRound();
+        }
     }
 
     [HarmonyPatch(typeof(IntroCutscene), "CoBegin")]
