@@ -17,7 +17,7 @@ public sealed class AeroDiscordPresence : MonoBehaviour
     // Discord Application ID shown as the game title in Rich Presence.
     // Change it in BepInEx/config/AeroMenu.cfg (AeroMenu.Discord -> AppId) with your own
     // application ID from https://discord.com/developers/applications
-    internal static long AppId = 1524895268028547163L;
+    internal static long AppId = 1540319887463948380L;
     private const float Tick = 2f;
 
     // Image asset key from your Discord application's Rich Presence Art Assets.
