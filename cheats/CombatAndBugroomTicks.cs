@@ -73,8 +73,8 @@ private void TryKillAuraTick()
             if (MeetingHud.Instance != null || IntroCutscene.Instance != null || ExileController.Instance != null) return;
             if (localPlayer.inVent || localPlayer.onLadder || localPlayer.inMovingPlat) return;
 
-            bool hostCooldownBypass = AmongUsClient.Instance.AmHost && (noKillCooldownHostOnly || noAbilityCooldown);
-            if (!hostCooldownBypass && GetRemainingKillCooldown(localPlayer.PlayerId) > 0.05f) return;
+            bool cooldownBypass = noKillCooldownHostOnly || noAbilityCooldown;
+            if (!cooldownBypass && GetRemainingKillCooldown(localPlayer.PlayerId) > 0.05f) return;
 
             killAuraTimer += Time.deltaTime;
             if (killAuraTimer < 0.10f) return;

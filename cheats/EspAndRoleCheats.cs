@@ -638,8 +638,7 @@ private static bool TrySetCooldownMember(object target, float value)
                     AeroMenuGUI.lastKillTimestamps[__instance.PlayerId] = Time.time;
                     float cooldown = AeroMenuGUI.GetConfiguredKillCooldown();
                     if (target != null && target.protectedByGuardianId >= 0) cooldown *= 0.5f;
-                    if (AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost &&
-                        __instance == PlayerControl.LocalPlayer &&
+                    if (__instance == PlayerControl.LocalPlayer &&
                         (AeroMenuGUI.noKillCooldownHostOnly || AeroMenuGUI.noAbilityCooldown))
                         cooldown = 0f;
                     __instance.killTimer = Mathf.Max(0f, cooldown);
@@ -698,7 +697,6 @@ private static bool TrySetCooldownMember(object target, float value)
                 try
                 {
                     if (!AeroMenuGUI.noKillCooldownHostOnly && !AeroMenuGUI.noAbilityCooldown) return;
-                    if (AmongUsClient.Instance == null || !AmongUsClient.Instance.AmHost) return;
                     if (__instance != PlayerControl.LocalPlayer) return;
                     time = 0f;
                 }
