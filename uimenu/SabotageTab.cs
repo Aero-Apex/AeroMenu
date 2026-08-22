@@ -92,8 +92,27 @@ private void DrawSabotageAnimationTab()
             }
         }
 
-private void DrawSabotagesTab()
+        private void DrawSabotagesTab()
         {
+            GUILayout.BeginVertical(menuCardStyle);
+            DrawMenuSectionHeader("CRAZY MODE");
+            GUILayout.BeginHorizontal();
+            bool prevCrazy = CrazyMode.enabled;
+            bool newCrazy = DrawToggle(CrazyMode.enabled, "Auto-cycle ALL sabotages + slam every door every 2.5s", 0);
+            if (newCrazy != prevCrazy)
+            {
+                CrazyMode.SetEnabled(newCrazy);
+                settingsDirty = true;
+                ShowNotification(newCrazy ?
+                    "<color=#FF2222>[CRAZY]</color> CRAZY MODE ENGAGED!" :
+                    "<color=#00FF00>[CRAZY]</color> Crazy Mode off.");
+            }
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+            GUILayout.Label("Bind a key under GENERAL → BINDS → Crazy Mode. Works without host.", menuDescStyle);
+            GUILayout.EndVertical();
+            GUILayout.Space(8);
+
             float outerContentWidth = Mathf.Floor(Mathf.Max(130f, GetMenuWorkWidth(150f, 760f) - 44f));
             float cardPaddingWidth = menuCardStyle != null && menuCardStyle.padding != null
                 ? menuCardStyle.padding.left + menuCardStyle.padding.right

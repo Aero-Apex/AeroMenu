@@ -84,7 +84,8 @@ private static void LoadKeybinds()
                 if (PlayerPrefs.HasKey("M_BndSetAllGhostImp")) bindSetAllGhostImp = (KeyCode)PlayerPrefs.GetInt("M_BndSetAllGhostImp");
                 if (PlayerPrefs.HasKey("M_BndReviveAll")) bindReviveAll = (KeyCode)PlayerPrefs.GetInt("M_BndReviveAll");
                 if (PlayerPrefs.HasKey("M_BndToggleAutoFix")) bindToggleAutoFix = (KeyCode)PlayerPrefs.GetInt("M_BndToggleAutoFix");
-            if (PlayerPrefs.HasKey("M_BndCopy")) bindCopyCode = (KeyCode)PlayerPrefs.GetInt("M_BndCopy");
+                if (PlayerPrefs.HasKey("M_BndCopy")) bindCopyCode = (KeyCode)PlayerPrefs.GetInt("M_BndCopy");
+                if (PlayerPrefs.HasKey("M_BndCrazy")) bindCrazyMode = (KeyCode)PlayerPrefs.GetInt("M_BndCrazy");
                 SyncKeybindDictionary();
             }
             catch { }
@@ -202,6 +203,7 @@ private void LoadConfig()
                 defaultMenuTab = Mathf.Clamp(LoadInt("M_DefaultTab", defaultMenuTab), 0, tabNames.Length - 1);
                 customAccentHex = PlayerPrefs.GetString("M_CustomAccentHex", string.Empty);
                 InvisibleSelf.enabled = LoadBool("M_InvisibleSelf", InvisibleSelf.enabled);
+                CrazyMode.enabled = LoadBool("M_CrazyMode", CrazyMode.enabled);
                 enableClipboard = LoadBool("M_EnableClipboard", enableClipboard);
                 enableChatBubbleCopy = LoadBool("M_EnableChatBubbleCopy", enableChatBubbleCopy);
                 enableChatNickCopy = LoadBool("M_EnableChatNickCopy", enableChatNickCopy);

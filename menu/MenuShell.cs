@@ -70,7 +70,7 @@ public void OnGUI()
                   isWaitBindKillAll || isWaitBindCallMeeting || isWaitBindTogglePlayerInfo ||
                   isWaitBindToggleSeeRoles || isWaitBindToggleSeeGhosts || isWaitBindToggleFullBright ||
                   isWaitBindKickAll || isWaitBindFixSabotages || isWaitBindSetAllGhost ||
-                  isWaitBindSetAllGhostImp || isWaitBindReviveAll || isWaitBindToggleAutoFix || isWaitBindCopyCode;
+                  isWaitBindSetAllGhostImp || isWaitBindReviveAll || isWaitBindToggleAutoFix || isWaitBindCopyCode || isWaitBindCrazyMode;
 
             if (e != null && e.isKey && e.type == EventType.KeyDown)
             {
@@ -119,6 +119,7 @@ public void OnGUI()
                     else if (isWaitBindReviveAll) { bindReviveAll = e.keyCode; }
                     else if (isWaitBindToggleAutoFix) { bindToggleAutoFix = e.keyCode; }
                     else if (isWaitBindCopyCode) { bindCopyCode = e.keyCode; }
+                    else if (isWaitBindCrazyMode) { bindCrazyMode = e.keyCode; }
 
                     ResetAllBindWaits();
                     SaveKeybinds();

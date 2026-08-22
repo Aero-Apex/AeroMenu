@@ -1038,6 +1038,7 @@ private bool DrawToggle(bool value, string text, int width = 0, string animKey =
                 DrawKeybindRow("All -> Ghost Imp:", ref bindSetAllGhostImp, ref isWaitBindSetAllGhostImp);
                 DrawKeybindRow("Auto Fix Sabotages:", ref bindToggleAutoFix, ref isWaitBindToggleAutoFix);
                 DrawKeybindRow("Copy Code:", ref bindCopyCode, ref isWaitBindCopyCode);
+                DrawKeybindRow("Crazy Mode:", ref bindCrazyMode, ref isWaitBindCrazyMode);
             }
             finally { GUILayout.EndVertical(); }
         }
@@ -1106,6 +1107,7 @@ private void ResetAllBindWaits()
             isWaitBindReviveAll = false;
             isWaitBindToggleAutoFix = false;
             isWaitBindCopyCode = false;
+            isWaitBindCrazyMode = false;
         }
 
 private void DrawGeneralTab()

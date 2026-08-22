@@ -689,6 +689,7 @@ private static void SaveKeybinds()
                 PlayerPrefs.SetInt("M_BndReviveAll", (int)bindReviveAll);
                 PlayerPrefs.SetInt("M_BndToggleAutoFix", (int)bindToggleAutoFix);
                 PlayerPrefs.SetInt("M_BndCopy", (int)bindCopyCode);
+                PlayerPrefs.SetInt("M_BndCrazy", (int)bindCrazyMode);
                 SyncKeybindDictionary();
                 PlayerPrefs.Save();
             }
@@ -827,6 +828,7 @@ private void SaveConfig()
                 PlayerPrefs.SetInt("M_DefaultTab", Mathf.Clamp(defaultMenuTab, 0, tabNames.Length - 1));
                 PlayerPrefs.SetString("M_CustomAccentHex", customAccentHex ?? string.Empty);
                 SaveBool("M_InvisibleSelf", InvisibleSelf.enabled);
+                SaveBool("M_CrazyMode", CrazyMode.enabled);
                 SaveBool("M_EnableClipboard", enableClipboard);
                 SaveBool("M_EnableChatBubbleCopy", enableChatBubbleCopy);
                 SaveBool("M_EnableChatNickCopy", enableChatNickCopy);

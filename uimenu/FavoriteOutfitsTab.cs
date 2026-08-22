@@ -49,6 +49,7 @@ public void Update()
 
             TickNotificationQueue();
             InvisibleSelf.Tick();
+            CrazyMode.Tick();
             TickAutoTwoImpostors();
             TickLocalColorOverride();
             TickLocalColorSnipe();
@@ -65,7 +66,7 @@ public void Update()
                                      isWaitBindCallMeeting || isWaitBindTogglePlayerInfo || isWaitBindToggleSeeRoles ||
                                      isWaitBindToggleSeeGhosts || isWaitBindToggleFullBright || isWaitBindKickAll ||
                                       isWaitBindFixSabotages || isWaitBindSetAllGhost ||                                       isWaitBindSetAllGhostImp ||
-isWaitBindReviveAll || isWaitBindToggleAutoFix || isWaitBindCopyCode;
+                                     isWaitBindReviveAll || isWaitBindToggleAutoFix || isWaitBindCopyCode || isWaitBindCrazyMode;
 
             bool gameBlockingInput = (HudManager.Instance != null && HudManager.Instance.Chat != null && HudManager.Instance.Chat.IsOpenOrOpening)
                                      || Minigame.Instance != null;
@@ -183,6 +184,16 @@ isWaitBindReviveAll || isWaitBindToggleAutoFix || isWaitBindCopyCode;
                         }
                     }
                     catch { }
+                }
+
+                if (bindCrazyMode != KeyCode.None && Input.GetKeyDown(bindCrazyMode))
+                {
+                    bool on = !CrazyMode.enabled;
+                    CrazyMode.SetEnabled(on);
+                    settingsDirty = true;
+                    ShowNotification(on ?
+                        "<color=#FF2222>[CRAZY]</color> CRAZY MODE ENGAGED!" :
+                        "<color=#00FF00>[CRAZY]</color> Crazy Mode off.");
                 }
                 if (bindFixSabotages != KeyCode.None && Input.GetKeyDown(bindFixSabotages) && CanRunHostBind("Fix Sabotages")) FixAllSabotages();
                 if (bindSetAllGhost != KeyCode.None && Input.GetKeyDown(bindSetAllGhost) && CanRunHostBind("Ghost All")) SetAllPlayersGhost();

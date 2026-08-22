@@ -94,7 +94,7 @@ private static readonly string[] menuProfileIntKeys = {
             "M_BndReviveAll", "M_BndSetAllGhost", "M_BndSetAllGhostImp", "M_BndSpawn",
             "M_BndToggleCameraZoom", "M_BndToggleFreecam", "M_BndToggleFullBright", "M_BndToggleNoClip",
             "M_BndTogglePlayerInfo", "M_BndToggleSeeGhosts", "M_BndToggleSeeRoles", "M_BndToggleTracers",
-            "M_BndToggleAutoFix", "M_BndCopy",
+            "M_BndToggleAutoFix", "M_BndCopy", "M_BndCrazy",
             "M_BugRoomTimedAutoRunMinutes", "M_ChatHistoryLimit", "M_CurrentAutoHostSubTab", "M_CurrentGeneralInfoSubTab",
             "M_CurrentGeneralSubTab", "M_CurrentHostOnlySubTab", "M_CurrentPlayersSubTab", "M_CurrentSabotageSubTab",
             "M_CurrentSelfSubTab", "M_CurrentTab", "M_CurrentVisualsSubTab", "M_FpsLimit",

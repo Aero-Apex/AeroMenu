@@ -341,6 +341,10 @@ public static KeyCode bindReviveAll = KeyCode.None;
 public static KeyCode bindToggleAutoFix = KeyCode.U;
         public static KeyCode bindCopyCode = KeyCode.None;
 
+public static KeyCode bindCrazyMode = KeyCode.None;
+
+public static bool isWaitBindCrazyMode = false;
+
 public static readonly HashSet<byte> VanillaRpcIds = new HashSet<byte>
         {
             0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,

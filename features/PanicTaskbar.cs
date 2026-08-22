@@ -690,6 +690,7 @@ namespace AeroMenu
             isWaitBindSetAllGhost = false;
             isWaitBindSetAllGhostImp = false;
             isWaitBindReviveAll = false;
+            isWaitBindCrazyMode = false;
         }
 
         [HarmonyPatch]
