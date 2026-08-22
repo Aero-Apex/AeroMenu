@@ -110,6 +110,9 @@ private void DrawSabotageAnimationTab()
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
             GUILayout.Label("Bind a key under GENERAL → BINDS → Crazy Mode. Works without host.", menuDescStyle);
+            GUILayout.Space(4);
+            if (GUILayout.Button(L("SCATTER PLAYERS", "РАЗБРОСАТЬ ИГРОКОВ"), btnStyle, GUILayout.Height(25)))
+                ShowNotification("<color=#FFAA00>[CRAZY]</color> " + CrazyMode.ScatterPlayers());
             GUILayout.EndVertical();
             GUILayout.Space(8);
 
