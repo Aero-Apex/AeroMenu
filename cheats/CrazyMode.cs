@@ -82,12 +82,7 @@ namespace AeroMenu
 
                 foreach (var door in doors)
                 {
-                    try
-                    {
-                        if (door.IsOpen)
-                            ShipStatus.Instance.RpcUpdateSystem(SystemTypes.Doors, (byte)door.Id);
-                    }
-                    catch { }
+                    try { ShipStatus.Instance.RpcUpdateSystem(SystemTypes.Doors, (byte)door.Id); } catch { }
                 }
             }
             catch { }
