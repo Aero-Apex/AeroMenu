@@ -11,6 +11,7 @@ namespace AeroMenu
     {
         internal static bool enabled = false;
         private static float nextAt = 0f;
+        private static float nextDoorAt = 0f;
         private static int lastIdx = -1;
 
         private static readonly SystemTypes[] chaosSabos =
@@ -65,12 +66,38 @@ namespace AeroMenu
                 }
             }
             catch { }
+
+            AutoRecloseDoors();
+        }
+
+        private static void AutoRecloseDoors()
+        {
+            try
+            {
+                if (Time.unscaledTime < nextDoorAt) return;
+                nextDoorAt = Time.unscaledTime + 0.7f;
+
+                var doors = ShipStatus.Instance.AllDoors;
+                if (doors == null) return;
+
+                foreach (var door in doors)
+                {
+                    try
+                    {
+                        if (door.IsOpen)
+                            ShipStatus.Instance.RpcUpdateSystem(SystemTypes.Doors, (byte)door.Id);
+                    }
+                    catch { }
+                }
+            }
+            catch { }
         }
 
         internal static string SetEnabled(bool on)
         {
             enabled = on;
             nextAt = 0f;
+            nextDoorAt = 0f;
             lastIdx = -1;
             if (!on) RepairAllChaos();
             return on ? "CRAZY MODE ENGAGED!" : "Crazy Mode off — everything repaired.";
@@ -79,6 +106,7 @@ namespace AeroMenu
         internal static void ResetForNewRound()
         {
             nextAt = 0f;
+            nextDoorAt = 0f;
             lastIdx = -1;
         }
 
