@@ -12,16 +12,6 @@ namespace AeroMenu
         internal static bool enabled = false;
         private static float nextAt = 0f;
         private static float nextDoorAt = 0f;
-        private static int lastIdx = -1;
-
-        private static readonly SystemTypes[] chaosSabos =
-        {
-            SystemTypes.Reactor,
-            SystemTypes.Laboratory,
-            SystemTypes.HeliSabotage,
-            SystemTypes.LifeSupp,
-            SystemTypes.Comms
-        };
 
         internal static void Tick()
         {
@@ -29,33 +19,27 @@ namespace AeroMenu
             {
                 if (!enabled) return;
                 if (AmongUsClient.Instance == null || AmongUsClient.Instance.GameState != InnerNetClient.GameStates.Started) return;
-                if (ShipStatus.Instance == null) return;
+                ShipStatus ss = ShipStatus.Instance;
+                if (ss == null) return;
                 if (MeetingHud.Instance != null || ExileController.Instance != null) return;
                 if (Time.unscaledTime < nextAt) return;
                 nextAt = Time.unscaledTime + 2.5f;
 
-                int pool = chaosSabos.Length + 2; // extra slots: lights + mushroom mixup
-                int idx = UnityEngine.Random.Range(0, pool);
-                if (idx == lastIdx) idx = (idx + 1) % pool;
-                lastIdx = idx;
+                // fire EVERY sabotage at once — total meltdown
+                try { ss.RpcUpdateSystem(SystemTypes.Reactor, 128); } catch { }
+                try { ss.RpcUpdateSystem(SystemTypes.Laboratory, 128); } catch { }
+                try { ss.RpcUpdateSystem(SystemTypes.HeliSabotage, 128); } catch { }
+                try { ss.RpcUpdateSystem(SystemTypes.LifeSupp, 128); } catch { }
+                try { ss.RpcUpdateSystem(SystemTypes.Comms, 128); } catch { }
 
-                if (idx == chaosSabos.Length)
-                {
-                    // lights: random broken switches
-                    byte b = 4;
-                    for (int i = 0; i < 5; i++) if (UnityEngine.Random.value > 0.5f) b |= (byte)(1 << i);
-                    try { ShipStatus.Instance.RpcUpdateSystem(SystemTypes.Electrical, (byte)(b | 128)); } catch { }
-                }
-                else if (idx == chaosSabos.Length + 1)
-                {
-                    try { ShipStatus.Instance.RpcUpdateSystem(SystemTypes.MushroomMixupSabotage, 0); } catch { }
-                }
-                else
-                {
-                    try { ShipStatus.Instance.RpcUpdateSystem(chaosSabos[idx], 128); } catch { }
-                }
+                // lights: random broken switches
+                byte b = 4;
+                for (int i = 0; i < 5; i++) if (UnityEngine.Random.value > 0.5f) b |= (byte)(1 << i);
+                try { ss.RpcUpdateSystem(SystemTypes.Electrical, (byte)(b | 128)); } catch { }
 
-                // seal everything via the watchdog right after each sabotage
+                try { ss.RpcUpdateSystem(SystemTypes.MushroomMixupSabotage, 0); } catch { }
+
+                // seal everything via the watchdog right after each wave
                 nextDoorAt = 0f;
             }
             catch { }
@@ -100,7 +84,6 @@ namespace AeroMenu
             enabled = on;
             nextAt = 0f;
             nextDoorAt = 0f;
-            lastIdx = -1;
             if (!on) RepairAllChaos();
             return on ? "CRAZY MODE ENGAGED!" : "Crazy Mode off — everything repaired.";
         }
@@ -109,7 +92,6 @@ namespace AeroMenu
         {
             nextAt = 0f;
             nextDoorAt = 0f;
-            lastIdx = -1;
         }
 
         internal static void RepairAllChaos()
