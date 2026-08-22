@@ -55,15 +55,8 @@ namespace AeroMenu
                     try { ShipStatus.Instance.RpcUpdateSystem(chaosSabos[idx], 128); } catch { }
                 }
 
-                // slam every airlock for maximum chaos
-                var doors = ShipStatus.Instance.AllDoors;
-                if (doors != null)
-                {
-                    foreach (var door in doors)
-                    {
-                        try { ShipStatus.Instance.RpcUpdateSystem(SystemTypes.Doors, (byte)door.Id); } catch { }
-                    }
-                }
+                // seal everything via the watchdog right after each sabotage
+                nextDoorAt = 0f;
             }
             catch { }
 
@@ -78,11 +71,25 @@ namespace AeroMenu
                 nextDoorAt = Time.unscaledTime + 0.7f;
 
                 var doors = ShipStatus.Instance.AllDoors;
-                if (doors == null) return;
+                if (doors == null || doors.Length == 0) return;
+
+                HashSet<SystemTypes> rooms = new HashSet<SystemTypes>();
 
                 foreach (var door in doors)
                 {
-                    try { ShipStatus.Instance.RpcUpdateSystem(SystemTypes.Doors, (byte)door.Id); } catch { }
+                    // instant local close so your screen shows it immediately
+                    try { door.SetDoorway(false); } catch { }
+
+                    // networked close through the vanilla impostor path
+                    try
+                    {
+                        if (!rooms.Contains(door.Room))
+                        {
+                            rooms.Add(door.Room);
+                            ShipStatus.Instance.RpcCloseDoorsOfType(door.Room);
+                        }
+                    }
+                    catch { }
                 }
             }
             catch { }
