@@ -73,8 +73,25 @@ private static string GetLobbyWhitelistKey(PlayerControl pc)
 public static bool IsLobbyWhitelisted(PlayerControl pc)
         {
             if (IsBuiltInProtected(pc)) return true;
-            string key = GetLobbyWhitelistKey(pc);
-            return !string.IsNullOrEmpty(key) && lobbyWhitelist.Contains(key);
+            if (pc == null || pc.Data == null) return false;
+
+            try
+            {
+                string puid = GetPlayerPuid(pc);
+                if (!string.IsNullOrWhiteSpace(puid) && puid != "Unknown" && lobbyWhitelist.Contains("puid:" + puid.Trim()))
+                    return true;
+            }
+            catch { }
+
+            try
+            {
+                string fc = GetDisplayedFriendCode(pc.Data, string.Empty);
+                if (!string.IsNullOrWhiteSpace(fc) && fc != "Hidden" && fc != "Unknown" && lobbyWhitelist.Contains("fc:" + fc.Trim()))
+                    return true;
+            }
+            catch { }
+
+            return false;
         }
 
 private static bool IsLobbyWhitelistedIdentity(string name, string fc, string puid)

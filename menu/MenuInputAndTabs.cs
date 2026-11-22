@@ -280,7 +280,7 @@ private int currentGeneralSubTab = 0;
 
 private int currentGeneralInfoSubTab = 0;
 
-private static readonly string[] generalSubTabs = { L("INFORMATION", "ИНФОРМАЦИЯ"), L("KEYBINDS", "БИНДЫ") }
+private static readonly string[] generalSubTabs = { L("INFORMATION", "ИНФОРМАЦИЯ"), L("KEYBINDS", "БИНДЫ"), L("EXTRAS", "ДОП. ФУНКЦИИ") }
 
 ;
 
@@ -848,9 +848,9 @@ public static bool FlippedSkeld
                 try
                 {
                     if (AmongUsClient.Instance.ShipPrefabs == null || AmongUsClient.Instance.ShipPrefabs.Count <= 3) return;
-                    var temp = AmongUsClient.Instance.ShipPrefabs[3];
-                    AmongUsClient.Instance.ShipPrefabs[3] = AmongUsClient.Instance.ShipPrefabs[0];
-                    AmongUsClient.Instance.ShipPrefabs[0] = temp;
+                    var temp = AmongUsClient.Instance.ShipPrefabs.get_Item(3);
+                    AmongUsClient.Instance.ShipPrefabs.set_Item(3, AmongUsClient.Instance.ShipPrefabs.get_Item(0));
+                    AmongUsClient.Instance.ShipPrefabs.set_Item(0, temp);
                     isSkeldFlipped = value;
                 }
                 catch { }

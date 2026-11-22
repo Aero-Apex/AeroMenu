@@ -108,7 +108,7 @@ public static bool TryHostAeroMurderPlayer(PlayerControl target)
                         (byte)RpcCalls.MurderPlayer,
                         SendOption.Reliable,
                         AmongUsClient.Instance.GetClientIdFromCharacter(receiver));
-                    writer.WriteNetObject(target);
+                    InnerNet.MessageExtensions.WriteNetObject(writer, target);
                     writer.Write((int)MurderResultFlags.Succeeded);
                     AmongUsClient.Instance.FinishRpcImmediately(writer);
                 }

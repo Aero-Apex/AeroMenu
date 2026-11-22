@@ -96,7 +96,8 @@ private void LoadConfig()
             try
             {
                 spoofLevelString = Plugin.SpoofedLevel.Value;
-                enableLevelSpoof = uint.TryParse(spoofLevelString, out uint spoofLevel) && spoofLevel > 0;
+                enableLevelSpoof = Plugin.EnableLevelSpoofConfig.Value &&
+                                   uint.TryParse(spoofLevelString, out uint spoofLevel) && spoofLevel > 0;
                 enableFriendCodeSpoof = Plugin.EnableFriendCodeSpoofConfig.Value;
                 spoofFriendCodeInput = Plugin.SpoofFriendCodeConfig.Value;
                 enablePlatformSpoof = Plugin.EnablePlatformSpoof.Value;
@@ -201,6 +202,8 @@ private void LoadConfig()
                 autoSaveInterval = Mathf.Clamp(LoadFloat("M_AutoSaveInterval", autoSaveInterval), 10f, 120f);
                 defaultMenuTab = Mathf.Clamp(LoadInt("M_DefaultTab", defaultMenuTab), 0, tabNames.Length - 1);
                 customAccentHex = PlayerPrefs.GetString("M_CustomAccentHex", string.Empty);
+                if (!string.IsNullOrWhiteSpace(customAccentHex)) ApplyCustomAccentHex();
+                menuScale = Mathf.Clamp(LoadFloat("M_MenuScale", menuScale), 0.65f, 1.75f);
                 enableClipboard = LoadBool("M_EnableClipboard", enableClipboard);
                 enableChatBubbleCopy = LoadBool("M_EnableChatBubbleCopy", enableChatBubbleCopy);
                 enableChatNickCopy = LoadBool("M_EnableChatNickCopy", enableChatNickCopy);
@@ -354,6 +357,7 @@ private void LoadConfig()
                 currentAutoHostSubTab = Mathf.Clamp(LoadInt("M_CurrentAutoHostSubTab", currentAutoHostSubTab), 0, autoHostSubTabs.Length - 1);
                 tabTransitionProgress = 1f;
                 SyncKeybindDictionary();
+                LoadExtras();
                 if (PlayerPrefs.HasKey("M_SpoofName")) customNameInput = PlayerPrefs.GetString("M_SpoofName");
             }
             catch { }

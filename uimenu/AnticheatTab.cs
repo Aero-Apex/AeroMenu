@@ -60,7 +60,12 @@ private void UpdateRoomPlayers()
                         if (playerName.Length > 18) playerName = playerName.Substring(0, 15) + "...";
 
                         int level = 1;
-                        try { level = (int)player.Data.PlayerLevel + 1; } catch { }
+                        try
+                        {
+                            uint rawLevel = player.Data.PlayerLevel;
+                            if (rawLevel != uint.MaxValue && rawLevel < 10000) level = (int)rawLevel + 1;
+                        }
+                        catch { }
 
                         RoomPlayerActionEntry entry;
                         if (count < roomPlayers.Count)
@@ -435,7 +440,7 @@ private static void WriteVentUpdate(MessageWriter batch, MessageWriter msg)
             batch.WritePacked(ShipStatus.Instance.NetId);
             batch.Write((byte)RpcCalls.UpdateSystem);
             batch.Write((byte)SystemTypes.Ventilation);
-            batch.WriteNetObject(PlayerControl.LocalPlayer);
+            InnerNet.MessageExtensions.WriteNetObject(batch, PlayerControl.LocalPlayer);
             batch.Write(msg, false);
             batch.EndMessage();
         }

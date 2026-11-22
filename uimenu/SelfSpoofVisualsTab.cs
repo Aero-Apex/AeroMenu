@@ -359,6 +359,7 @@ private void TryAutoBanBrokenFriendCodeTick()
                 {
                     brokenFcScanTimer = 0f;
                     brokenFcPunishedOwners.Clear();
+                    platformSpoofPunishedOwners.Clear();
                     return;
                 }
 
@@ -369,7 +370,10 @@ private void TryAutoBanBrokenFriendCodeTick()
                 }
 
                 if (PlayerControl.AllPlayerControls.Count <= 1)
+                {
                     brokenFcPunishedOwners.Clear();
+                    platformSpoofPunishedOwners.Clear();
+                }
 
                 brokenFcScanTimer += Time.deltaTime;
                 if (brokenFcScanTimer < 0.8f) return;
@@ -409,6 +413,7 @@ private void TryAutoKickLowLevelTick()
                 {
                     lowLevelKickScanTimer = 0f;
                     lowLevelKickPunishedOwners.Clear();
+                    platformSpoofPunishedOwners.Clear();
                     return;
                 }
 
@@ -419,7 +424,10 @@ private void TryAutoKickLowLevelTick()
                 }
 
                 if (PlayerControl.AllPlayerControls.Count <= 1)
+                {
                     lowLevelKickPunishedOwners.Clear();
+                    platformSpoofPunishedOwners.Clear();
+                }
 
                 lowLevelKickScanTimer += Time.deltaTime;
                 if (lowLevelKickScanTimer < 0.8f) return;
@@ -639,6 +647,7 @@ private static void TryAutoBanCustomPlatformsTick()
                     AmongUsClient.Instance == null || !AmongUsClient.Instance.AmHost || PlayerControl.AllPlayerControls == null)
                 {
                     platformBanScanTimer = 0f;
+                    platformSpoofPunishedOwners.Clear();
                     return;
                 }
 

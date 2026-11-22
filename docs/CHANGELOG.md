@@ -1,5 +1,38 @@
 ﻿# Changelog
 
+## Unreleased
+
+### Added
+
+- Added a prebuilt `AeroMenu.dll` (compiled against Among Us 2026.9.29 / BepInEx IL2CPP) in the repository root.
+- Added 60 new optional features in **General → EXTRAS**, grouped into 12 categories (visual overlays, info panels, local tweaks, host tools, player tools, utility, panels, meeting, lobby, cosmetics, diagnostics, automation). Every option is saved independently.
+- Added an EXTRAS hub that isolates each feature group so one failing group cannot break the menu or the game.
+- Added `.github/workflows/build-dll.yml` and `docs/BUILDING.md` explaining how to compile `AeroMenu.dll` (the game's interop assemblies are not committed).
+
+### Fixed
+
+- "Auto-Ban Broken FriendCode (Host)" now respects its saved setting instead of always banning (the guard option was a permanently-null `readonly` field).
+- Whitelist-only lobbies no longer kick players whose friend code is whitelisted but whose PUID is not.
+- Lobby teleport detection now actually runs; it was completely dead code.
+- Position sanity patch now normalizes the authoritative network sync fields, not just the rendered transform.
+- Fixed malformed-packet "ban sender" targeting client 0 (the host) when the sender dictionary is empty.
+- Fixed SetColor/SetName RPC validation reading a nonexistent 4-byte netId prefix.
+- Vote-kick bans are de-duplicated when both anti-cheat paths fire.
+- Auto-host now honors the configured load-wait grace period and force-start bypass.
+- Fixed swapped Engineer/Scientist role option names in forced-role logic.
+- Auto-two-impostors now restores the previous role-forcing state when disabled.
+- Guardian Angel auto-protect now applies the picked target instead of whichever player is nearest.
+- Auto-kill no longer wastes attempts on dead players.
+- Replay trails are cleared on round/map change.
+- Bots no longer reuse the local player's color.
+- Chat history size 5-20 is no longer silently overwritten with 80.
+- Hotkeys no longer fire while typing in the status bar or accent hex fields.
+- Custom accent color is now re-applied after config load/profile load.
+- Menu scale is now loaded and applied instead of being silently ignored.
+- Menu toggle key can now actually be cleared.
+- Clicking an already-active sub-tab no longer resets the scroll position.
+- Platform-spoof punishment state is now cleared like the other anti-cheat states.
+
 ## v1.4.5 — 2026-07-29
 
 ### Changed

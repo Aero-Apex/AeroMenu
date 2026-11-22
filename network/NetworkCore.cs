@@ -412,11 +412,17 @@ public class ModPlayer : MonoBehaviour
                     _ = new LateTask(delegate
                     {
                         DestroyableSingleton<HudManager>.Instance.Notifier.AddDisconnectMessage("<#ffff00>Got crash attempt - " + reason);
-                        if (banMalformedPacketSender)
+                        // LastJoin is only written by the legacy code path below the early
+                        // `return true`, so it is normally empty. Never ban the default
+                        // KeyValuePair (Key == 0) when no real sender was recorded.
+                        if (banMalformedPacketSender && HandleMessage.LastJoin.Count > 0)
                         {
                             KeyValuePair<int, float> keyValuePair = HandleMessage.LastJoin.OrderBy((KeyValuePair<int, float> pair) => pair.Value).FirstOrDefault();
-                            AeroMenuGUI.RegisterAntiCheatDisconnectNotice(keyValuePair.Key, $"Client {keyValuePair.Key}", $"Malformed packet: {reason}", true);
-		                    AmongUsClient.Instance.KickPlayer(keyValuePair.Key, ban: true);
+                            if (keyValuePair.Key >= 0)
+                            {
+                                AeroMenuGUI.RegisterAntiCheatDisconnectNotice(keyValuePair.Key, $"Client {keyValuePair.Key}", $"Malformed packet: {reason}", true);
+                                AmongUsClient.Instance.KickPlayer(keyValuePair.Key, ban: true);
+                            }
                         }
                     }, 0.1f);
                     _ = new LateTask(delegate

@@ -51,8 +51,29 @@ namespace AeroMenu
         {
             try
             {
-                List<int> free = AeroMenuGUI.GetFreeColorIds();
-                if (free != null && free.Count > 0) return free[UnityEngine.Random.Range(0, free.Count)];
+                if (AeroMenuGUI.allowDuplicateColors)
+                    return UnityEngine.Random.Range(0, Palette.PlayerColors.Length);
+
+                HashSet<int> used = new HashSet<int>();
+                if (PlayerControl.AllPlayerControls != null)
+                {
+                    foreach (PlayerControl pc in PlayerControl.AllPlayerControls)
+                    {
+                        if (pc == null || pc.Data == null || pc.Data.Disconnected) continue;
+                        try
+                        {
+                            int cid = pc.Data.DefaultOutfit != null ? pc.Data.DefaultOutfit.ColorId : -1;
+                            if (cid >= 0 && cid < Palette.PlayerColors.Length) used.Add(cid);
+                        }
+                        catch { }
+                    }
+                }
+                foreach (Bot b in bots) used.Add(b.ColorId);
+
+                List<int> free = new List<int>();
+                for (int i = 0; i < Palette.PlayerColors.Length; i++)
+                    if (!used.Contains(i)) free.Add(i);
+                if (free.Count > 0) return free[UnityEngine.Random.Range(0, free.Count)];
             }
             catch { }
             return UnityEngine.Random.Range(0, Palette.PlayerColors.Length);

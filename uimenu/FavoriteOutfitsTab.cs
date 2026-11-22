@@ -56,6 +56,7 @@ public void Update()
 
             bool isTypingOrBinding = isEditingName || isEditingLevel || isEditingFriendCode || isEditingLocalFriendCode || isEditingGhostChatColor || isEditingBan || customChatInputFocused ||
                                      isEditingDeviceId || isEditingFpsLimit || isEditingBugRoomTimedAutoRun || isEditingSearch ||
+                                     isEditingStatusText || isEditingAccentHex ||
                                      isWaitingForBind || isWaitBindMassMorph || isWaitBindSpawnLobby ||
                                      isWaitBindDespawnLobby || isWaitBindCloseMeeting || isWaitBindInstaStart ||
                                      isWaitBindEndCrew || isWaitBindEndImp || isWaitBindEndImpDC || isWaitBindEndHnsDC ||
@@ -68,6 +69,8 @@ isWaitBindReviveAll || isWaitBindToggleAutoFix || isWaitBindCopyCode;
 
             bool gameBlockingInput = (HudManager.Instance != null && HudManager.Instance.Chat != null && HudManager.Instance.Chat.IsOpenOrOpening)
                                      || Minigame.Instance != null;
+
+            TickExtras(isTypingOrBinding || gameBlockingInput);
 
             KeyCode activeMenuKey = menuToggleKey == KeyCode.None ? KeyCode.Insert : menuToggleKey;
             if (!isTypingOrBinding && !gameBlockingInput && Input.GetKeyDown(activeMenuKey))

@@ -49,6 +49,26 @@ Some features are completely local, while others interact with the current lobby
 | **Chat** | Extended chat, history, clipboard, whispers, filters, colors, spam/flood and logging |
 | **Sabotages** | Trigger/repair sabotages, vents, doors and room controls |
 | **Menu** | Themes, backgrounds, RGB accents, notifications, profiles, keybinds, scaling and deep UI customization |
+| **EXTRAS (60)** | 60 extra toggles/tools in **General → EXTRAS**: crosshair, FPS/compass/distance overlays, info panels, HUD/FOV/cursor tweaks, host tools, player tools, chat macros, meeting/lobby automation, diagnostics and more |
+
+### 🧩 EXTRAS tab (60 features)
+
+Open **General → EXTRAS** for 60 additional, individually saved options across 12 groups:
+
+1. **Visual overlays** — crosshair, FPS counter, compass, player distance, session clock.
+2. **Info panels** — room code, player counts, task progress, meeting timer, connection info.
+3. **Local tweaks** — hide HUD, no vignette, custom FOV, free cursor, fullscreen.
+4. **Host tools** — freeze players, kill-cooldown override, auto end game, kick no-friend-code, mute all.
+5. **Player tools** — TP-to-cursor, push/pull, target speed, auto revive, spin.
+6. **Utility** — auto-copy room code on join, screenshot hotkey, chat macros, config backup, auto rejoin.
+7. **Panels** — task list, role chart, player status, hotkey reference, FPS graph.
+8. **Meeting** — ejection countdown, auto skip vote, auto close meeting, auto report body, meeting cam.
+9. **Lobby** — lobby timer, auto start at player count, name-pattern kick, rules preset, room code in status bar.
+10. **Cosmetics (local)** — name suffix, rainbow name, player scale, cosmetic spin, color lock.
+11. **Diagnostics** — frame-time graph, FPS min/max, memory usage, build info, open config folder.
+12. **Automation** — auto open doors, auto fix lights, auto close doors, auto-fill bots, auto refresh lobby.
+
+Host features require host permissions; cosmetic/visual features are local only.
 
 ### 🔎 Search everything
 
@@ -171,10 +191,17 @@ Replace the old `BepInEx/plugins/AeroMenu.dll` with the DLL from the newest rele
 The project targets **.NET 6**.
 
 ```powershell
-dotnet build .\AeroMenu.slnx -c Release
+dotnet build .\AeroMenu.slnx -c Release -p:AmongUsDir="C:\Program Files (x86)\Steam\steamapps\common\Among Us"
 ```
 
 Local Among Us and BepInEx assemblies are resolved through `AmongUsDir`.
+
+A **prebuilt `AeroMenu.dll` is included** in the repository root,
+compiled against Among Us **2026.9.29** / BepInEx IL2CPP. Copy it to
+`Among Us/BepInEx/plugins/AeroMenu.dll`. If your game version differs, rebuild with
+the command above or use `./build-dll.sh "/path/to/Among Us"` — see
+[docs/BUILDING.md](docs/BUILDING.md) for details. The `docs/build-dll-workflow.yml` workflow can also build it in CI once copied to
+`.github/workflows/` (requires a token with `workflow` scope).
 
 ## 🖥️ Compatibility
 

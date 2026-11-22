@@ -189,7 +189,7 @@ public static class AmongUsClientUtils
                     GameManager netObjParent = GameManagerCreator.CreateGameManager(GameOptionsManager.Instance.CurrentGameOptions.GameMode);
                     __instance.Spawn(netObjParent);
                     int index = ((AmongUsClient.Instance.TutorialMapId == 0 && AprilFoolsMode.ShouldFlipSkeld()) ? 3 : AmongUsClient.Instance.TutorialMapId);
-                    AmongUsClient.Instance.ShipLoadingAsyncHandle = AmongUsClient.Instance.ShipPrefabs[index].InstantiateAsync(null, false);
+                    AmongUsClient.Instance.ShipLoadingAsyncHandle = AmongUsClient.Instance.ShipPrefabs.get_Item(index).InstantiateAsync(null, false);
                     yield return AmongUsClient.Instance.ShipLoadingAsyncHandle;
                     AsyncOperationHandle<GameObject> test = AmongUsClient.Instance.ShipLoadingAsyncHandle;
                     GameObject result = test.Result;
@@ -659,8 +659,6 @@ private static void SaveKeybinds()
         {
             try
             {
-                if (menuToggleKey == KeyCode.None) menuToggleKey = KeyCode.Insert;
-
                 PlayerPrefs.SetInt("M_MenuToggleKey", (int)menuToggleKey);
                 PlayerPrefs.SetInt("M_BndMagnet", (int)bindMagnetCursor);
                 PlayerPrefs.SetInt("M_BndMMorph", (int)bindMassMorph);
@@ -948,6 +946,7 @@ private void SaveConfig()
                 PlayerPrefs.SetString("M_SpoofName", customNameInput);
                 for (int i = 0; i < favoriteOutfitSlots.Length; i++)
                     PlayerPrefs.SetString($"M_FavoriteOutfit_{i}", favoriteOutfitSlots[i] ?? string.Empty);
+                SaveExtras();
                 PlayerPrefs.Save();
                 lastSavedAt = Time.unscaledTime;
             }

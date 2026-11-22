@@ -1,0 +1,47 @@
+name: Build AeroMenu.dll
+
+# This workflow compiles the mod, but the Among Us / BepInEx reference
+# assemblies are NOT committed (they are proprietary game files).
+# Configure a repository secret or artifact source before using it. See docs/BUILDING.md.
+
+on:
+  workflow_dispatch:
+    inputs:
+      amongus-dir:
+        description: 'Path (on the runner) containing the BepInEx/interop assemblies'
+        required: true
+        default: 'C:\AmongUs'
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET 6
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '6.0.x'
+
+      - name: Restore BepInEx interop assemblies
+        shell: pwsh
+        run: |
+          # The game assemblies cannot be redistributed here. Point this at a
+          # private artifact / secret storage you control, then copy the whole
+          # BepInEx folder into the path supplied in the workflow input.
+          $dest = "${{ github.event.inputs.amongus-dir }}"
+          if (-not (Test-Path "$dest\BepInEx\interop\Assembly-CSharp.dll")) {
+            throw "Missing game assemblies. See docs/BUILDING.md. Expected $dest\BepInEx\interop\Assembly-CSharp.dll"
+          }
+          Write-Host "Using assemblies from $dest"
+
+      - name: Build
+        shell: pwsh
+        run: dotnet build AeroMenu.csproj -c Release -p:AmongUsDir="${{ github.event.inputs.amongus-dir }}"
+
+      - name: Upload DLL
+        uses: actions/upload-artifact@v4
+        with:
+          name: AeroMenu
+          path: bin/Release/net6.0/AeroMenu.dll
+          if-no-files-found: error

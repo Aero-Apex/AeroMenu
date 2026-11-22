@@ -61,6 +61,66 @@ internal static class CntPositionSanityPatch
 {
 	private const float MaxCoord = 1000f;
 
+	private static readonly FieldInfo[] SyncVectorFields = FindSyncVectorFields();
+
+	private static FieldInfo[] FindSyncVectorFields()
+	{
+		try
+		{
+			List<FieldInfo> fields = new List<FieldInfo>();
+			FieldInfo[] all = typeof(CustomNetworkTransform).GetFields(
+				BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+			foreach (FieldInfo field in all)
+			{
+				if (field.FieldType == typeof(Vector2) || field.FieldType == typeof(Vector3))
+					fields.Add(field);
+			}
+			return fields.ToArray();
+		}
+		catch { return new FieldInfo[0]; }
+	}
+
+	private static float SanitizeCoord(float value)
+	{
+		if (float.IsNaN(value) || float.IsInfinity(value)) return 0f;
+		return Mathf.Clamp(value, -MaxCoord, MaxCoord);
+	}
+
+	private static Vector3 Sanitize(Vector3 v)
+	{
+		return new Vector3(SanitizeCoord(v.x), SanitizeCoord(v.y), SanitizeCoord(v.z));
+	}
+
+	private static Vector2 Sanitize(Vector2 v)
+	{
+		return new Vector2(SanitizeCoord(v.x), SanitizeCoord(v.y));
+	}
+
+	// Deserialize may have already copied attacker-controlled values into the
+	// transform's internal sync fields; normalize those too, not just Transform.position.
+	private static void NormalizeSyncFields(CustomNetworkTransform cnt)
+	{
+		if (SyncVectorFields == null) return;
+		foreach (FieldInfo field in SyncVectorFields)
+		{
+			try
+			{
+				object value = field.GetValue(cnt);
+				if (value is Vector3 v3)
+				{
+					Vector3 clean = Sanitize(v3);
+					if (clean != v3) field.SetValue(cnt, clean);
+				}
+				else if (value is Vector2 v2)
+				{
+					Vector2 clean = Sanitize(v2);
+					if (clean != v2) field.SetValue(cnt, clean);
+				}
+			}
+			catch { }
+		}
+	}
+
 	public static void Postfix(CustomNetworkTransform __instance)
 	{
 		if (!AeroMenu.AeroMenuGUI.oldAntiCheatVersion) return;
@@ -70,28 +130,39 @@ internal static class CntPositionSanityPatch
 			{
 				return;
 			}
+			if (AmongUsClient.Instance == null || !AmongUsClient.Instance.AmHost) return;
 
 			PlayerControl pl = __instance.myPlayer;
-			Transform t = pl != null ? ((Component)pl).transform : ((Component)__instance).transform;
+			if (pl == null || pl == PlayerControl.LocalPlayer) return;
+
+			Transform t = ((Component)pl).transform;
 			if (t == null)
 			{
 				return;
 			}
 
 			Vector3 p = t.position;
-			if (float.IsNaN(p.x) || float.IsNaN(p.y) || float.IsNaN(p.z) ||
-				float.IsInfinity(p.x) || float.IsInfinity(p.y) || float.IsInfinity(p.z))
+			bool invalid = float.IsNaN(p.x) || float.IsNaN(p.y) || float.IsNaN(p.z) ||
+				float.IsInfinity(p.x) || float.IsInfinity(p.y) || float.IsInfinity(p.z) ||
+				Mathf.Abs(p.x) > MaxCoord || Mathf.Abs(p.y) > MaxCoord || Mathf.Abs(p.z) > MaxCoord;
+			if (!invalid) return;
+
+			NormalizeSyncFields(__instance);
+
+			Vector3 q = t.position;
+			if (float.IsNaN(q.x) || float.IsNaN(q.y) || float.IsNaN(q.z) ||
+				float.IsInfinity(q.x) || float.IsInfinity(q.y) || float.IsInfinity(q.z))
 			{
 				t.position = Vector3.zero;
 				return;
 			}
 
-			if (Mathf.Abs(p.x) > MaxCoord || Mathf.Abs(p.y) > MaxCoord || Mathf.Abs(p.z) > MaxCoord)
+			if (Mathf.Abs(q.x) > MaxCoord || Mathf.Abs(q.y) > MaxCoord || Mathf.Abs(q.z) > MaxCoord)
 			{
 				t.position = new Vector3(
-					Mathf.Clamp(p.x, -MaxCoord, MaxCoord),
-					Mathf.Clamp(p.y, -MaxCoord, MaxCoord),
-					Mathf.Clamp(p.z, -MaxCoord, MaxCoord));
+					Mathf.Clamp(q.x, -MaxCoord, MaxCoord),
+					Mathf.Clamp(q.y, -MaxCoord, MaxCoord),
+					Mathf.Clamp(q.z, -MaxCoord, MaxCoord));
 			}
 		}
 		catch

@@ -43,6 +43,10 @@ namespace AeroMenu
 {
     public partial class AeroMenuGUI : MonoBehaviour
     {
+private static bool autoTwoImpostorsEnabledRoleForce = false;
+
+private static bool autoTwoImpostorsPrevRoleForce = false;
+
 private static void ClearAutoTwoImpostorSelection()
         {
             try
@@ -246,6 +250,11 @@ private static bool RollAutoTwoImpostors(bool forceNewRoll)
                     autoTwoImpostorPlayerIds.Add(playerId);
                 }
 
+                if (autoTwoImpostors && !autoTwoImpostorsEnabledRoleForce)
+                {
+                    autoTwoImpostorsPrevRoleForce = enablePreGameRoleForce;
+                    autoTwoImpostorsEnabledRoleForce = true;
+                }
                 enablePreGameRoleForce = true;
                 return true;
             }
@@ -261,6 +270,11 @@ private static void TickAutoTwoImpostors()
             {
                 if (!autoTwoImpostors)
                 {
+                    if (autoTwoImpostorsEnabledRoleForce)
+                    {
+                        enablePreGameRoleForce = autoTwoImpostorsPrevRoleForce;
+                        autoTwoImpostorsEnabledRoleForce = false;
+                    }
                     autoTwoImpostorsNeedsGameStartRoll = true;
                     autoTwoImpostorsWasGameStarted = false;
                     autoTwoImpostorsLastLobbyFingerprint = 0;

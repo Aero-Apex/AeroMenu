@@ -163,10 +163,12 @@ public static class PublicFriendCodeConfirmPatch
             if (__instance.UsernameText != null)
                 __instance.UsernameText.text = value;
 
+            // The compiler-generated callback field was renamed/removed in newer game builds.
+            // Use a no-op completion callback so spoofing still compiles and applies locally.
             var callback = Il2CppInterop.Runtime.DelegateSupport.ConvertDelegate<Il2CppSystem.Action<
                 Assets.InnerNet.ResponseState, Assets.InnerNet.Response<Assets.InnerNet.ResponseFriendCode>>>(
                 new System.Action<Assets.InnerNet.ResponseState, Assets.InnerNet.Response<Assets.InnerNet.ResponseFriendCode>>(
-                    __instance._SaveUsername_b__8_0));
+                    (state, response) => { }));
             mgr.SetFriendCode(value, callback);
             return false;
         }

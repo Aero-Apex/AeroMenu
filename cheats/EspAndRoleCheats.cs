@@ -915,7 +915,7 @@ private void teleportToPlayer(PlayerControl t)
                 try
                 {
                     var target = PlayerControl.AllPlayerControls.ToArray()
-                        .Where(p => p != null && __instance.IsValidTarget(p.Data) && !p.Data.IsDead && !p.Data.Disconnected)
+                        .Where(p => p != null && p.Data != null && __instance.IsValidTarget(p.Data) && !p.Data.IsDead && !p.Data.Disconnected)
                         .OrderBy(p => Vector2.Distance(p.transform.position, PlayerControl.LocalPlayer.transform.position))
                         .FirstOrDefault();
                     if (target != null) __result = target;
@@ -977,16 +977,9 @@ private void teleportToPlayer(PlayerControl t)
                 {
                     if (__instance == null || pc == null) return;
 
-                    bool isImpostor = AeroMenuGUI.IsLocalImpostorRole(pc);
-                    if (AeroMenuGUI.allowTasksAsImpostor || !isImpostor)
-                    {
-                        __instance.AllowImpostor = true;
-                        return;
-                    }
+                    if (!AeroMenuGUI.allowTasksAsImpostor) return;
 
-                    int[] sabotageConsoleIds = { 0, 1, 2 };
-                    if (!sabotageConsoleIds.Contains(__instance.ConsoleId))
-                        __instance.AllowImpostor = false;
+                    __instance.AllowImpostor = true;
                 }
                 catch { }
             }

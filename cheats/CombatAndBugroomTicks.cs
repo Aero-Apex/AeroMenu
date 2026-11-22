@@ -142,6 +142,7 @@ private static PlayerControl FindRandomHostAutoKillTarget(PlayerControl localPla
                 {
                     if (pc == null || pc == localPlayer || pc.Data == null) continue;
                     if (pc.Data.Disconnected) continue;
+                    if (pc.Data.IsDead || pc.inVent || pc.onLadder || pc.inMovingPlat) continue;
                     targets.Add(pc);
                 }
 
@@ -197,6 +198,7 @@ private static PlayerControl FindHostAutoKillTarget(PlayerControl localPlayer)
                 {
                     if (pc == null || pc.Data == null) continue;
                     if (pc.Data.Disconnected) continue;
+                    if (pc.Data.IsDead || pc.inVent || pc.onLadder || pc.inMovingPlat) continue;
                     if (pc.PlayerId == hostAutoKillTargetId) return pc;
                 }
             }

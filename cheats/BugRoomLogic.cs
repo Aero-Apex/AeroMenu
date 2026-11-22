@@ -48,7 +48,7 @@ private void TryBugRoomAutoAngelTick()
             PlayerControl target = PickBugRoomProtectTarget(local);
             if (target == null) return;
 
-            if (TryClickBugRoomProtectButton())
+            if (TryBugRoomProtectTarget(local, target))
             {
                 bugRoomAngelLastTargetId = target.PlayerId;
             }
@@ -511,6 +511,20 @@ private static PlayerControl PickBugRoomOtherTarget(List<PlayerControl> plrs)
             }
 
             return plrs[UnityEngine.Random.Range(0, plrs.Count)];
+        }
+
+private static bool TryBugRoomProtectTarget(PlayerControl local, PlayerControl target)
+        {
+            try
+            {
+                if (local == null || target == null) return false;
+                MethodInfo m = typeof(PlayerControl).GetMethod("CmdCheckProtect", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new[] { typeof(PlayerControl) }, null);
+                if (m == null) m = typeof(PlayerControl).GetMethod("CmdCheckProtect", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                if (m == null) return false;
+                m.Invoke(local, new object[] { target });
+                return true;
+            }
+            catch { return false; }
         }
 
 private static bool TryClickBugRoomProtectButton()

@@ -30,10 +30,10 @@ namespace AeroMenu
         private bool SetMultiTab(string key, ref int current, int tab, int count, bool resetScroll = true)
         {
             tab = Mathf.Clamp(tab, 0, count - 1);
-            if (resetScroll)
-                scrollPosition = Vector2.zero;
             if (current == tab)
                 return false;
+            if (resetScroll)
+                scrollPosition = Vector2.zero;
 
             MultiTabAnim anim = GetMultiTabAnim(key);
             anim.Dir = tab > current ? 1 : -1;

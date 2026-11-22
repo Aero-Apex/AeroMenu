@@ -97,9 +97,10 @@ public static class ChatHistory
             {
                 if (!enableChatHistory) return;
                 if (string.IsNullOrWhiteSpace(message)) return;
-                AeroMenuGUI.chatHistoryLimit = Mathf.Clamp(AeroMenuGUI.chatHistoryLimit, 5, 300);
-                if (AeroMenuGUI.chatHistoryLimit <= 20)
+                if (AeroMenuGUI.chatHistoryLimit < 5 || AeroMenuGUI.chatHistoryLimit > 300)
                     AeroMenuGUI.chatHistoryLimit = 80;
+                else
+                    AeroMenuGUI.chatHistoryLimit = Mathf.Clamp(AeroMenuGUI.chatHistoryLimit, 5, 300);
                 bool isNewEntry = sentMessages.Count == 0 || sentMessages[sentMessages.Count - 1] != message;
                 if (isNewEntry)
                 {

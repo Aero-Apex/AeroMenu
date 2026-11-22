@@ -64,7 +64,7 @@ internal static class GuardOptions
 	internal static readonly GuardOption<bool> NonHostDataDrop = new GuardOption<bool>(() => true);
 	internal static readonly GuardOption<bool> LobbyTeleportDetection = new GuardOption<bool>(() => true);
 	internal static readonly GuardOption<string> NetworkProtectionAction = null;
-	internal static readonly GuardOption<bool> BanBrokenFriendCode = null;
+	internal static readonly GuardOption<bool> BanBrokenFriendCode = new GuardOption<bool>(() => AeroMenu.Plugin.AutoBanBrokenFriendCodeConfig.Value);
 	internal static readonly GuardOption<bool> LevelRpcProtection = null;
 	internal static readonly GuardOption<string> LevelRpcAction = null;
 	internal static readonly GuardOption<bool> IdenticalNetIdProtection = null;

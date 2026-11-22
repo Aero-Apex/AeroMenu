@@ -1220,14 +1220,9 @@ private static bool IsKnownRemoteClient(InnerNetClient client, int clientId)
 
 private static bool IsRemoteClientIdValue(InnerNetClient client, int clientId)
 	{
-		if (clientId < 0)
+		if (client == null || clientId < 0)
 		{
 			return false;
-		}
-
-		if (client == null)
-		{
-			return AmongUsClient.Instance == null || IsRemoteClientIdValue((InnerNetClient)AmongUsClient.Instance, clientId);
 		}
 
 		return clientId != client.ClientId && clientId != client.HostId;

@@ -77,9 +77,7 @@ internal static class BanAccessList
 		try
 		{
 			if (AeroMenu.AeroMenuGUI.IsProtectedFromAnticheat(identity.PlayerName, identity.FriendCode, identity.ProductUserId)) return;
-			string fc = identity.FriendCode;
-			if (string.IsNullOrEmpty(fc)) fc = identity.ProductUserId;
-			if (string.IsNullOrEmpty(fc)) return;
+			string fc = string.IsNullOrEmpty(identity.FriendCode) ? "Unknown" : identity.FriendCode;
 			AeroMenu.AeroMenuGUI.AddToBanList(fc, string.IsNullOrEmpty(identity.ProductUserId) ? "Unknown" : identity.ProductUserId, string.IsNullOrEmpty(identity.PlayerName) ? "Unknown" : identity.PlayerName, reason);
 		}
 		catch { }

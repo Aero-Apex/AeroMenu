@@ -490,7 +490,7 @@ private void SpawnMap(int mapId)
             manualMapSpawnInProgress = true;
             try
             {
-                AmongUsClient.Instance.ShipLoadingAsyncHandle = AmongUsClient.Instance.ShipPrefabs[mapId].InstantiateAsync((Transform)null, false);
+                AmongUsClient.Instance.ShipLoadingAsyncHandle = AmongUsClient.Instance.ShipPrefabs.get_Item(mapId).InstantiateAsync((Transform)null, false);
                 yield return AmongUsClient.Instance.ShipLoadingAsyncHandle;
 
                 ShipStatus.Instance = AmongUsClient.Instance.ShipLoadingAsyncHandle.Result.GetComponent<ShipStatus>();
@@ -1077,7 +1077,7 @@ private static void WriteVentTpUpdate(MessageWriter batch, PlayerControl player,
             batch.WritePacked(ShipStatus.Instance.NetId);
             batch.Write((byte)RpcCalls.UpdateSystem);
             batch.Write((byte)sys);
-            batch.WriteNetObject(player);
+            InnerNet.MessageExtensions.WriteNetObject(batch, player);
             batch.Write(msg, false);
             batch.EndMessage();
         }

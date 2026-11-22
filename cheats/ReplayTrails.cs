@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using HarmonyLib;
 using UnityEngine;
 
 namespace AeroMenu
@@ -18,7 +19,7 @@ namespace AeroMenu
         private static Texture2D replayCrossTex;
         private static GUIStyle replayPxStyle;
         private static GUIStyle replayWinStyle;
-        private static readonly Action<int> drawReplayWindow = DrawReplayWindow;
+        private static readonly GUI.WindowFunction drawReplayWindow = DrawReplayWindow;
         private static float replayNextSampleAt;
 
         private sealed class ReplayPoint
@@ -346,6 +347,15 @@ namespace AeroMenu
                 return RoleManager.IsImpostorRole(pc.Data.RoleType);
             }
             catch { return false; }
+        }
+
+        [HarmonyPatch(typeof(ShipStatus), nameof(ShipStatus.Start))]
+        public static class ReplayTrails_RoundStart_Patch
+        {
+            public static void Postfix()
+            {
+                AeroMenuGUI.ClearVisualReplay();
+            }
         }
     }
 }

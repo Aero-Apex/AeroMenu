@@ -1057,11 +1057,6 @@ private static void PruneFloodDrops()
 		for (int i = 0; i < ScratchConnectionKeys.Count; i++)
 		{
 			string key = ScratchConnectionKeys[i];
-			if (string.IsNullOrWhiteSpace(key))
-			{
-				continue;
-			}
-
 			FloodDropConnectionUntil.Remove(key);
 			FloodDropClientByConnectionKey.Remove(key);
 		}

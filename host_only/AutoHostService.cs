@@ -101,7 +101,10 @@ public static class AeroAutoLobbyReturn
 
                 attempt++;
                 if (attempt >= AutoReturnMaxAttempts)
+                {
+                    exhaustedEndGameId = trackedEndGameId;
                     pending = false;
+                }
                 else
                     nextAttemptAt = Time.unscaledTime + AutoReturnRetrySeconds;
             }
@@ -483,10 +486,9 @@ public static class AeroAutoHostService
                     return;
                 }
 
-                bool waitingForLoad = !autoRun && AeroMenuGUI.AutoHostWaitLoadedPlayers && connectedPlayers > readyPlayers;
-                if (waitingForLoad)
+                bool waitingForLoad = !autoRun && !forceStart && AeroMenuGUI.AutoHostWaitLoadedPlayers && connectedPlayers > readyPlayers;
+                if (waitingForLoad && !CanBypassLoadWait(now, readyPlayers, connectedPlayers, loadingName))
                 {
-                    if (loadWaitStartedAt < 0f) loadWaitStartedAt = now;
                     countdownStartedAt = -1f;
                     activeCountdownDelay = -1f;
                     lastStartIssuedAt = -1f;

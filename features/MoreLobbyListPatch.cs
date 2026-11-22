@@ -45,6 +45,7 @@ public static class MoreLobbyInfo_FindAGameManager_HandleList_Postfix
     public static void Postfix(HttpMatchmakerManager.FindGamesListFilteredResponse response, FindAGameManager __instance)
     {
         if (!AeroMenuGUI.moreLobbyInfo) return;
+        if (response?.Metadata == null || __instance?.TotalText == null) return;
 
         __instance.TotalText.text = response.Metadata.AllGamesCount.ToString();
     }

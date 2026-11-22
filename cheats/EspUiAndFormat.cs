@@ -1167,7 +1167,7 @@ public static void InitializeKillCooldownOnRoundStart()
                         while (assigned < numImps && players.Count > 0)
                         {
                             int index = UnityEngine.Random.Range(0, players.Count);
-                            players[index].Object.RpcSetRole(RoleTypes.Impostor, false);
+                            players.get_Item(index).Object.RpcSetRole(RoleTypes.Impostor, false);
                             players.RemoveAt(index);
                             assigned++;
                         }
@@ -1180,7 +1180,7 @@ public static void InitializeKillCooldownOnRoundStart()
                         var crewRoleTypes = new HashSet<int> { 0, 2, 3, 4, 8, 10, 12 };
                         for (int index = players.Count - 1; index >= 0; index--)
                         {
-                            NetworkedPlayerInfo player = players[index];
+                            NetworkedPlayerInfo player = players.get_Item(index);
                             if (player == null || player.Object == null) continue;
 
                             RoleTypes role = RoleTypes.Crewmate;
@@ -1246,7 +1246,7 @@ public static void InitializeKillCooldownOnRoundStart()
                     while (assigned < numImps && players.Count > 0)
                     {
                         int index = UnityEngine.Random.Range(0, players.Count);
-                        players[index].Object.RpcSetRole(RoleTypes.Impostor, false);
+                        players.get_Item(index).Object.RpcSetRole(RoleTypes.Impostor, false);
                         players.RemoveAt(index);
                         assigned++;
                     }

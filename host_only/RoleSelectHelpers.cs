@@ -126,10 +126,10 @@ private static bool TryGetRoleOptionNames(RoleTypes role, out string[] names)
             switch ((int)role)
             {
                 case 2:
-                    names = new[] { "Engineer" };
+                    names = new[] { "Scientist" };
                     return true;
                 case 3:
-                    names = new[] { "Scientist" };
+                    names = new[] { "Engineer" };
                     return true;
                 case 4:
                     names = new[] { "GuardianAngel", "Guardian" };

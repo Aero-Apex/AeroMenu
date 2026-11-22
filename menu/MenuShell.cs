@@ -42,7 +42,7 @@ namespace AeroMenu
 {
     public partial class AeroMenuGUI : MonoBehaviour
     {
-private Action<int> drawMenuWindow;
+private GUI.WindowFunction drawMenuWindow;
 
 private string menuTitleText;
 
@@ -246,6 +246,7 @@ public void OnGUI()
             DrawVisualRadar();
             DrawVisualReplay();
             DrawEspBoxes();
+            DrawExtrasOverlays();
 
             if (Time.unscaledTime >= nextPlayerHistoryUpdateAt)
             {
@@ -452,7 +453,19 @@ private void DrawMenuWindowIfVisible()
                     GUI.contentColor = GetMenuAccentColor();
 
                 if (drawMenuWindow == null) drawMenuWindow = DrawAeroMenu;
-                windowRect = GUI.Window(0, windowRect, drawMenuWindow, "", windowStyle);
+
+                Matrix4x4 oldGuiMatrix = GUI.matrix;
+                float appliedScale = Mathf.Clamp(menuScale, 0.65f, 1.75f);
+                if (!Mathf.Approximately(appliedScale, 1f))
+                    GUI.matrix = Matrix4x4.Scale(new Vector3(appliedScale, appliedScale, 1f));
+                try
+                {
+                    windowRect = GUI.Window(0, windowRect, drawMenuWindow, "", windowStyle);
+                }
+                finally
+                {
+                    GUI.matrix = oldGuiMatrix;
+                }
             }
             finally
             {
@@ -538,6 +551,7 @@ private void SetMenuTab(int tab)
             isEditingDeviceId = isEditingGhostChatColor = isEditingBan = isEditingFpsLimit =
             isEditingBugRoomTimedAutoRun = isEditingSearch = isEditingStatusText = isEditingAccentHex = false;
             customSpoofRpcInputFocused = false;
+            ResetAllBindWaitsStatic();
         }
 
 private void DrawAnimatedSidebarHighlight()

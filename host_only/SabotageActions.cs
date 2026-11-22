@@ -415,7 +415,7 @@ private void ToggleLights(bool state)
                 }
                 else
                 {
-                    var sys = ShipStatus.Instance.Systems[SystemTypes.Electrical].Cast<SwitchSystem>();
+                    var sys = ShipStatus.Instance.Systems.get_Item(SystemTypes.Electrical).Cast<SwitchSystem>();
                     if (sys != null)
                     {
                         for (int i = 0; i < 5; i++)

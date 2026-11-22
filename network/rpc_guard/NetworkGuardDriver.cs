@@ -58,6 +58,8 @@ using UnityEngine;
 
 public sealed class NetworkGuardDriver : MonoBehaviour
 {
+	private static bool lastLobbyState;
+
 	public void Update()
 	{
 		NetworkGuard.UpdateClientSpawnDrop();
@@ -69,6 +71,22 @@ public sealed class NetworkGuardDriver : MonoBehaviour
 			MinLevelKickGuard.Update();
 			BugColorGuard.Update();
 			BanAccessList.UpdateNickBanChecks();
+		}
+
+		// Lobby teleport detection: CheckPlayer is a no-op unless we are in a lobby
+		// and the guard is enabled; it also self-resets when the game id changes.
+		if (AmongUsClient.Instance == null || !AmongUsClient.Instance.AmHost) return;
+		bool inLobby = LobbyBehaviour.Instance != null;
+		if (inLobby != lastLobbyState)
+		{
+			LobbyTeleportPositionTracker.Reset();
+			lastLobbyState = inLobby;
+		}
+		if (!inLobby || PlayerControl.AllPlayerControls == null) return;
+		foreach (PlayerControl pc in PlayerControl.AllPlayerControls)
+		{
+			if (pc == null || pc == PlayerControl.LocalPlayer || pc.Data == null || pc.Data.Disconnected) continue;
+			LobbyTeleportPositionTracker.CheckPlayer(pc);
 		}
 	}
 }

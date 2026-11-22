@@ -246,7 +246,7 @@ private static bool BlockVentKickRpc(ShipStatus ship, byte callId, Hazel.Message
             {
                 copy = MessageReader.Get(reader);
                 SystemTypes system = (SystemTypes)copy.ReadByte();
-                PlayerControl plr = copy.ReadNetObject<PlayerControl>();
+                PlayerControl plr = MessageExtensions.ReadNetObject<PlayerControl>(copy);
                 if (system != SystemTypes.Ventilation) return false;
 
                 if (!AmongUsClient.Instance.AmHost)
@@ -491,13 +491,11 @@ private static void BanVentExploitOwner(PlayerControl plr, int owner, string rea
                     {
                         if (callId == (byte)RpcCalls.SetColor)
                         {
-                            uint netId = reader.ReadUInt32();
                             byte color = reader.ReadByte();
                             if (color >= Palette.PlayerColors.Length) { isCheat = true; cheatReason = $"Invalid Color ID ({color})"; }
                         }
                         else if (callId == (byte)RpcCalls.SetName || callId == (byte)RpcCalls.CheckName)
                         {
-                            uint netId = callId == (byte)RpcCalls.SetName ? reader.ReadUInt32() : 0;
                             string reqName = reader.ReadString();
                             if (reqName.Length > 12) { isCheat = true; cheatReason = "Name length too long"; }
                             if (reqName.Contains("<")) { isCheat = true; cheatReason = "HTML Tags in name"; }
@@ -573,7 +571,7 @@ private static void BanVentExploitOwner(PlayerControl plr, int owner, string rea
                     if (callId == (byte)RpcCalls.UpdateSystem)
                     {
                         SystemTypes system = (SystemTypes)reader.ReadByte();
-                        sender = reader.ReadNetObject<PlayerControl>();
+                        sender = MessageExtensions.ReadNetObject<PlayerControl>(reader);
 
                         if (sender != null && !sender.AmOwner)
                         {

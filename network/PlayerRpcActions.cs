@@ -156,7 +156,7 @@ private static void WriteShapeshift(MessageWriter batch, PlayerControl player, P
             batch.StartMessage((byte)GameDataTypes.RpcFlag);
             batch.WritePacked(player.NetId);
             batch.Write((byte)RpcCalls.Shapeshift);
-            batch.WriteNetObject(target);
+            InnerNet.MessageExtensions.WriteNetObject(batch, target);
             batch.Write(animate);
             batch.EndMessage();
         }

@@ -65,5 +65,49 @@ internal static class VoteKickRpcProtectionPatch
 		return NetworkGuard.CheckVoteKickRpc(__instance, callId, reader);
 	}
 }
+
+// Both NetworkGuard.CheckVoteKickRpc and the legacy VoteBanSystemPatch.Prefix
+// (uimenu/MapsTab.cs) call BanVoteKickVoter for the same vote-kick RPC, which
+// double-bans the voter. Suppress the duplicate within a short window. Keying on
+// (game, voter) is intentional: the two callers format the target name differently.
+[HarmonyPatch(typeof(AeroMenu.AeroMenuGUI.VoteBanSystemPatch), "BanVoteKickVoter")]
+internal static class BanVoteKickVoterDedupPatch
+{
+	private const float DedupWindowSeconds = 5f;
+	private static readonly Dictionary<string, float> recentBans = new Dictionary<string, float>();
+	private static readonly object sync = new object();
+
+	public static bool Prefix(int voterClientId, string voterName, string targetName)
+	{
+		try
+		{
+			int gameId = AmongUsClient.Instance != null ? ((InnerNetClient)AmongUsClient.Instance).GameId : -1;
+			string key = gameId + ":" + voterClientId;
+			float now = Time.realtimeSinceStartup;
+			lock (sync)
+			{
+				if (recentBans.TryGetValue(key, out float at) && now - at < DedupWindowSeconds)
+					return false;
+				recentBans[key] = now;
+
+				List<string> stale = null;
+				foreach (KeyValuePair<string, float> pair in recentBans)
+				{
+					if (now - pair.Value > DedupWindowSeconds * 2f)
+					{
+						if (stale == null) stale = new List<string>();
+						stale.Add(pair.Key);
+					}
+				}
+				if (stale != null)
+				{
+					foreach (string s in stale) recentBans.Remove(s);
+				}
+			}
+		}
+		catch { }
+		return true;
+	}
+}
 }
 

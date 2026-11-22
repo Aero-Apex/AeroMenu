@@ -1130,6 +1130,7 @@ private void DrawGeneralTab()
             {
                 if (currentGeneralSubTab == 0) DrawGeneralInfoTab();
                 else if (currentGeneralSubTab == 1) DrawBindsTab();
+                else if (currentGeneralSubTab == 2) { try { DrawExtrasTab(); } catch { } }
             }
             finally
             {
