@@ -1353,7 +1353,7 @@ private static void RemoveClientFromActiveList(InnerNetClient client, ClientData
 			{
 				for (int i = client.allClients.Count - 1; i >= 0; i--)
 				{
-					ClientData current = client.allClients.get_Item(i);
+					ClientData current = client.allClients[i];
 					if (current != null && (current.Id == clientId || current == target))
 					{
 						client.allClients.RemoveAt(i);

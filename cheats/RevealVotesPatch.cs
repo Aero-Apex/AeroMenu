@@ -132,7 +132,7 @@ public static class RevealVotesPatch
             var spread = tr.GetComponent<VoteSpreader>();
             if (spread != null && spread.Votes != null && spread.Votes.Count != 0)
             {
-                var spr = spread.Votes.get_Item(spread.Votes.Count - 1);
+                var spr = spread.Votes[spread.Votes.Count - 1];
                 if (spr != null)
                 {
                     PlayerMaterial.SetColors(colorId, spr);

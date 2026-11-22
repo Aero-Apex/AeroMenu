@@ -430,7 +430,7 @@ private static void CaptureGameDataEnvelope(MessageReader reader, byte tag, Send
 									activeInboundHasSpawnExploit = true;
 									try
 									{
-										InnerNetObject existingObj = innerForOwnerCheck.allObjects.AllObjectsFast.get_Item(newNetId);
+										InnerNetObject existingObj = innerForOwnerCheck.allObjects.AllObjectsFast[newNetId];
 										activeInboundSpawnExploitDetail = (existingObj != null && existingObj.OwnerId != spawnOwnerId)
 											? $"Spawn netId {newNetId} hijack: existing owner {existingObj.OwnerId} != new owner {spawnOwnerId}."
 											: $"Spawn netId {newNetId} duplicates a live object.";

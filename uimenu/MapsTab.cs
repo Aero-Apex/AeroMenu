@@ -490,7 +490,7 @@ private void SpawnMap(int mapId)
             manualMapSpawnInProgress = true;
             try
             {
-                AmongUsClient.Instance.ShipLoadingAsyncHandle = AmongUsClient.Instance.ShipPrefabs.get_Item(mapId).InstantiateAsync((Transform)null, false);
+                AmongUsClient.Instance.ShipLoadingAsyncHandle = AmongUsClient.Instance.ShipPrefabs[mapId].InstantiateAsync((Transform)null, false);
                 yield return AmongUsClient.Instance.ShipLoadingAsyncHandle;
 
                 ShipStatus.Instance = AmongUsClient.Instance.ShipLoadingAsyncHandle.Result.GetComponent<ShipStatus>();

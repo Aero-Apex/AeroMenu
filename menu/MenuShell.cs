@@ -42,7 +42,7 @@ namespace AeroMenu
 {
     public partial class AeroMenuGUI : MonoBehaviour
     {
-private GUI.WindowFunction drawMenuWindow;
+private Action<int> drawMenuWindow;
 
 private string menuTitleText;
 

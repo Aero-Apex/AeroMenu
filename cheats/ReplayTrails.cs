@@ -19,7 +19,7 @@ namespace AeroMenu
         private static Texture2D replayCrossTex;
         private static GUIStyle replayPxStyle;
         private static GUIStyle replayWinStyle;
-        private static readonly GUI.WindowFunction drawReplayWindow = DrawReplayWindow;
+        private static readonly Action<int> drawReplayWindow = DrawReplayWindow;
         private static float replayNextSampleAt;
 
         private sealed class ReplayPoint
