@@ -61,6 +61,21 @@ private static void LoadKeybinds()
                 if (PlayerPrefs.HasKey("M_MenuToggleKey")) menuToggleKey = (KeyCode)PlayerPrefs.GetInt("M_MenuToggleKey");
                 if (PlayerPrefs.HasKey("M_MenuToggleKeyAlt")) menuToggleKeyAlt = (KeyCode)PlayerPrefs.GetInt("M_MenuToggleKeyAlt");
                 if (menuToggleKey == KeyCode.None) menuToggleKey = DefaultMenuKey();
+
+                // One-time migration to the requested keys: macOS ` + F3, Windows Insert + F3.
+                if (!PlayerPrefs.HasKey("M_MenuKeyPlatformMigrated"))
+                {
+                    if (IsMacHost()) menuToggleKey = KeyCode.BackQuote;
+                    else if (menuToggleKey == KeyCode.BackQuote) menuToggleKey = KeyCode.Insert;
+                    menuToggleKeyAlt = KeyCode.F3;
+                    PlayerPrefs.SetInt("M_MenuKeyPlatformMigrated", 1);
+                    PlayerPrefs.Save();
+                }
+                else if (menuToggleKeyAlt == KeyCode.BackQuote)
+                {
+                    menuToggleKeyAlt = KeyCode.F3;
+                }
+
                 if (PlayerPrefs.HasKey("M_BndMagnet")) bindMagnetCursor = (KeyCode)PlayerPrefs.GetInt("M_BndMagnet");
                 if (PlayerPrefs.HasKey("M_BndMMorph")) bindMassMorph = (KeyCode)PlayerPrefs.GetInt("M_BndMMorph");
                 if (PlayerPrefs.HasKey("M_BndSpawn")) bindSpawnLobby = (KeyCode)PlayerPrefs.GetInt("M_BndSpawn");
@@ -197,7 +212,7 @@ private void LoadConfig()
                 cloneFormationCount = Mathf.Clamp(LoadInt("M_CloneFormationCount", cloneFormationCount), 1, NetworkedClones.MaxCloneCount);
                 cloneFormationWidth = Mathf.Clamp(LoadFloat("M_CloneFormationWidth", cloneFormationWidth), 0.25f, 5f);
                 showStatusBar = LoadBool("M_ShowStatusBar", showStatusBar);
-                statusBarText = PlayerPrefs.GetString("M_StatusBarText", "{key} — toggle menu");
+                statusBarText = PlayerPrefs.GetString("M_StatusBarText", "{key} - toggle menu");
                 menuOpacity = Mathf.Clamp(LoadFloat("M_MenuOpacity", menuOpacity), 0.5f, 1f);
                 menuCornerRoundness = Mathf.Clamp(LoadFloat("M_CornerRoundness", menuCornerRoundness), 0f, 16f);
                 menuFontOffset = Mathf.Clamp(LoadInt("M_FontOffset", menuFontOffset), -2, 4);

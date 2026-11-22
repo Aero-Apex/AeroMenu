@@ -97,7 +97,7 @@ namespace AeroMenu
 
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(L("FOV:", "Угол:"), GUILayout.Width(46));
-                string typed = GUILayout.TextField(fovTextC, fieldStyle, GUILayout.Width(64));
+                string typed = AeroTextField(fovTextC, fieldStyle, GUILayout.Width(64));
                 if (!string.Equals(typed, fovTextC, StringComparison.Ordinal))
                 {
                     fovTextC = typed ?? string.Empty;

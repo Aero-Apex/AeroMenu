@@ -1137,7 +1137,13 @@ private void DrawVisualsInGame()
             GUILayout.BeginHorizontal();
             revealMeetingRoles = DrawToggle(revealMeetingRoles, L("Reveal Roles (Meeting)", "Роли на собрании"), 210);
             RevealVotesEnabled = DrawToggle(RevealVotesEnabled, L("Reveal Votes (Meeting)", "Голоса на собрании"), 210);
-            forceVote = DrawToggle(forceVote, L("Force Vote (Always Vote)", "Принудительный голос (голосовать всегда)"), 210);
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+            GUILayout.Space(5);
+
+            GUILayout.BeginHorizontal();
+            forceVote = DrawToggle(forceVote, L("Force Vote", "Голосовать всегда"), 210);
+            GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
             GUILayout.Space(5);
 

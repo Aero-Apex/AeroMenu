@@ -16,7 +16,7 @@ namespace AeroMenu
     public partial class AeroMenuGUI : MonoBehaviour
     {
         // --------------------------------------------------------------------
-        // Group K — Diagnostics. Public feature flags (exact contract names).
+        // Group K - Diagnostics. Public feature flags (exact contract names).
         // --------------------------------------------------------------------
         public static bool extraFrameTimeGraph;
         public static bool extraFpsMinMax;
@@ -190,7 +190,8 @@ namespace AeroMenu
 
                 if (extraFpsMinMax)
                 {
-                    Rect panel = new Rect(6f, sh - 146f, 248f, 28f);
+                    // Sit fully above the frame-time graph panel frame (top at sh - 132).
+                    Rect panel = new Rect(6f, sh - 164f, 248f, 28f);
                     DrawPanelK(panel);
                     DrawLabelK(new Rect(panel.x + 6f, panel.y + 4f, panel.width - 12f, 20f), FormatFpsStatsK());
                 }
@@ -198,7 +199,7 @@ namespace AeroMenu
                 if (extraMemoryUsage)
                 {
                     RefreshMemoryK();
-                    Rect panel = new Rect(6f, sh - 178f, 248f, 28f);
+                    Rect panel = new Rect(6f, sh - 196f, 248f, 28f);
                     DrawPanelK(panel);
                     DrawLabelK(new Rect(panel.x + 6f, panel.y + 4f, panel.width - 12f, 20f), $"Managed memory: {cachedMemoryMbK:0.0} MB");
                 }

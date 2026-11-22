@@ -175,13 +175,13 @@ private void DrawChatSettingsCompact(float columnWidth)
 
                 GUILayout.Space(3);
                 GUILayout.BeginHorizontal();
-                GUILayout.Label($"{L("Delay:", "Р—Р°РґРµСЂР¶РєР°:")} {Mathf.Round(customChatSpamDelay * 10f) / 10f}s", toggleLabelStyle11, GUILayout.Width(82), GUILayout.Height(17));
+                GUILayout.Label($"{L("Delay:", "Р-Р°РґРµСЂР¶РєР°:")} {Mathf.Round(customChatSpamDelay * 10f) / 10f}s", toggleLabelStyle11, GUILayout.Width(82), GUILayout.Height(17));
                 customChatSpamDelay = GUILayout.HorizontalSlider(customChatSpamDelay, 0.5f, 10f, sliderStyle, sliderThumbStyle, GUILayout.ExpandWidth(true));
                 GUILayout.EndHorizontal();
 
                 GUILayout.FlexibleSpace();
 
-                if (GUILayout.Button("sendQUICK CHAT1", quickChatTileStyle, GUILayout.Width(toggleWidth), GUILayout.Height(24)))
+                if (GUILayout.Button(L("Send Quick Chat", "Быстрый чат"), quickChatTileStyle, GUILayout.Width(toggleWidth), GUILayout.Height(24)))
                     SendQuickChatPhrase();
 
                 GUILayout.EndVertical();

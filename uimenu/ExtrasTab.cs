@@ -6,10 +6,28 @@ namespace AeroMenu
 {
     public partial class AeroMenuGUI : MonoBehaviour
     {
+        private static readonly System.Collections.Generic.HashSet<string> extrasSectionErrorsLogged = new System.Collections.Generic.HashSet<string>();
+
+        // Each EXTRAS group is isolated: if one throws, its layout group is still
+        // closed and the remaining groups keep drawing.
+        private void DrawExtrasSection(string id, System.Action<float> draw, float width)
+        {
+            GUILayout.BeginVertical();
+            try { draw(width); }
+            catch (System.Exception ex)
+            {
+                if (extrasSectionErrorsLogged.Add(id + ex.GetType().Name))
+                    Plugin.Instance?.Log?.LogError("[EXTRAS] section " + id + " failed: " + ex);
+            }
+            finally { GUILayout.EndVertical(); }
+        }
+
         private void DrawExtrasTab()
         {
             float width = Mathf.Max(180f, GetMenuWorkWidth(220f, 610f) - 18f);
 
+            // Outer card padding (32) + nested section card padding (32).
+            float innerWidth = Mathf.Max(150f, width - 72f);
             GUILayout.BeginVertical(menuCardStyle, GUILayout.Width(width));
             try
             {
@@ -18,51 +36,51 @@ namespace AeroMenu
                 GUILayout.Space(10);
 
                 DrawMenuSectionHeader(L("1-5  VISUAL OVERLAYS", "1-5  ВИЗУАЛЬНЫЕ ОВЕРЛЕИ"));
-                DrawExtrasA(width);
+                DrawExtrasSection("A", DrawExtrasA, innerWidth);
                 GUILayout.Space(10);
 
                 DrawMenuSectionHeader(L("6-10  INFO PANELS", "6-10  ИНФОРМАЦИОННЫЕ ПАНЕЛИ"));
-                DrawExtrasB(width);
+                DrawExtrasSection("B", DrawExtrasB, innerWidth);
                 GUILayout.Space(10);
 
                 DrawMenuSectionHeader(L("11-15  LOCAL TWEAKS", "11-15  ЛОКАЛЬНЫЕ НАСТРОЙКИ"));
-                DrawExtrasC(width);
+                DrawExtrasSection("C", DrawExtrasC, innerWidth);
                 GUILayout.Space(10);
 
                 DrawMenuSectionHeader(L("16-20  HOST TOOLS", "16-20  ИНСТРУМЕНТЫ ХОСТА"));
-                DrawExtrasD(width);
+                DrawExtrasSection("D", DrawExtrasD, innerWidth);
                 GUILayout.Space(10);
 
                 DrawMenuSectionHeader(L("21-25  PLAYER TOOLS", "21-25  ИНСТРУМЕНТЫ ИГРОКА"));
-                DrawExtrasE(width);
+                DrawExtrasSection("E", DrawExtrasE, innerWidth);
                 GUILayout.Space(10);
 
                 DrawMenuSectionHeader(L("26-30  UTILITY", "26-30  УТИЛИТЫ"));
-                DrawExtrasF(width);
+                DrawExtrasSection("F", DrawExtrasF, innerWidth);
                 GUILayout.Space(10);
 
                 DrawMenuSectionHeader(L("31-35  PANELS", "31-35  ПАНЕЛИ"));
-                DrawExtrasG(width);
+                DrawExtrasSection("G", DrawExtrasG, innerWidth);
                 GUILayout.Space(10);
 
                 DrawMenuSectionHeader(L("36-40  MEETING TOOLS", "36-40  СОБРАНИЯ"));
-                DrawExtrasH(width);
+                DrawExtrasSection("H", DrawExtrasH, innerWidth);
                 GUILayout.Space(10);
 
                 DrawMenuSectionHeader(L("41-45  LOBBY TOOLS", "41-45  ЛОББИ"));
-                DrawExtrasI(width);
+                DrawExtrasSection("I", DrawExtrasI, innerWidth);
                 GUILayout.Space(10);
 
                 DrawMenuSectionHeader(L("46-50  COSMETICS (LOCAL)", "46-50  КОСМЕТИКА (ЛОКАЛЬНО)"));
-                DrawExtrasJ(width);
+                DrawExtrasSection("J", DrawExtrasJ, innerWidth);
                 GUILayout.Space(10);
 
                 DrawMenuSectionHeader(L("51-55  DIAGNOSTICS", "51-55  ДИАГНОСТИКА"));
-                DrawExtrasK(width);
+                DrawExtrasSection("K", DrawExtrasK, innerWidth);
                 GUILayout.Space(10);
 
                 DrawMenuSectionHeader(L("56-60  AUTOMATION", "56-60  АВТОМАТИЗАЦИЯ"));
-                DrawExtrasL(width);
+                DrawExtrasSection("L", DrawExtrasL, innerWidth);
                 GUILayout.Space(10);
             }
             finally

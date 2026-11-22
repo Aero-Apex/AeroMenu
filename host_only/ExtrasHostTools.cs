@@ -85,7 +85,7 @@ namespace AeroMenu
                     try
                     {
                         GUILayout.Label(MenuText(L("Seconds:", "Секунды:")), toggleLabelStyle, GUILayout.Width(inputWidth));
-                        string secondsText = GUILayout.TextField(
+                        string secondsText = AeroTextField(
                             extraKillCooldownSeconds.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture),
                             inputBlockStyle, GUILayout.Width(inputWidth));
                         if (float.TryParse(secondsText, System.Globalization.NumberStyles.Float,
@@ -103,7 +103,7 @@ namespace AeroMenu
                     try
                     {
                         GUILayout.Label(MenuText(L("Minutes:", "Минуты:")), toggleLabelStyle, GUILayout.Width(inputWidth));
-                        string minutesText = GUILayout.TextField(extraAutoEndMinutes.ToString(),
+                        string minutesText = AeroTextField(extraAutoEndMinutes.ToString(),
                             inputBlockStyle, GUILayout.Width(inputWidth));
                         if (int.TryParse(minutesText, out int minutes))
                             extraAutoEndMinutes = Mathf.Clamp(minutes, 0, 240);

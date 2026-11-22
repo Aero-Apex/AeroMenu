@@ -84,7 +84,7 @@ private void DrawGeneralInfoTab()
                 GUILayout.BeginVertical(boxStyle);
                 GUILayout.Label(
                     $"{L("Welcome to", "Welcome to")} <b><color=#{accentHex}>Aero Menu</color></b> " +
-                    $"<b><color=#{goldHex}>v{versionText}</color></b>",
+                    $"<b><color=#{goldHex}>{versionText}</color></b>",
                     textStyle);
                 GUILayout.Space(4);
                 GUILayout.Label(L(
@@ -94,7 +94,7 @@ private void DrawGeneralInfoTab()
                 GUILayout.Label($"<b><color=#{accentHex}>Quick Hotkeys</color></b>", textStyle);
                 string menuKeyText = (menuToggleKey == KeyCode.None ? DefaultMenuKey() : menuToggleKey).ToString();
                 if (menuToggleKeyAlt != KeyCode.None) menuKeyText += " / " + menuToggleKeyAlt;
-                GUILayout.Label($"{L("Menu key", "Menu key")}: <b>{menuKeyText}</b>{L(" (Windows: Insert | macOS: Command or `)", " (Windows: Insert | macOS: Command or `)")}", textStyle);
+                GUILayout.Label($"{L("Menu key", "Menu key")}: <b>{menuKeyText}</b>{L(" (Windows: Insert / F3 | macOS: ` / F3)", " (Windows: Insert / F3 | macOS: ` / F3)")}", textStyle);
                 GUILayout.Label(L("Right Click: teleport to cursor", "Right Click: teleport to cursor"), textStyle);
                 GUILayout.Label(L("F9: magnet cursor", "F9: magnet cursor"), textStyle);
                 GUILayout.EndVertical();

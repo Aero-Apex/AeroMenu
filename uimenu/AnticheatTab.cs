@@ -142,10 +142,10 @@ private void DrawAntiCheatTab()
 
             string modeDesc = punishmentMode switch
             {
-                0 => "<color=#777777>Null: Пакеты блокируются без действий.</color>",
-                1 => "<color=#FFFF00>Warn: Блокировка + Уведомление на экран.</color>",
-                2 => "<color=#FF8800>Kick: Игрок будет исключен из лобби.</color>",
-                3 => "<color=#FF0000>Ban: Игрок будет забанен (Host Only).</color>",
+                0 => "<color=#777777>" + L("Null: packets are blocked with no action.", "Null: Пакеты блокируются без действий.") + "</color>",
+                1 => "<color=#FFFF00>" + L("Warn: block + on-screen notification.", "Warn: Блокировка + Уведомление на экран.") + "</color>",
+                2 => "<color=#FF8800>" + L("Kick: the player is removed from the lobby.", "Kick: Игрок будет исключен из лобби.") + "</color>",
+                3 => "<color=#FF0000>" + L("Ban: the player is banned (host only).", "Ban: Игрок будет забанен (Host Only).") + "</color>",
                 _ => ""
             };
             GUILayout.Label(modeDesc, richWrapLabelStyle11);

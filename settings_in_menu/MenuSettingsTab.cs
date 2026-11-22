@@ -98,7 +98,7 @@ private void DrawMenuTab()
                 UpdateAccentColor(currentAccentColor);
                 menuPrefsChanged = true;
             }
-            GUILayout.Label(L("Switches menu text between bold and normal. Default: bold.", "Переключает текст меню между жирным и обычным. По умолчанию — жирный."), menuDescStyle);
+            GUILayout.Label(L("Switches menu text between bold and normal. Default: bold.", "Переключает текст меню между жирным и обычным. По умолчанию - жирный."), menuDescStyle);
             GUILayout.Space(8);
 
             bool prevWhiteTheme = whiteMenuTheme;
@@ -231,7 +231,7 @@ private void DrawMenuTab()
             GUILayout.EndVertical();
 
             GUILayout.BeginVertical(menuCardStyle);
-            DrawMenuSectionHeader(L("ACCENT & PERFORMANCE", "РђРљР¦Р•РќРў Р РџР РћРР—Р’РћР”РРўР•Р›Р¬РќРћРЎРўР¬"));
+            DrawMenuSectionHeader(L("ACCENT & PERFORMANCE", "РђРљР¦Р•РќРў Р РџР РћРР-Р’РћР”РРўР•Р›Р¬РќРћРЎРўР¬"));
 
             bool prevLimitFps = limitFps;
             limitFps = DrawToggle(limitFps, L("Limit FPS", "РћРіСЂР°РЅРёС‡РёРІР°С‚СЊ FPS"), 260);
@@ -557,7 +557,7 @@ private void ResetSlidersToDefault()
             cloneFormationCount = 8;
             cloneFormationWidth = 1f;
             showStatusBar = true;
-            statusBarText = "{key} — toggle menu";
+            statusBarText = "{key} - toggle menu";
             menuOpacity = 1f;
             menuCornerRoundness = 12f;
             menuFontOffset = 0;

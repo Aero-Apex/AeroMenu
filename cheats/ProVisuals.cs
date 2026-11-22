@@ -106,7 +106,7 @@ namespace AeroMenu
                     MenuText(L("Enable Minimap Zoom", "\u0412\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u043C\u0430\u0441\u0448\u0442\u0430\u0431")), 280);
                 GUILayout.BeginHorizontal(GUILayout.Width(workWidth));
                 GUILayout.Label(MenuText(L("Zoom", "\u041C\u0430\u0441\u0448\u0442\u0430\u0431")), GUILayout.Width(70));
-                proMinimapZoomValue = GUILayout.HorizontalSlider(proMinimapZoomValue, 0.5f, 2.5f);
+                proMinimapZoomValue = ThemedSlider(proMinimapZoomValue, 0.5f, 2.5f);
                 GUILayout.Label(proMinimapZoomValue.ToString("0.00") + "x", GUILayout.Width(52));
                 GUILayout.EndHorizontal();
                 GUILayout.Label(MenuText(L("Scales the radar rendering matrix.",

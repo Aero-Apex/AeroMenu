@@ -176,7 +176,7 @@ namespace AeroMenu
                         GUILayout.Label(MenuText(L("Preset:", "Пресет:")), toggleLabelStyle,
                             GUILayout.Width(inputWidth));
                         int shown = Mathf.Clamp(proGamePresetIndex, 0, GamePresetsP.Length - 1) + 1;
-                        string presetText = GUILayout.TextField(shown.ToString(), inputBlockStyle,
+                        string presetText = AeroTextField(shown.ToString(), inputBlockStyle,
                             GUILayout.Width(inputWidth));
                         if (int.TryParse(presetText, out int parsed))
                         {
@@ -192,7 +192,7 @@ namespace AeroMenu
 
                     string name = GamePresetNamesP[Mathf.Clamp(proGamePresetIndex, 0, GamePresetNamesP.Length - 1)];
                     GUILayout.Label(MenuText(L("Selected: ", "Выбран: ") + name +
-                        L(" — host applies via reflection.", " — хост применяет через рефлексию.")), menuDescStyle);
+                        L(" - host applies via reflection.", " - хост применяет через рефлексию.")), menuDescStyle);
                 }
                 catch { }
                 finally { GUILayout.EndVertical(); }

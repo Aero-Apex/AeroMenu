@@ -109,7 +109,7 @@ namespace AeroMenu
                         L("Highlight Keywords", "Highlight Keywords"), toggleW, "proChatHighlighterQ");
                     GUILayout.BeginHorizontal();
                     GUILayout.Label(L("Keywords:", "Keywords:"), GUILayout.Width(96));
-                    string nextWords = GUILayout.TextField(proHighlightWords ?? string.Empty, fieldStyle);
+                    string nextWords = AeroTextField(proHighlightWords ?? string.Empty, fieldStyle);
                     if (!string.Equals(nextWords, proHighlightWords, StringComparison.Ordinal))
                         proHighlightWords = nextWords ?? string.Empty;
                     GUILayout.EndHorizontal();
@@ -122,7 +122,7 @@ namespace AeroMenu
                         L("Chat Font Size", "Chat Font Size"), toggleW, "proChatFontSizeQ");
                     GUILayout.BeginHorizontal();
                     GUILayout.Label(L("Size:", "Size:"), GUILayout.Width(96));
-                    float slider = GUILayout.HorizontalSlider(proChatFontSizeValue, ProChatFontMinQ, ProChatFontMaxQ);
+                    float slider = ThemedSlider(proChatFontSizeValue, ProChatFontMinQ, ProChatFontMaxQ);
                     proChatFontSizeValue = Mathf.Clamp(Mathf.RoundToInt(slider), ProChatFontMinQ, ProChatFontMaxQ);
                     GUILayout.Label(proChatFontSizeValue.ToString(), GUILayout.Width(32));
                     GUILayout.EndHorizontal();

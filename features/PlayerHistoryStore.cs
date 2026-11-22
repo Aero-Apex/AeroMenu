@@ -745,9 +745,9 @@ public static void RecordPlayerRpc(PlayerControl pc, byte callId)
 
 private static string FormatRpcHistory(PlayerHistoryEntry entry)
         {
-            if (entry == null || entry.RpcCalls == null || entry.RpcCalls.Count == 0) return "нет";
+            if (entry == null || entry.RpcCalls == null || entry.RpcCalls.Count == 0) return "none";
             byte[] customRpcCalls = entry.RpcCalls.Where(x => !VanillaRpcIds.Contains(x)).Distinct().OrderBy(x => x).ToArray();
-            if (customRpcCalls.Length == 0) return "нет";
+            if (customRpcCalls.Length == 0) return "none";
             return string.Join(", ", customRpcCalls.Select(x => x.ToString()).ToArray());
         }
 

@@ -393,7 +393,7 @@ namespace AeroMenu
             {
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("M" + index + ":", GUILayout.Width(30));
-                string typed = GUILayout.TextField(text ?? string.Empty, fieldStyle,
+                string typed = AeroTextField(text ?? string.Empty, fieldStyle,
                     GUILayout.Width(Mathf.Max(140f, toggleW - 180f)), GUILayout.Height(22));
                 if (!string.Equals(typed, text, StringComparison.Ordinal))
                     text = typed ?? string.Empty;

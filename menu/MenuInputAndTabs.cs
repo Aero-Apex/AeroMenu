@@ -132,8 +132,8 @@ private static readonly Dictionary<string, string> menuRussianTexts = new Dictio
             ["GAME"] = "ИГРА",
             ["MEETING / TASKS"] = "МИТИНГ / ТАСКИ",
             ["EXTRA"] = "ДОПОЛНИТЕЛЬНО",
-            ["H&S MAIN"] = "H&S — ОСНОВНОЕ",
-            ["H&S PORT"] = "H&S — PORT",
+            ["H&S MAIN"] = "H&S - ОСНОВНОЕ",
+            ["H&S PORT"] = "H&S - PORT",
             ["CLASSIC ROLES"] = "КЛАССИЧЕСКИЕ РОЛИ",
             ["ROLE DETAILS"] = "ПАРАМЕТРЫ РОЛЕЙ",
             ["CLONES"] = "КЛОНЫ",
@@ -292,7 +292,7 @@ public static KeyCode menuToggleKey = KeyCode.Insert;
 
 public static KeyCode menuToggleKeyAlt = KeyCode.None;
 
-// Windows uses Insert; macOS (including Wine/Crosswire) uses Command or `~`.
+// Windows uses Insert; macOS (including Wine/Crosswire) uses `~`. F3 works on both.
 public static bool IsMacHost()
 {
     try
@@ -300,6 +300,11 @@ public static bool IsMacHost()
         if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.OSX))
             return true;
         string winePrefix = System.Environment.GetEnvironmentVariable("WINEPREFIX") ?? string.Empty;
+        // Crosswire/Wine on macOS exposes a MoltenVK ICD path under /Users.
+        string vkIcd = System.Environment.GetEnvironmentVariable("VK_ICD_FILENAMES") ?? string.Empty;
+        if (vkIcd.IndexOf("moltenvk", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
+            vkIcd.StartsWith("/Users/", System.StringComparison.Ordinal))
+            return true;
         string firstArg = string.Empty;
         try
         {
@@ -315,12 +320,12 @@ public static bool IsMacHost()
 
 public static KeyCode DefaultMenuKey()
 {
-    return IsMacHost() ? KeyCode.LeftCommand : KeyCode.Insert;
+    return IsMacHost() ? KeyCode.BackQuote : KeyCode.Insert;
 }
 
 public static KeyCode DefaultMenuKeyAlt()
 {
-    return IsMacHost() ? KeyCode.BackQuote : KeyCode.None;
+    return KeyCode.F3;
 }
 
 public static bool ToggleMenuPressed()
@@ -328,9 +333,10 @@ public static bool ToggleMenuPressed()
     KeyCode primary = menuToggleKey == KeyCode.None ? DefaultMenuKey() : menuToggleKey;
     if (Input.GetKeyDown(primary)) return true;
     if (menuToggleKeyAlt != KeyCode.None && Input.GetKeyDown(menuToggleKeyAlt)) return true;
-    if (IsMacHost() &&
-        (Input.GetKeyDown(KeyCode.LeftCommand) || Input.GetKeyDown(KeyCode.RightCommand) || Input.GetKeyDown(KeyCode.BackQuote)))
-        return true;
+    // Keep both keys working even if an older config saved different values.
+    if (Input.GetKeyDown(KeyCode.F3)) return true;
+    if (IsMacHost() && Input.GetKeyDown(KeyCode.BackQuote)) return true;
+    if (!IsMacHost() && Input.GetKeyDown(KeyCode.Insert)) return true;
     return false;
 }
 
@@ -755,7 +761,7 @@ private bool wasShowMenu = false;
 private float nextAutoSaveAt = 30f;
 
 public static bool showStatusBar = true;
-public static string statusBarText = "{key} — toggle menu";
+public static string statusBarText = "{key} - toggle menu";
 public static float menuOpacity = 1f;
 public static float menuCornerRoundness = 12f;
 public static int menuFontOffset = 0;

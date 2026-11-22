@@ -581,6 +581,9 @@ namespace AeroMenu
                 float y = r.y + 32f;
                 float w = r.width - 20f;
 
+                // Reserve one row for the "+N" overflow label and one for the
+                // "Done" footer so neither is painted over the last task row.
+                int maxRows = Mathf.Max(1, Mathf.FloorToInt((r.height - 70f) / 16f) - 1);
                 int done = 0, total = 0, line = 0;
                 PlayerControl local = PlayerControl.LocalPlayer;
                 object data = local != null ? local.Data : null;
@@ -595,7 +598,7 @@ namespace AeroMenu
                         bool complete = ReadBoolG(task, "Complete", "Completed", "IsComplete", "IsCompleted");
                         if (complete) done++;
 
-                        if (line < 9)
+                        if (line < maxRows)
                         {
                             string mark = complete ? "<color=#7CFC98>[X]</color> " : "<color=#FFB266>[ ]</color> ";
                             GUI.Label(new Rect(x, y + line * 16f, w, 16f), mark + GetTaskLabelG(task), extrasPanelTextG);
@@ -609,9 +612,9 @@ namespace AeroMenu
                     GUI.Label(new Rect(x, y, w, 16f), MenuText(L("No tasks", "Нет задач")), extrasPanelTextG);
                     line = 1;
                 }
-                if (total > 9)
+                if (total > maxRows)
                 {
-                    GUI.Label(new Rect(x, y + line * 16f, w, 16f), "… +" + (total - 9), extrasPanelTextG);
+                    GUI.Label(new Rect(x, y + line * 16f, w, 16f), "… +" + (total - maxRows), extrasPanelTextG);
                     line++;
                 }
 
@@ -755,7 +758,8 @@ namespace AeroMenu
                 float x = r.x + 10f;
                 float y = r.y + 32f;
                 float w = r.width - 20f;
-                int maxRows = Mathf.Max(1, Mathf.FloorToInt((r.height - 40f) / 16f));
+                // Leave one row of headroom for the overflow label at r.yMax - 18.
+                int maxRows = Mathf.Max(1, Mathf.FloorToInt((r.height - 56f) / 16f));
                 string[] lines = extrasHotkeyLinesG ?? Array.Empty<string>();
                 int rows = Mathf.Min(lines.Length, maxRows);
 

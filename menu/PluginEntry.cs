@@ -43,8 +43,8 @@ namespace AeroMenu
     [BepInPlugin("com.aeromenu.menu", "AeroMenu", Plugin.PluginVersion)]
     public class Plugin : BasePlugin
     {
-        public const string PluginVersion = "1.0.3";
-        public const string DisplayVersion = "v1.0.3";
+        public const string PluginVersion = "1.0.4";
+        public const string DisplayVersion = "v1.0.4";
         public static ModPlayer modClass;
 
         public static Plugin Instance { get; private set; } = null!;
@@ -153,6 +153,7 @@ namespace AeroMenu
             AeroDiscordPresence.LargeImageKey = DiscordImageKeyConfig.Value;
             MenuConfig.Save();
             AeroMenuGUI.detailedLogsEnabled = DetailedLogsEnabledConfig.Value;
+            AeroMenuGUI.InitAutoUpdater();
             RepeatedLogFilter.Install();
 
             ClassInjector.RegisterTypeInIl2Cpp<AeroMenuGUI>();

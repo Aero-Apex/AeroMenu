@@ -83,7 +83,7 @@ namespace AeroMenu
                     if (proClipboardTool)
                     {
                         GUILayout.Label(MenuText(L("Text:", "Текст:")), menuDescStyle);
-                        string typedClip = GUILayout.TextField(proClipboardText ?? string.Empty,
+                        string typedClip = AeroTextField(proClipboardText ?? string.Empty,
                             fieldStyle, GUILayout.Height(24));
                         if (!string.Equals(typedClip, proClipboardText, StringComparison.Ordinal))
                         {
@@ -133,7 +133,7 @@ namespace AeroMenu
                     {
                         GUILayout.Label(MenuText(L("Expression (+ - * / and parentheses):",
                                                    "Выражение (+ - * / и скобки):")), menuDescStyle);
-                        string typedExpr = GUILayout.TextField(proCalcExpression ?? string.Empty,
+                        string typedExpr = AeroTextField(proCalcExpression ?? string.Empty,
                             fieldStyle, GUILayout.Height(24));
                         if (!string.Equals(typedExpr, proCalcExpression, StringComparison.Ordinal))
                         {
@@ -167,7 +167,7 @@ namespace AeroMenu
                         L("Enable Notes Pad", "Включить блок заметок"), toggleW, "proNotesPad");
                     if (proNotesPad)
                     {
-                        string typedNotes = GUILayout.TextArea(proNotesText ?? string.Empty,
+                        string typedNotes = AeroTextArea(proNotesText ?? string.Empty,
                             areaStyle, GUILayout.Height(130));
                         if (!string.Equals(typedNotes, proNotesText, StringComparison.Ordinal))
                         {

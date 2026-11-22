@@ -53,10 +53,13 @@ namespace AeroMenu
             }
 
             float ease = SmoothMenuTab(anim.Progress);
-            float slide = (1f - ease) * 18f * anim.Dir;
+            // Never mutate GUI.matrix here. The slide value depends on Progress,
+            // which only advances on Repaint; setting a matrix from it during
+            // Layout makes GUILayout cache rects under a different transform and
+            // the body gets drawn on top of the sidebar. Capture it only so the
+            // existing try/finally call sites stay valid; leave it untouched.
             oldMatrix = GUI.matrix;
             oldColor = GUI.color;
-            GUI.matrix = Matrix4x4.Translate(new Vector3(slide, 0f, 0f)) * oldMatrix;
             GUI.color = new Color(oldColor.r, oldColor.g, oldColor.b, oldColor.a * Mathf.Clamp01(ease * 1.25f));
         }
 

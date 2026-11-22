@@ -501,7 +501,7 @@ namespace AeroMenu
                         buffer = value.ToString();
                     }
 
-                    string typed = GUILayout.TextField(buffer, inputBlockStyle, GUILayout.Width(52f));
+                    string typed = AeroTextField(buffer, inputBlockStyle, GUILayout.Width(52f));
                     if (!string.Equals(typed, buffer, StringComparison.Ordinal))
                     {
                         buffer = typed;

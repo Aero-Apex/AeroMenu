@@ -85,7 +85,7 @@ namespace AeroMenu
 
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(MenuText(L("Size", "\u0420\u0430\u0437\u043C\u0435\u0440")), GUILayout.Width(70));
-                float chSize = GUILayout.HorizontalSlider((float)extraCrosshairSize, 4f, 80f);
+                float chSize = ThemedSlider((float)extraCrosshairSize, 4f, 80f);
                 extraCrosshairSize = Mathf.Clamp(Mathf.RoundToInt(chSize), 4, 80);
                 GUILayout.Label(extraCrosshairSize.ToString(), GUILayout.Width(34));
                 GUILayout.EndHorizontal();

@@ -303,19 +303,19 @@ private void UpdateMenuTrackTex(Texture2D tex, Color color)
             FontStyle menuTextStyle = boldMenuText ? FontStyle.Bold : FontStyle.Normal;
             Color accent = GetMenuAccentColor();
             Color controlAccent = GetMenuControlAccentColor();
-            Color darkBg = isLightTheme ? new Color(0.97f, 0.97f, 0.97f, 0.78f) : new Color(0.12f, 0.12f, 0.12f, 0.90f);
-            Color sidebarBg = new Color(0.0f, 0.0f, 0.0f, 0.0f);
-            Color boxBg = new Color(0f, 0f, 0f, 0f);
+            Color darkBg = isLightTheme ? new Color(0.97f, 0.97f, 0.97f, 0.98f) : new Color(0.10f, 0.10f, 0.10f, 0.98f);
+            Color sidebarBg = isLightTheme ? new Color(0.92f, 0.92f, 0.92f, 0.95f) : new Color(0.06f, 0.06f, 0.06f, 0.95f);
+            Color boxBg = isLightTheme ? new Color(1f, 1f, 1f, 0.7f) : new Color(0.14f, 0.14f, 0.14f, 0.7f);
             Color btnCol = isLightTheme ? new Color32(252, 247, 240, 255) : new Color(0.23f, 0.23f, 0.23f, 1f);
             Color sliderBgCol = isLightTheme ? new Color(0.78f, 0.78f, 0.78f, 0.68f) : new Color(0.08f, 0.08f, 0.08f, 1f);
-            Color textMain = isLightTheme ? new Color(0.18f, 0.18f, 0.18f, 1f) : new Color(0.78f, 0.78f, 0.78f, 1f);
-            Color textMuted = isLightTheme ? new Color(0.33f, 0.33f, 0.33f, 1f) : new Color(0.6f, 0.6f, 0.6f, 1f);
+            Color textMain = isLightTheme ? new Color(0.12f, 0.12f, 0.12f, 1f) : new Color(0.94f, 0.94f, 0.94f, 1f);
+            Color textMuted = isLightTheme ? new Color(0.28f, 0.28f, 0.28f, 1f) : new Color(0.82f, 0.82f, 0.82f, 1f);
             Color textHover = isLightTheme ? new Color(0.06f, 0.06f, 0.06f, 1f) : Color.white;
             Color headerText = RgbMenuTextActive() ? accent : (isLightTheme ? new Color(0.15f, 0.15f, 0.15f, 1f) : accent);
             Color inputBgCol = isLightTheme ? new Color(1f, 1f, 1f, 0.86f) : new Color(0.08f, 0.08f, 0.08f, 0.85f);
 
             float round = Mathf.Clamp(menuCornerRoundness, 0f, 16f);
-            float opacity = Mathf.Clamp(menuOpacity, 0.35f, 1f);
+            float opacity = Mathf.Clamp(menuOpacity, 0.96f, 1f);
             darkBg.a *= opacity;
 
             texWindowBg = MakeRoundedTex(64, darkBg, round);
@@ -331,10 +331,8 @@ private void UpdateMenuTrackTex(Texture2D tex, Color color)
             texColorWheel = new Texture2D(28, 28, TextureFormat.RGBA32, false);
             texColorWheel.hideFlags = HideFlags.HideAndDontSave;
             UpdateColorWheelTex(texColorWheel, accent, controlAccent);
-            UpdateRoundedGradientTex(texAccent, accent, controlAccent, 6f);
-            UpdateRoundedGradientTex(texSliderThumb, accent, controlAccent, 10f);
 
-            Color cardCol = isLightTheme ? new Color(1f, 1f, 1f, 0.32f * opacity) : new Color(1f, 1f, 1f, 0.045f * opacity);
+            Color cardCol = isLightTheme ? new Color(1f, 1f, 1f, 0.55f * opacity) : new Color(1f, 1f, 1f, 0.10f * opacity);
             texMenuCard = MakeRoundedTex(64, cardCol, round);
             int cardBorder = Mathf.Max(1, Mathf.RoundToInt(round));
 
@@ -524,6 +522,8 @@ private void UpdateMenuTrackTex(Texture2D tex, Color color)
             sliderThumbStyle.hover.background = texSliderThumb;
             sliderThumbStyle.active.background = texSliderThumb;
             sliderThumbStyle.focused.background = texSliderThumb;
+            themedSliderS = sliderStyle;
+            themedSliderThumbS = sliderThumbStyle;
             sliderThumbStyle.onNormal.background = texSliderThumb;
             sliderThumbStyle.onHover.background = texSliderThumb;
             sliderThumbStyle.onActive.background = texSliderThumb;

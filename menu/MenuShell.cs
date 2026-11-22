@@ -48,6 +48,41 @@ private string menuTitleText;
 
 private int menuTitleFrame = -1;
 
+// IMGUI requires the GUILayout.BeginArea rect to be identical between the
+// Layout and Repaint events. Animation progress advances only on Repaint, so
+// computing body geometry inline made that rect differ every frame and caused
+// the body to be painted at the wrong X (on top of the sidebar). Freeze it.
+private static int menuGeomFrame = -1;
+private static float menuGeomVisibleW = 80f;
+private static float menuGeomSideW = 0f;
+private static float menuGeomBodyX = 4f;
+private static float menuGeomBodyY = 36f;
+private static float menuGeomBodyW = 64f;
+private static float menuGeomBodyH = 100f;
+private static float menuGeomBodySlide = 0f;
+private static float menuGeomBodyAlpha = 1f;
+
+private void EnsureMenuFrameGeometry()
+{
+    if (menuGeomFrame == Time.frameCount) return;
+    menuGeomFrame = Time.frameCount;
+
+    menuGeomVisibleW = Mathf.Max(80f, windowRect.width);
+    menuGeomSideW = GetMenuSidebarWidth();
+    float ease = SmoothMenuTab(tabTransitionProgress);
+    menuGeomBodyX = menuGeomSideW > 0f ? menuGeomSideW + (menuGeomSideW < 90f ? 6f : 10f) : 4f;
+    menuGeomBodyW = Mathf.Max(64f, menuGeomVisibleW - menuGeomBodyX - 14f);
+    menuGeomBodyY = 36f + ((1f - ease) * 10f);
+    menuGeomBodyH = windowRect.height - 46f;
+    menuGeomBodySlide = (1f - ease) * 34f * tabTransitionDir;
+    menuGeomBodyAlpha = Mathf.Clamp01(ease * 1.2f);
+    if (menuGeomSideW <= 0f)
+    {
+        menuGeomBodyY = 103f + ((1f - ease) * 6f);
+        menuGeomBodyH = windowRect.height - 111f;
+    }
+}
+
 public void OnGUI()
         {
             if (isPanicked) return;
@@ -462,18 +497,7 @@ private void DrawMenuWindowIfVisible()
 
                 if (drawMenuWindow == null) drawMenuWindow = DrawAeroMenu;
 
-                Matrix4x4 oldGuiMatrix = GUI.matrix;
-                float appliedScale = Mathf.Clamp(menuScale, 0.65f, 1.75f);
-                if (!Mathf.Approximately(appliedScale, 1f))
-                    GUI.matrix = Matrix4x4.Scale(new Vector3(appliedScale, appliedScale, 1f));
-                try
-                {
-                    windowRect = GUI.Window(0, windowRect, drawMenuWindow, "", windowStyle);
-                }
-                finally
-                {
-                    GUI.matrix = oldGuiMatrix;
-                }
+                windowRect = GUI.Window(0, windowRect, drawMenuWindow, "", windowStyle);
             }
             finally
             {
@@ -513,8 +537,11 @@ private static float GetMenuSidebarWidth()
 
 private static float GetMenuVisibleWidth()
         {
-            try { return Mathf.Max(80f, Mathf.Min(windowRect.width, Screen.width - windowRect.x)); }
-            catch { return windowRect.width; }
+            // Use the window rect only. Screen.width can report different values
+            // across IMGUI Layout/Repaint events under Wine, which desyncs layout.
+            // Once frozen for this frame, every consumer reads the same width.
+            if (menuGeomFrame == Time.frameCount) return menuGeomVisibleW;
+            return Mathf.Max(80f, windowRect.width);
         }
 
 private static float GetMenuBodyX()
@@ -559,7 +586,24 @@ private void SetMenuTab(int tab)
             isEditingDeviceId = isEditingGhostChatColor = isEditingBan = isEditingFpsLimit =
             isEditingBugRoomTimedAutoRun = isEditingSearch = isEditingStatusText = isEditingAccentHex = false;
             customSpoofRpcInputFocused = false;
+            aeroFocusedField = -1;
             ResetAllBindWaitsStatic();
+        }
+
+// GUILayout.BeginArea(Rect) drops the rect's x/y in this Il2Cpp/Wine build
+        // (areas are drawn at the parent origin). GUI.BeginGroup is immediate-mode
+        // and positions correctly, so pin the area with a group and use a
+        // zero-origin area inside it.
+        private static void BeginPinnedArea(Rect r)
+        {
+            GUI.BeginGroup(r);
+            GUILayout.BeginArea(new Rect(0f, 0f, r.width, r.height));
+        }
+
+        private static void EndPinnedArea()
+        {
+            try { GUILayout.EndArea(); }
+            finally { GUI.EndGroup(); }
         }
 
 private void DrawAnimatedSidebarHighlight()
@@ -616,19 +660,16 @@ private void TrackAnimatedSidebarHighlight(int tab, Rect rect)
             float visibleW = GetMenuVisibleWidth();
             bool microMenu = visibleW < 150f;
 
-            GUILayout.BeginHorizontal();
-            try
+            // Header: absolute rects only. A GUILayout header row lost its
+            // FlexibleSpace on some frames, which threw the close button to the left.
+            if (!microMenu && menuTitleFrame != Time.frameCount)
             {
-                if (!microMenu && menuTitleFrame != Time.frameCount)
-                {
-                    menuTitleText = ApplyMenuShimmer("Aero Menu");
-                    menuTitleFrame = Time.frameCount;
-                }
-                GUILayout.Label(microMenu ? "Aero" : menuTitleText, titleStyle);
-                GUILayout.FlexibleSpace();
-                if (GUILayout.Button("✕", menuCloseButtonStyle)) { showMenu = false; FlushAllSaves(); }
+                Color titleAccent = GetMenuControlAccentColor();
+                menuTitleText = "<color=#" + ColorUtility.ToHtmlStringRGB(titleAccent) + ">Aero Menu</color>";
+                menuTitleFrame = Time.frameCount;
             }
-            finally { GUILayout.EndHorizontal(); }
+            GUI.Label(new Rect(0f, 0f, Mathf.Max(40f, windowRect.width - 40f), 30f), microMenu ? "Aero" : menuTitleText, titleStyle);
+            if (GUI.Button(new Rect(windowRect.width - 30f, 6f, 20f, 18f), "X", menuCloseButtonStyle)) { showMenu = false; FlushAllSaves(); }
 
             GUI.color = new Color(1f, 1f, 1f, 0.1f);
             GUI.Box(new Rect(0, 30, windowRect.width, 1), "", safeLineStyle);
@@ -642,15 +683,9 @@ private void TrackAnimatedSidebarHighlight(int tab, Rect rect)
                 return;
             }
 
-            float sideW = GetMenuSidebarWidth();
-            float bodyX = GetMenuBodyX();
-            float bodyW = GetMenuBodyWidth();
-            float tabEase = SmoothMenuTab(tabTransitionProgress);
-            float bodyY = 36f + ((1f - tabEase) * 10f);
-            float bodyH = windowRect.height - 46f;
-            float bodySlide = (1f - tabEase) * 34f * tabTransitionDir;
-            float bodyAlpha = Mathf.Clamp01(tabEase * 1.2f);
-
+            EnsureMenuFrameGeometry();
+            float sideW = menuGeomSideW;
+            float bodyAlpha = menuGeomBodyAlpha;
             GUIStyle sideBtn = sidebarBtnStyle;
             GUIStyle sideBtnOn = activeSidebarBtnStyle;
             if (sideW < 110f)
@@ -659,38 +694,14 @@ private void TrackAnimatedSidebarHighlight(int tab, Rect rect)
                 sideBtnOn = sideW < 70f ? activeSidebarNarrowStyle : activeSidebarCompactStyle;
             }
 
-            if (sideW > 0f)
-            {
-                GUILayout.BeginArea(new Rect(0f, 31f, sideW, windowRect.height - 31f));
-                try
-                {
-                    GUILayout.BeginVertical(sidebarStyle, GUILayout.ExpandHeight(true));
-                    try
-                    {
-                        GUILayout.Space(5);
-                        for (int i = 0; i < tabNames.Length; i++)
-                        {
-                            if (i == 0) DrawAnimatedSidebarHighlight();
-                            if (GUILayout.Button(tabNames[i], i == targetTabIndex ? sideBtnOn : sideBtn, GUILayout.Height(24)))
-                                SetMenuTab(i);
-                            TrackAnimatedSidebarHighlight(i, GUILayoutUtility.GetLastRect());
-                        }
-                    }
-                    finally { GUILayout.EndVertical(); }
-                }
-                finally { GUILayout.EndArea(); }
-
-                GUI.color = new Color(1f, 1f, 1f, 0.1f);
-                GUI.Box(new Rect(sideW, 31, 1, windowRect.height), "", safeLineStyle);
-            }
-            else
+            // Narrow-but-not-micro layout: a 3x3 top bar instead of a sidebar.
+            if (sideW <= 0f)
             {
                 GUIStyle topBtn = topSidebarStyle;
                 GUIStyle topBtnOn = activeTopSidebarStyle;
                 float topW = GetMenuVisibleWidth() - 8f;
                 float btnW = Mathf.Max(18f, Mathf.Floor((topW - 4f) / 3f));
-
-                GUILayout.BeginArea(new Rect(4f, 32f, topW, 68f));
+                BeginPinnedArea(new Rect(4f, 32f, topW, 68f));
                 try
                 {
                     for (int row = 0; row < 3; row++)
@@ -712,18 +723,40 @@ private void TrackAnimatedSidebarHighlight(int tab, Rect rect)
                         finally { GUILayout.EndHorizontal(); }
                     }
                 }
-                finally { GUILayout.EndArea(); }
-
-                bodyY = 103f + ((1f - tabEase) * 6f);
-                bodyH = windowRect.height - 111f;
+                finally { EndPinnedArea(); }
             }
 
-            DrawMenuCharacter(bodyX, bodyY, bodyW, bodyH, bodyAlpha);
-            GUI.color = new Color(1f, 1f, 1f, bodyAlpha);
+            // Sidebar: absolute GUI.Button rects (no layout involved).
+            // Body: pinned group + zero-origin GUILayout area.
+            float sideWFinal = sideW;
+            float topOffset = sideWFinal > 0f ? 0f : 68f;
+            float contentTop = 31f + topOffset;
+            float areaH = windowRect.height - contentTop - (showStatusBar ? 22f : 0f);
+            if (areaH < 60f) areaH = 60f;
 
-            GUILayout.BeginArea(new Rect(bodyX + bodySlide, bodyY, bodyW, bodyH));
+            if (sideWFinal > 0f)
+            {
+                DrawAnimatedSidebarHighlight();
+                float by = contentTop + 5f;
+                for (int i = 0; i < tabNames.Length; i++)
+                {
+                    Rect br = new Rect(4f, by, sideWFinal - 8f, 24f);
+                    if (GUI.Button(br, tabNames[i], i == targetTabIndex ? sideBtnOn : sideBtn))
+                        SetMenuTab(i);
+                    TrackAnimatedSidebarHighlight(i, br);
+                    by += 26f;
+                }
+                GUI.color = new Color(1f, 1f, 1f, 0.1f);
+                GUI.Box(new Rect(sideWFinal, contentTop, 1f, areaH), "", safeLineStyle);
+                GUI.color = Color.white;
+            }
+
+            float bodyLeft = sideWFinal > 0f ? sideWFinal + 8f : 4f;
+            float bodyWidth = Mathf.Max(64f, windowRect.width - bodyLeft - 6f);
+            BeginPinnedArea(new Rect(bodyLeft, contentTop + 4f, bodyWidth, areaH - 4f));
             try
             {
+                GUI.color = new Color(1f, 1f, 1f, bodyAlpha);
                 scrollPosition = GUILayout.BeginScrollView(scrollPosition, false, false, GUIStyle.none, GUI.skin.verticalScrollbar);
                 try
                 {
@@ -733,35 +766,35 @@ private void TrackAnimatedSidebarHighlight(int tab, Rect rect)
                         GUILayout.BeginVertical();
                         try
                         {
-                            int tabToDraw = (tabTransitionProgress < 1f) ? targetTabIndex : currentTab;
+                                    int tabToDraw = (tabTransitionProgress < 1f) ? targetTabIndex : currentTab;
 
-                            if (tabToDraw == 0) DrawGeneralTab();
-                            else if (tabToDraw == 1) DrawSelfTab();
-                            else if (tabToDraw == 2) DrawVisualsTab();
-                            else if (tabToDraw == 3) { try { DrawPlayersTab(); } catch { } }
-                            else if (tabToDraw == 4) { try { DrawSabotageAnimationTab(); } catch { } }
-                            else if (tabToDraw == 5) DrawHostOnlyTab();
-                            else if (tabToDraw == 6) DrawVotekickTab();
-                            else if (tabToDraw == 7) DrawMenuTab();
-                            else if (tabToDraw == 8) { try { DrawSearchTab(); } catch (System.Exception ex) { Plugin.Instance?.Log?.LogError("SearchTab error: " + ex); GUILayout.Label("Search error [" + ex.GetType().Name + "]: " + ex.Message); } }
+                                    if (tabToDraw == 0) DrawGeneralTab();
+                                    else if (tabToDraw == 1) DrawSelfTab();
+                                    else if (tabToDraw == 2) DrawVisualsTab();
+                                    else if (tabToDraw == 3) { try { DrawPlayersTab(); } catch { } }
+                                    else if (tabToDraw == 4) { try { DrawSabotageAnimationTab(); } catch { } }
+                                    else if (tabToDraw == 5) DrawHostOnlyTab();
+                                    else if (tabToDraw == 6) DrawVotekickTab();
+                                    else if (tabToDraw == 7) DrawMenuTab();
+                                    else if (tabToDraw == 8) { try { DrawSearchTab(); } catch (System.Exception ex) { Plugin.Instance?.Log?.LogError("SearchTab error: " + ex); GUILayout.Label("Search error [" + ex.GetType().Name + "]: " + ex.Message); } }
 
-                            // 50 PRO features are embedded in existing tabs (no new tabs).
-                            float proWidth = Mathf.Max(180f, GetMenuWorkWidth(220f, 610f) - 18f);
-                            GUILayout.Space(10);
-                            if (tabToDraw == 0) { try { DrawProM(proWidth); } catch { } try { DrawProR(proWidth); } catch { } }
-                            else if (tabToDraw == 1) { try { DrawProN(proWidth); } catch { } try { DrawProQ(proWidth); } catch { } try { DrawProT(proWidth); } catch { } try { DrawProU(proWidth); } catch { } }
-                            else if (tabToDraw == 2) { try { DrawProO(proWidth); } catch { } }
-                            else if (tabToDraw == 5) { try { DrawProP(proWidth); } catch { } try { DrawProS(proWidth); } catch { } try { DrawProV(proWidth); } catch { } }
+                                    // Cards add 32px of padding around this width; keep the card inside the scroll view.
+                                    float proWidth = Mathf.Max(160f, GetMenuWorkWidth(220f, 610f) - 18f - 32f);
+                                    GUILayout.Space(10);
+                                    if (tabToDraw == 0) { try { DrawProM(proWidth); } catch { } try { DrawProR(proWidth); } catch { } try { DrawAutoUpdater(proWidth); } catch { } }
+                                    else if (tabToDraw == 1) { try { DrawProN(proWidth); } catch { } try { DrawProQ(proWidth); } catch { } try { DrawProT(proWidth); } catch { } try { DrawProU(proWidth); } catch { } }
+                                    else if (tabToDraw == 2) { try { DrawProO(proWidth); } catch { } }
+                                    else if (tabToDraw == 5) { try { DrawProP(proWidth); } catch { } try { DrawProS(proWidth); } catch { } try { DrawProV(proWidth); } catch { } }
                         }
                         finally { GUILayout.EndVertical(); }
-
                         GUILayout.Space(10);
                     }
                     finally { GUILayout.EndHorizontal(); }
                 }
                 finally { GUILayout.EndScrollView(); }
+                GUI.color = Color.white;
             }
-            finally { GUILayout.EndArea(); }
+            finally { EndPinnedArea(); }
 
             DrawStatusBar();
 
@@ -797,7 +830,7 @@ private void TrackAnimatedSidebarHighlight(int tab, Rect rect)
                 bool savedRecently = Time.unscaledTime - lastSavedAt < 2.5f;
 
                 string leftText = (statusBarText ?? string.Empty);
-                if (leftText.Length == 0) leftText = "{key} — toggle menu";
+                if (leftText.Length == 0) leftText = "{key} - toggle menu";
                 leftText = leftText.Replace("{key}", keyName).Replace("{version}", Plugin.DisplayVersion);
 
                 GUI.Label(new Rect(bar.x + 10f, bar.y + 3f, bar.width * 0.6f, h - 4f), leftText, statusBarLeftStyle);
@@ -835,7 +868,7 @@ private void DrawMicroMenu(float visibleW)
             GUIStyle st = topSidebarStyle;
             GUIStyle on = activeTopSidebarStyle;
 
-            GUILayout.BeginArea(new Rect(4f, 34f, w, Mathf.Max(60f, windowRect.height - 40f)));
+            BeginPinnedArea(new Rect(4f, 34f, w, Mathf.Max(60f, windowRect.height - 40f)));
             try
             {
                 for (int i = 0; i < tabNames.Length; i++)
@@ -849,7 +882,7 @@ private void DrawMicroMenu(float visibleW)
                 GUILayout.Space(4f);
                 GUILayout.Label("WIDEN", microMenuHintStyle, GUILayout.Width(w), GUILayout.Height(14f));
             }
-            finally { GUILayout.EndArea(); }
+            finally { EndPinnedArea(); }
         }
     }
 }

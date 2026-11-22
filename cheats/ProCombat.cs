@@ -111,7 +111,7 @@ namespace AeroMenu
 
                     GUILayout.BeginHorizontal();
                     GUILayout.Label(L("Multiplier:", "Множитель:"), GUILayout.Width(Mathf.Min(170f, toggleW * 0.55f)));
-                    string typed = GUILayout.TextField(taskSpeedTextN, fieldStyle, GUILayout.Width(70f));
+                    string typed = AeroTextField(taskSpeedTextN, fieldStyle, GUILayout.Width(70f));
                     if (!string.Equals(typed, taskSpeedTextN, StringComparison.Ordinal))
                     {
                         taskSpeedTextN = typed ?? string.Empty;

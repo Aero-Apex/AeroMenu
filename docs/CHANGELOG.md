@@ -1,5 +1,22 @@
 ﻿# Changelog
 
+## v1.0.4 — 2026-11-22
+
+### Added
+
+- Auto-updater (MENU / General tab): checks GitHub releases on launch, downloads the newest `AeroMenu.dll` in the background and installs it on the next game start (with a backup of the previous DLL).
+- In-game screenshots in the README.
+
+### Fixed
+
+- Fixed the sidebar/content overlap: `GUILayout.BeginArea(Rect)` ignores the rect position in this IL2CPP build, so the menu body is now pinned with `GUI.BeginGroup` and the sidebar uses fixed rects.
+- Fixed 45 EXTRAS features never showing: `GUILayout.TextField`/`TextArea` throw "Method unstripping failed" in this build, which aborted the EXTRAS tab after section C. All 15 text boxes now use a built-in replacement text field (typing, backspace, Ctrl/Cmd+C/V/X, Enter/Esc), and each EXTRAS section is isolated so one failure can no longer hide the rest.
+- Fixed the close button: it was drawn on the wrong side on some frames and showed an empty square (the game font has no `✕` glyph).
+- Fixed EXTRAS and PRO cards running past the right edge of the menu.
+- Fixed sliders with no visible track (crosshair size, chat font, graphics, minimap zoom, push/pull, spin, scale, color ID).
+- Fixed the "Force Vote" toggle running off the Visuals tab, truncated labels in Search, the content area hiding under the status bar, and overlapping overlay panels / list overflow labels.
+- Fixed text: "vv1.0.4" on the Welcome page, the "sendQUICK CHAT1" button label, Russian-only Anti-Cheat mode descriptions and the "нет" RPC label in Player History.
+
 ## v1.0.3 — 2026-11-22
 
 ### Added

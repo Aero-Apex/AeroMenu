@@ -54,7 +54,8 @@ public void Update()
             MoreLobbyInfo_GameContainer_SetupGameInfo_Postfix.UpdateStyledNames();
             NetworkedClones.Tick(showMenu);
 
-            bool isTypingOrBinding = isEditingName || isEditingLevel || isEditingFriendCode || isEditingLocalFriendCode || isEditingGhostChatColor || isEditingBan || customChatInputFocused ||
+            if (!showMenu) aeroFocusedField = -1;
+            bool isTypingOrBinding = AeroTextFieldFocused || isEditingName || isEditingLevel || isEditingFriendCode || isEditingLocalFriendCode || isEditingGhostChatColor || isEditingBan || customChatInputFocused ||
                                      isEditingDeviceId || isEditingFpsLimit || isEditingBugRoomTimedAutoRun || isEditingSearch ||
                                      isEditingStatusText || isEditingAccentHex ||
                                      isWaitingForBind || isWaitingForBindAlt || isWaitBindMassMorph || isWaitBindSpawnLobby ||
@@ -72,6 +73,7 @@ isWaitBindReviveAll || isWaitBindToggleAutoFix || isWaitBindCopyCode;
 
             TickExtras(isTypingOrBinding || gameBlockingInput);
             TickPro(isTypingOrBinding || gameBlockingInput);
+            TickAutoUpdater();
 
             if (!isTypingOrBinding && !gameBlockingInput && ToggleMenuPressed())
             {

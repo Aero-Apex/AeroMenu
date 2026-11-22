@@ -10,7 +10,7 @@
   <img src="https://img.shields.io/badge/Among%20Us-Mod%20Menu-4b5563?style=flat-square" alt="Among Us Mod Menu">
   <img src="https://img.shields.io/badge/IL2CPP-BepInEx%206-374151?style=flat-square" alt="BepInEx IL2CPP">
   <img src="https://img.shields.io/badge/C%23-.NET%206-512BD4?style=flat-square&logo=csharp&logoColor=white" alt="C#">
-  <img src="https://img.shields.io/badge/Version-v1.0.3-a855f7?style=flat-square" alt="Version v1.0.3">
+  <img src="https://img.shields.io/badge/Version-v1.0.4-a855f7?style=flat-square" alt="Version v1.0.4">
   <img src="https://img.shields.io/github/downloads/Aero-Apex/AeroMenu/total?style=flat-square&label=Downloads&color=2563eb" alt="Downloads">
 </p>
 
@@ -35,6 +35,33 @@ Aero Menu is a BepInEx IL2CPP mod menu for Among Us.
 It uses a custom IMGUI interface and includes local visual tools, player utilities, lobby controls, host features, cosmetics, moderation tools and other experimental options — all searchable from an in-game search tab and rebindable to any key.
 
 Some features are completely local, while others interact with the current lobby and may require host permissions.
+
+## 📸 Screenshots
+
+Captured in-game (Among Us 2026.9.29, BepInEx IL2CPP) with AeroMenu v1.0.4.
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/screenshots/general-information.png" width="420" alt="General - Information"><br><sub>General · Information</sub></td>
+    <td align="center"><img src="docs/screenshots/extras-overlays.png" width="420" alt="General - Extras"><br><sub>General · Extras (60 features)</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/screenshots/extras-utility.png" width="420" alt="Extras - Utility"><br><sub>Extras · Utility &amp; chat macros</sub></td>
+    <td align="center"><img src="docs/screenshots/self-spoof.png" width="420" alt="Self - Spoof"><br><sub>Self · Spoof</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/screenshots/self-chat.png" width="420" alt="Self - Chat"><br><sub>Self · Chat</sub></td>
+    <td align="center"><img src="docs/screenshots/visuals.png" width="420" alt="Visuals"><br><sub>Visuals · In-game</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/screenshots/sabotages.png" width="420" alt="Sabotages"><br><sub>Sabotages</sub></td>
+    <td align="center"><img src="docs/screenshots/host-lobby-controls.png" width="420" alt="Host Only - Lobby Controls"><br><sub>Host Only · Lobby Controls</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/screenshots/host-anticheat.png" width="420" alt="Host Only - Anti Cheat"><br><sub>Host Only · Anti Cheat</sub></td>
+    <td align="center"><img src="docs/screenshots/search.png" width="420" alt="Search"><br><sub>Search (every option in one list)</sub></td>
+  </tr>
+</table>
 
 ## ✨ Features
 

@@ -100,7 +100,7 @@ namespace AeroMenu
 
                     GUILayout.BeginHorizontal();
                     GUILayout.Label(L("Close after (s):", "Закрыть через (с):"), GUILayout.Width(Mathf.Min(148f, toggleW * 0.62f)));
-                    string typed = GUILayout.TextField(autoCloseTextH, fieldStyle, GUILayout.Width(56));
+                    string typed = AeroTextField(autoCloseTextH, fieldStyle, GUILayout.Width(56));
                     if (!string.Equals(typed, autoCloseTextH, StringComparison.Ordinal))
                     {
                         autoCloseTextH = typed ?? string.Empty;

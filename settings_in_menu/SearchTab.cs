@@ -242,7 +242,7 @@ namespace AeroMenu
 
                         bool current;
                         if (!TryGetFeatureValue(f, out current)) continue;
-                        bool next = DrawToggle(current, f.label, 0);
+                        bool next = DrawToggle(current, f.label, Mathf.RoundToInt(Mathf.Max(200f, GetMenuWorkWidth(220f, 610f) - 70f)));
                         if (next != current)
                         {
                             try { f.field.SetValue(null, next); settingsDirty = true; }

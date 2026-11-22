@@ -119,7 +119,7 @@ namespace AeroMenu
                         wordWrap = false
                     };
                 }
-                extraNameSuffixText = GUILayout.TextField(
+                extraNameSuffixText = AeroTextField(
                     extraNameSuffixText ?? string.Empty,
                     jSuffixInputStyle,
                     GUILayout.Width(Mathf.Max(80f, toggleWidth - 66f)),
@@ -135,7 +135,7 @@ namespace AeroMenu
                 extraPlayerScale = DrawToggle(extraPlayerScale, L("Player Scale", "Масштаб игрока"), toggleWidth, "extraPlayerScaleJ");
                 GUILayout.BeginHorizontal(GUILayout.Width(toggleWidth));
                 GUILayout.Label(L("Scale:", "Масштаб:"), toggleLabelStyle, GUILayout.Width(58f));
-                extraPlayerScaleValue = GUILayout.HorizontalSlider(
+                extraPlayerScaleValue = ThemedSlider(
                     Mathf.Clamp(extraPlayerScaleValue, 0.05f, 5f), 0.05f, 5f,
                     GUILayout.Width(Mathf.Max(60f, toggleWidth - 130f)));
                 extraPlayerScaleValue = Mathf.Clamp(extraPlayerScaleValue, 0.05f, 5f);
@@ -161,7 +161,7 @@ namespace AeroMenu
                 extraLocalColorLock = DrawToggle(extraLocalColorLock, L("Local Color Lock", "Фикс. цвет (локально)"), toggleWidth, "extraLocalColorLockJ");
                 GUILayout.BeginHorizontal(GUILayout.Width(toggleWidth));
                 GUILayout.Label(L("Color ID:", "ID цвета:"), toggleLabelStyle, GUILayout.Width(58f));
-                extraLocalColorLockId = Mathf.RoundToInt(GUILayout.HorizontalSlider(
+                extraLocalColorLockId = Mathf.RoundToInt(ThemedSlider(
                     Mathf.Clamp(extraLocalColorLockId, 0, 17), 0f, 17f,
                     GUILayout.Width(Mathf.Max(60f, toggleWidth - 130f))));
                 extraLocalColorLockId = Mathf.Clamp(extraLocalColorLockId, 0, 17);

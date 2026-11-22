@@ -470,7 +470,7 @@ namespace AeroMenu
             {
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(MenuText(label), menuDescStyle, GUILayout.Width(120));
-                float f = GUILayout.HorizontalSlider((float)value, (float)min, (float)max);
+                float f = ThemedSlider((float)value, (float)min, (float)max);
                 GUILayout.Label(Mathf.RoundToInt(f).ToString(), ValueStyleM(), GUILayout.Width(38));
                 GUILayout.EndHorizontal();
                 return Mathf.Clamp(Mathf.RoundToInt(f), min, max);
@@ -484,7 +484,7 @@ namespace AeroMenu
             {
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(MenuText(label), menuDescStyle, GUILayout.Width(120));
-                float f = GUILayout.HorizontalSlider(value, min, max);
+                float f = ThemedSlider(value, min, max);
                 GUILayout.Label(f.ToString("0.00"), ValueStyleM(), GUILayout.Width(38));
                 GUILayout.EndHorizontal();
                 return Mathf.Clamp(f, min, max);
@@ -499,7 +499,7 @@ namespace AeroMenu
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(MenuText(L("AA Samples", "Сэмплы AA")), menuDescStyle, GUILayout.Width(120));
                 int index = AaIndexFromLevelM(level);
-                float f = GUILayout.HorizontalSlider((float)index, 0f, (float)(ProAaLevelsM.Length - 1));
+                float f = ThemedSlider((float)index, 0f, (float)(ProAaLevelsM.Length - 1));
                 int next = AaLevelFromIndexM(Mathf.RoundToInt(f));
                 GUILayout.Label(next == 0 ? "OFF" : (next + "x"), ValueStyleM(), GUILayout.Width(38));
                 GUILayout.EndHorizontal();

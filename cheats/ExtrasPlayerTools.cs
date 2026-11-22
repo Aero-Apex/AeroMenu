@@ -63,7 +63,7 @@ namespace AeroMenu
                     try
                     {
                         GUILayout.Label($"{L("Push/Pull Strength", "Сила толчка")}: {extraPushPullStrength:0.0}", toggleLabelStyle, GUILayout.Width(labelWidth));
-                        extraPushPullStrength = GUILayout.HorizontalSlider(extraPushPullStrength, 0.1f, 50f, GUILayout.ExpandWidth(true));
+                        extraPushPullStrength = ThemedSlider(extraPushPullStrength, 0.1f, 50f, GUILayout.ExpandWidth(true));
                         if (GUILayout.Button("R", btnStyle, GUILayout.Width(24f))) extraPushPullStrength = 3f;
                     }
                     finally { GUILayout.EndHorizontal(); }
@@ -76,7 +76,7 @@ namespace AeroMenu
                     try
                     {
                         GUILayout.Label($"{L("Target Speed", "Скорость цели")}: {extraTargetSpeedValue:0.00}", toggleLabelStyle, GUILayout.Width(labelWidth));
-                        extraTargetSpeedValue = GUILayout.HorizontalSlider(extraTargetSpeedValue, 0.01f, 20f, GUILayout.ExpandWidth(true));
+                        extraTargetSpeedValue = ThemedSlider(extraTargetSpeedValue, 0.01f, 20f, GUILayout.ExpandWidth(true));
                         if (GUILayout.Button("R", btnStyle, GUILayout.Width(24f))) extraTargetSpeedValue = 2.5f;
                     }
                     finally { GUILayout.EndHorizontal(); }
@@ -92,7 +92,7 @@ namespace AeroMenu
                     try
                     {
                         GUILayout.Label($"{L("Spin Speed", "Скорость вращения")}: {extraSpinSpeed:0}", toggleLabelStyle, GUILayout.Width(labelWidth));
-                        extraSpinSpeed = GUILayout.HorizontalSlider(extraSpinSpeed, -1440f, 1440f, GUILayout.ExpandWidth(true));
+                        extraSpinSpeed = ThemedSlider(extraSpinSpeed, -1440f, 1440f, GUILayout.ExpandWidth(true));
                         if (GUILayout.Button("R", btnStyle, GUILayout.Width(24f))) extraSpinSpeed = 360f;
                     }
                     finally { GUILayout.EndHorizontal(); }

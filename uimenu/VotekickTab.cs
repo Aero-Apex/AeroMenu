@@ -100,7 +100,7 @@ namespace AeroMenu
 
                 GUILayout.Space(4);
                 bool hostTarget = VotekickHostIsTarget();
-                if (GUILayout.Button(hostTarget ? L("HOST TARGET: ON", "ХОСТ — ЦЕЛЬ: ВКЛ") : L("HOST TARGET", "ХОСТ — ЦЕЛЬ"), hostTarget ? activeTabStyle : btnStyle, GUILayout.Width(innerWidth), GUILayout.Height(22)))
+                if (GUILayout.Button(hostTarget ? L("HOST TARGET: ON", "ХОСТ - ЦЕЛЬ: ВКЛ") : L("HOST TARGET", "ХОСТ - ЦЕЛЬ"), hostTarget ? activeTabStyle : btnStyle, GUILayout.Width(innerWidth), GUILayout.Height(22)))
                     ToggleVotekickHostTarget();
 
                 GUILayout.Space(3);

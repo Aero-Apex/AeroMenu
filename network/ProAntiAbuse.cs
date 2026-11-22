@@ -586,7 +586,7 @@ namespace AeroMenu
                 GUIStyle th = sliderThumbStyle ?? (GUI.skin != null ? GUI.skin.horizontalSliderThumb : null);
                 float v = sl != null && th != null
                     ? GUILayout.HorizontalSlider((float)proSpoofPingValue, 1f, 999f, sl, th, GUILayout.Width(sliderW))
-                    : GUILayout.HorizontalSlider((float)proSpoofPingValue, 1f, 999f, GUILayout.Width(sliderW));
+                    : ThemedSlider((float)proSpoofPingValue, 1f, 999f, GUILayout.Width(sliderW));
 
                 int nv = Mathf.Clamp(Mathf.RoundToInt(v), 1, 999);
                 if (nv != proSpoofPingValue) proSpoofPingValue = nv;

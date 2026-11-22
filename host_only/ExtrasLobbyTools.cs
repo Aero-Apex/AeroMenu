@@ -86,7 +86,7 @@ namespace AeroMenu
                     try
                     {
                         GUILayout.Label(MenuText(L("Players:", "Игроков:")), toggleLabelStyle, GUILayout.Width(inputWidth));
-                        string countText = GUILayout.TextField(extraAutoStartCount.ToString(),
+                        string countText = AeroTextField(extraAutoStartCount.ToString(),
                             inputBlockStyle, GUILayout.Width(inputWidth));
                         if (int.TryParse(countText, out int count))
                             extraAutoStartCount = Mathf.Clamp(count, 1, 15);
@@ -103,7 +103,7 @@ namespace AeroMenu
                     try
                     {
                         GUILayout.Label(MenuText(L("Pattern:", "Шаблон:")), toggleLabelStyle, GUILayout.Width(inputWidth));
-                        string patternText = GUILayout.TextField(extraKickNamePattern ?? string.Empty,
+                        string patternText = AeroTextField(extraKickNamePattern ?? string.Empty,
                             inputBlockStyle, GUILayout.Width(Mathf.Max(inputWidth, 120)));
                         if (patternText != null && patternText.Length > 40) patternText = patternText.Substring(0, 40);
                         extraKickNamePattern = patternText ?? string.Empty;
