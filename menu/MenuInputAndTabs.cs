@@ -290,6 +290,50 @@ private static readonly string[] generalInfoSubTabs = { L("WELCOME", "ДОБРО
 
 public static KeyCode menuToggleKey = KeyCode.Insert;
 
+public static KeyCode menuToggleKeyAlt = KeyCode.None;
+
+// Windows uses Insert; macOS (including Wine/Crosswire) uses Command or `~`.
+public static bool IsMacHost()
+{
+    try
+    {
+        if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.OSX))
+            return true;
+        string winePrefix = System.Environment.GetEnvironmentVariable("WINEPREFIX") ?? string.Empty;
+        string firstArg = string.Empty;
+        try
+        {
+            string[] args = System.Environment.GetCommandLineArgs();
+            if (args != null && args.Length > 0) firstArg = args[0] ?? string.Empty;
+        }
+        catch { }
+        return winePrefix.IndexOf("crosswire", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
+               firstArg.IndexOf("crosswire", System.StringComparison.OrdinalIgnoreCase) >= 0;
+    }
+    catch { return false; }
+}
+
+public static KeyCode DefaultMenuKey()
+{
+    return IsMacHost() ? KeyCode.LeftCommand : KeyCode.Insert;
+}
+
+public static KeyCode DefaultMenuKeyAlt()
+{
+    return IsMacHost() ? KeyCode.BackQuote : KeyCode.None;
+}
+
+public static bool ToggleMenuPressed()
+{
+    KeyCode primary = menuToggleKey == KeyCode.None ? DefaultMenuKey() : menuToggleKey;
+    if (Input.GetKeyDown(primary)) return true;
+    if (menuToggleKeyAlt != KeyCode.None && Input.GetKeyDown(menuToggleKeyAlt)) return true;
+    if (IsMacHost() &&
+        (Input.GetKeyDown(KeyCode.LeftCommand) || Input.GetKeyDown(KeyCode.RightCommand) || Input.GetKeyDown(KeyCode.BackQuote)))
+        return true;
+    return false;
+}
+
 public static KeyCode bindMassMorph = KeyCode.None;
 
 public static KeyCode bindSpawnLobby = KeyCode.None;
@@ -353,6 +397,8 @@ private bool isScannerActiveFlag = false;
 private bool isCamsActiveFlag = false;
 
 public static bool isWaitingForBind = false;
+
+public static bool isWaitingForBindAlt = false;
 
 public static bool isWaitBindMassMorph = false;
 

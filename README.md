@@ -10,7 +10,7 @@
   <img src="https://img.shields.io/badge/Among%20Us-Mod%20Menu-4b5563?style=flat-square" alt="Among Us Mod Menu">
   <img src="https://img.shields.io/badge/IL2CPP-BepInEx%206-374151?style=flat-square" alt="BepInEx IL2CPP">
   <img src="https://img.shields.io/badge/C%23-.NET%206-512BD4?style=flat-square&logo=csharp&logoColor=white" alt="C#">
-  <img src="https://img.shields.io/badge/Version-v1.0.2-a855f7?style=flat-square" alt="Version v1.0.2">
+  <img src="https://img.shields.io/badge/Version-v1.0.3-a855f7?style=flat-square" alt="Version v1.0.3">
   <img src="https://img.shields.io/github/downloads/Aero-Apex/AeroMenu/total?style=flat-square&label=Downloads&color=2563eb" alt="Downloads">
 </p>
 
@@ -69,6 +69,21 @@ Open **General → EXTRAS** for 60 additional, individually saved options across
 12. **Automation** — auto open doors, auto fix lights, auto close doors, auto-fill bots, auto refresh lobby.
 
 Host features require host permissions; cosmetic/visual features are local only.
+
+### ⚡ PRO features (50 more)
+
+50 additional features are embedded directly in the existing tabs — no new tabs:
+- **MENU**: FPS limiter (e.g. 120), VSync, quality/anti-aliasing override, resolution scale, clipboard tool, real clock, calculator, notes pad, room-code generator.
+- **SELF**: kill-through-walls, kill-all, instant meeting, vote immunity, task speed, chat colour/filter/clipboard/highlighter/font options, teleport-by-number, speed hotkeys, camera follow/smooth/zoom, random name/colour/outfit identity tools.
+- **VISUALS**: role outlines, name backgrounds, cooldown bars, minimap zoom, dead-body arrows.
+- **HOST ONLY**: skip countdown, autoban voters, lobby lock, spectator mode, game presets, ping spoof, host-migration alerts, NetID sanity checks, session/identity logging, auto-ready, auto-exit, screenshot-on-kill, room-code copy, player stats CSV.
+
+### ⌨️ Menu key (platform-aware)
+
+- **Windows / Linux**: `Insert`
+- **macOS (including Wine/Crosswire)**: `Command` or `` ` `` (tilde)
+
+The primary and secondary keys are both rebindable in **General → Keybinds**.
 
 ### 🔎 Search everything
 

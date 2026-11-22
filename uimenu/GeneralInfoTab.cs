@@ -92,8 +92,9 @@ private void DrawGeneralInfoTab()
                     "Aero Menu is a lightweight BepInEx IL2CPP utility for Among Us with lobby tools, visuals, spoofing and host-side controls."), textStyle);
                 GUILayout.Space(8);
                 GUILayout.Label($"<b><color=#{accentHex}>Quick Hotkeys</color></b>", textStyle);
-                string menuKeyText = (menuToggleKey == KeyCode.None ? KeyCode.Insert : menuToggleKey).ToString();
-                GUILayout.Label($"{L("Menu key", "Menu key")}: <b>{menuKeyText}</b>", textStyle);
+                string menuKeyText = (menuToggleKey == KeyCode.None ? DefaultMenuKey() : menuToggleKey).ToString();
+                if (menuToggleKeyAlt != KeyCode.None) menuKeyText += " / " + menuToggleKeyAlt;
+                GUILayout.Label($"{L("Menu key", "Menu key")}: <b>{menuKeyText}</b>{L(" (Windows: Insert | macOS: Command or `)", " (Windows: Insert | macOS: Command or `)")}", textStyle);
                 GUILayout.Label(L("Right Click: teleport to cursor", "Right Click: teleport to cursor"), textStyle);
                 GUILayout.Label(L("F9: magnet cursor", "F9: magnet cursor"), textStyle);
                 GUILayout.EndVertical();

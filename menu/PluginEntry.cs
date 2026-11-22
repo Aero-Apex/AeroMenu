@@ -43,8 +43,8 @@ namespace AeroMenu
     [BepInPlugin("com.aeromenu.menu", "AeroMenu", Plugin.PluginVersion)]
     public class Plugin : BasePlugin
     {
-        public const string PluginVersion = "1.0.2";
-        public const string DisplayVersion = "v1.0.2";
+        public const string PluginVersion = "1.0.3";
+        public const string DisplayVersion = "v1.0.3";
         public static ModPlayer modClass;
 
         public static Plugin Instance { get; private set; } = null!;
@@ -54,6 +54,7 @@ namespace AeroMenu
     public static ConfigEntry<long> DiscordAppIdConfig;
     public static ConfigEntry<string> DiscordImageKeyConfig;
         public static ConfigEntry<KeyCode> MenuKeybind;
+        public static ConfigEntry<KeyCode> MenuKeybindAltConfig;
         public static ConfigEntry<string> SpoofedLevel;
         public static ConfigEntry<bool> EnableLevelSpoofConfig;
         public static ConfigEntry<bool> EnableFriendCodeSpoofConfig;
@@ -114,7 +115,8 @@ namespace AeroMenu
             MigratePlatformSpoofKey(configPath);
             MenuConfig = new ConfigFile(configPath, true);
             RpcSpoofDelayConfig = MenuConfig.Bind("AeroMenu.Spoofing", "RpcDelay", 4f, "");
-            MenuKeybind = MenuConfig.Bind("AeroMenu.GUI", "Keybind", KeyCode.Insert, "");
+            MenuKeybind = MenuConfig.Bind("AeroMenu.GUI", "Keybind", AeroMenuGUI.DefaultMenuKey(), "Primary menu key (Insert on Windows, Command on macOS).");
+            MenuKeybindAltConfig = MenuConfig.Bind("AeroMenu.GUI", "KeybindAlt", AeroMenuGUI.DefaultMenuKeyAlt(), "Secondary menu key (` on macOS, unset on Windows).");
             SpoofedLevel = MenuConfig.Bind("AeroMenu.Spoofing", "Level", "100", "");
             EnableLevelSpoofConfig = MenuConfig.Bind("AeroMenu.Spoofing", "EnableLevelSpoof", true, "");
             EnableFriendCodeSpoofConfig = MenuConfig.Bind("AeroMenu.Spoofing", "EnableFriendCodeSpoof", false, "");

@@ -63,7 +63,7 @@ public void OnGUI()
 
             bool isTyping = isEditingName || isEditingLevel || isEditingFriendCode || isEditingLocalFriendCode || isEditingDeviceId || isEditingGhostChatColor || isEditingBan || isEditingFpsLimit || isEditingBugRoomTimedAutoRun || isEditingSearch || isEditingStatusText || isEditingAccentHex;
             bool isCustomSpoofRpcEditing = customSpoofRpcInputFocused && selectedSpoofMenuIndex == spoofMenuNames.Length - 1;
-            bool isBinding = isWaitingForBind || isWaitBindMassMorph || isWaitBindSpawnLobby || isWaitBindDespawnLobby ||
+            bool isBinding = isWaitingForBind || isWaitingForBindAlt || isWaitBindMassMorph || isWaitBindSpawnLobby || isWaitBindDespawnLobby ||
                   isWaitBindCloseMeeting || isWaitBindInstaStart || isWaitBindEndCrew || isWaitBindEndImp ||
                   isWaitBindEndImpDC || isWaitBindEndHnsDC || isWaitBindMagnetCursor || isWaitBindToggleTracers ||
                   isWaitBindToggleNoClip || isWaitBindToggleFreecam || isWaitBindToggleCameraZoom ||
@@ -74,7 +74,14 @@ public void OnGUI()
 
             if (e != null && e.isKey && e.type == EventType.KeyDown)
             {
-                if (e.keyCode == KeyCode.Escape)
+                if (isWaitingForBindAlt && e.keyCode != KeyCode.None)
+                {
+                    menuToggleKeyAlt = e.keyCode;
+                    isWaitingForBindAlt = false;
+                    SaveKeybinds();
+                    e.Use();
+                }
+                else if (e.keyCode == KeyCode.Escape)
                 {
                     if (isEditingFpsLimit)
                     {
@@ -247,6 +254,7 @@ public void OnGUI()
             DrawVisualReplay();
             DrawEspBoxes();
             DrawExtrasOverlays();
+            DrawProOverlays();
 
             if (Time.unscaledTime >= nextPlayerHistoryUpdateAt)
             {
@@ -736,6 +744,14 @@ private void TrackAnimatedSidebarHighlight(int tab, Rect rect)
                             else if (tabToDraw == 6) DrawVotekickTab();
                             else if (tabToDraw == 7) DrawMenuTab();
                             else if (tabToDraw == 8) { try { DrawSearchTab(); } catch (System.Exception ex) { Plugin.Instance?.Log?.LogError("SearchTab error: " + ex); GUILayout.Label("Search error [" + ex.GetType().Name + "]: " + ex.Message); } }
+
+                            // 50 PRO features are embedded in existing tabs (no new tabs).
+                            float proWidth = Mathf.Max(180f, GetMenuWorkWidth(220f, 610f) - 18f);
+                            GUILayout.Space(10);
+                            if (tabToDraw == 0) { try { DrawProM(proWidth); } catch { } try { DrawProR(proWidth); } catch { } }
+                            else if (tabToDraw == 1) { try { DrawProN(proWidth); } catch { } try { DrawProQ(proWidth); } catch { } try { DrawProT(proWidth); } catch { } try { DrawProU(proWidth); } catch { } }
+                            else if (tabToDraw == 2) { try { DrawProO(proWidth); } catch { } }
+                            else if (tabToDraw == 5) { try { DrawProP(proWidth); } catch { } try { DrawProS(proWidth); } catch { } try { DrawProV(proWidth); } catch { } }
                         }
                         finally { GUILayout.EndVertical(); }
 
@@ -776,7 +792,8 @@ private void TrackAnimatedSidebarHighlight(int tab, Rect rect)
 
                 GUI.Box(bar, GUIContent.none, statusBarBgStyle);
 
-                string keyName = menuToggleKey == KeyCode.None ? "INSERT" : menuToggleKey.ToString().ToUpperInvariant();
+                string keyName = menuToggleKey == KeyCode.None ? DefaultMenuKey().ToString().ToUpperInvariant() : menuToggleKey.ToString().ToUpperInvariant();
+                if (menuToggleKeyAlt != KeyCode.None) keyName += "/" + menuToggleKeyAlt.ToString().ToUpperInvariant();
                 bool savedRecently = Time.unscaledTime - lastSavedAt < 2.5f;
 
                 string leftText = (statusBarText ?? string.Empty);

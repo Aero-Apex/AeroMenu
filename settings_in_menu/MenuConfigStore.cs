@@ -47,17 +47,20 @@ private static void LoadKeybinds()
         {
             try
             {
-                menuToggleKey = Plugin.MenuKeybind.Value == KeyCode.None ? KeyCode.Insert : Plugin.MenuKeybind.Value;
+                menuToggleKey = Plugin.MenuKeybind.Value == KeyCode.None ? DefaultMenuKey() : Plugin.MenuKeybind.Value;
+                menuToggleKeyAlt = Plugin.MenuKeybindAltConfig.Value;
             }
             catch
             {
-                menuToggleKey = KeyCode.Insert;
+                menuToggleKey = DefaultMenuKey();
+                menuToggleKeyAlt = DefaultMenuKeyAlt();
             }
 
             try
             {
                 if (PlayerPrefs.HasKey("M_MenuToggleKey")) menuToggleKey = (KeyCode)PlayerPrefs.GetInt("M_MenuToggleKey");
-                if (menuToggleKey == KeyCode.None) menuToggleKey = KeyCode.Insert;
+                if (PlayerPrefs.HasKey("M_MenuToggleKeyAlt")) menuToggleKeyAlt = (KeyCode)PlayerPrefs.GetInt("M_MenuToggleKeyAlt");
+                if (menuToggleKey == KeyCode.None) menuToggleKey = DefaultMenuKey();
                 if (PlayerPrefs.HasKey("M_BndMagnet")) bindMagnetCursor = (KeyCode)PlayerPrefs.GetInt("M_BndMagnet");
                 if (PlayerPrefs.HasKey("M_BndMMorph")) bindMassMorph = (KeyCode)PlayerPrefs.GetInt("M_BndMMorph");
                 if (PlayerPrefs.HasKey("M_BndSpawn")) bindSpawnLobby = (KeyCode)PlayerPrefs.GetInt("M_BndSpawn");
@@ -358,6 +361,7 @@ private void LoadConfig()
                 tabTransitionProgress = 1f;
                 SyncKeybindDictionary();
                 LoadExtras();
+                LoadPro();
                 if (PlayerPrefs.HasKey("M_SpoofName")) customNameInput = PlayerPrefs.GetString("M_SpoofName");
             }
             catch { }

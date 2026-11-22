@@ -1011,6 +1011,7 @@ private bool DrawToggle(bool value, string text, int width = 0, string animKey =
                 GUILayout.Space(10);
 
                 DrawKeybindRow("Menu Toggle:", ref menuToggleKey, ref isWaitingForBind);
+                DrawKeybindRow("Menu Toggle Alt:", ref menuToggleKeyAlt, ref isWaitingForBindAlt);
                 DrawKeybindRow("Magnet Cursor:", ref bindMagnetCursor, ref isWaitBindMagnetCursor);
                 DrawKeybindRow("Mass Morph:", ref bindMassMorph, ref isWaitBindMassMorph);
                 DrawKeybindRow("Spawn Lobby:", ref bindSpawnLobby, ref isWaitBindSpawnLobby);

@@ -665,6 +665,7 @@ namespace AeroMenu
         private static void ResetAllBindWaitsStatic()
         {
             isWaitingForBind = false;
+            isWaitingForBindAlt = false;
             isWaitBindMassMorph = false;
             isWaitBindSpawnLobby = false;
             isWaitBindDespawnLobby = false;

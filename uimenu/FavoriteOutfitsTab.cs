@@ -57,7 +57,7 @@ public void Update()
             bool isTypingOrBinding = isEditingName || isEditingLevel || isEditingFriendCode || isEditingLocalFriendCode || isEditingGhostChatColor || isEditingBan || customChatInputFocused ||
                                      isEditingDeviceId || isEditingFpsLimit || isEditingBugRoomTimedAutoRun || isEditingSearch ||
                                      isEditingStatusText || isEditingAccentHex ||
-                                     isWaitingForBind || isWaitBindMassMorph || isWaitBindSpawnLobby ||
+                                     isWaitingForBind || isWaitingForBindAlt || isWaitBindMassMorph || isWaitBindSpawnLobby ||
                                      isWaitBindDespawnLobby || isWaitBindCloseMeeting || isWaitBindInstaStart ||
                                      isWaitBindEndCrew || isWaitBindEndImp || isWaitBindEndImpDC || isWaitBindEndHnsDC ||
                                      isWaitBindMagnetCursor || isWaitBindToggleTracers || isWaitBindToggleNoClip ||
@@ -71,9 +71,9 @@ isWaitBindReviveAll || isWaitBindToggleAutoFix || isWaitBindCopyCode;
                                      || Minigame.Instance != null;
 
             TickExtras(isTypingOrBinding || gameBlockingInput);
+            TickPro(isTypingOrBinding || gameBlockingInput);
 
-            KeyCode activeMenuKey = menuToggleKey == KeyCode.None ? KeyCode.Insert : menuToggleKey;
-            if (!isTypingOrBinding && !gameBlockingInput && Input.GetKeyDown(activeMenuKey))
+            if (!isTypingOrBinding && !gameBlockingInput && ToggleMenuPressed())
             {
                 showMenu = !showMenu;
                 if (showMenu)

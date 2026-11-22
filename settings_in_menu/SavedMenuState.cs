@@ -660,6 +660,7 @@ private static void SaveKeybinds()
             try
             {
                 PlayerPrefs.SetInt("M_MenuToggleKey", (int)menuToggleKey);
+                PlayerPrefs.SetInt("M_MenuToggleKeyAlt", (int)menuToggleKeyAlt);
                 PlayerPrefs.SetInt("M_BndMagnet", (int)bindMagnetCursor);
                 PlayerPrefs.SetInt("M_BndMMorph", (int)bindMassMorph);
                 PlayerPrefs.SetInt("M_BndSpawn", (int)bindSpawnLobby);
@@ -695,6 +696,7 @@ private static void SaveKeybinds()
             try
             {
                 Plugin.MenuKeybind.Value = menuToggleKey;
+                Plugin.MenuKeybindAltConfig.Value = menuToggleKeyAlt;
                 Plugin.MenuConfig.Save();
             }
             catch { }
@@ -947,6 +949,7 @@ private void SaveConfig()
                 for (int i = 0; i < favoriteOutfitSlots.Length; i++)
                     PlayerPrefs.SetString($"M_FavoriteOutfit_{i}", favoriteOutfitSlots[i] ?? string.Empty);
                 SaveExtras();
+                SavePro();
                 PlayerPrefs.Save();
                 lastSavedAt = Time.unscaledTime;
             }

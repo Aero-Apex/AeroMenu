@@ -7,11 +7,11 @@
 		<LangVersion>latest</LangVersion>
 		<AssemblyName>AeroMenu</AssemblyName>
 		<RootNamespace>AeroMenu</RootNamespace>
-		<Version>1.0.2</Version>
-		<InformationalVersion>1.0.2</InformationalVersion>
+		<Version>1.0.3</Version>
+		<InformationalVersion>1.0.3</InformationalVersion>
 		<IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
-		<AssemblyVersion>1.0.2.0</AssemblyVersion>
-		<FileVersion>1.0.2.0</FileVersion>
+		<AssemblyVersion>1.0.3.0</AssemblyVersion>
+		<FileVersion>1.0.3.0</FileVersion>
 		<AmongUsDir Condition="'$(AmongUsDir)' == '' and Exists('E:\AmongUs\BepInEx\interop\Assembly-CSharp.dll')">E:\AmongUs</AmongUsDir>
 		<AmongUsDir Condition="'$(AmongUsDir)' == ''">C:\Program Files (x86)\Steam\steamapps\common\Among Us</AmongUsDir>
 	</PropertyGroup>

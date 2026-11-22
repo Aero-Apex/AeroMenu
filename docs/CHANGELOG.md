@@ -1,5 +1,17 @@
 ﻿# Changelog
 
+## v1.0.3 — 2026-11-22
+
+### Added
+
+- Added 50 new PRO features embedded in the existing tabs (no new tabs): FPS limiter, VSync, quality/AA/resolution controls, combat/meeting/host tools, chat utilities, anti-abuse logging, movement/identity tools, automation, calculator, notes pad and more.
+- Added platform-aware menu hotkeys: `Insert` on Windows/Linux, `Command` or `` ` `` on macOS (including Wine/Crosswire). Both keys are rebindable.
+- Added the prebuilt DLL compiled against Among Us 2026.9.29 / BepInEx IL2CPP.
+
+### Changed
+
+- No breaking changes.
+
 ## v1.0.2 — 2026-11-22
 
 ### Added
