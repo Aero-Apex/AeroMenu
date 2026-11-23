@@ -84,6 +84,9 @@ public static class RPCSniffer_Patch
 
         AeroMenuGUI.RecordPlayerRpc(__instance, callId);
 
+        // Never report whitelisted / protected players (friends, known AeroMenu users).
+        if (AeroMenuGUI.IsProtectedFromAnticheat(__instance)) return true;
+
         if (AeroMenuGUI.LogAllRPCs)
         {
 
@@ -94,11 +97,11 @@ public static class RPCSniffer_Patch
 
                 if (KnownMods.TryGetValue(callId, out var modInfo))
                 {
-                    AeroMenuGUI.ShowNotification($"<color=#00FFFF>[RPC SPOOF]</color> <b>{pNameSniff}</b>: <b><color={modInfo.Color}>{modInfo.Name}</color></b> <color=#FFFF00>({callId})</color>");
+                    AeroMenuGUI.ShowNotification($"<color=#00FFFF>[MOD RPC]</color> <b>{pNameSniff}</b>: <b><color={modInfo.Color}>{modInfo.Name}</color></b> <color=#FFFF00>({callId})</color>");
                 }
                 else
                 {
-                    AeroMenuGUI.ShowNotification($"<color=#00FFFF>[RPC SPOOF]</color> <b>{pNameSniff}</b> unknown RPC: <color=#FFFF00>{callId}</color>");
+                    AeroMenuGUI.ShowNotification($"<color=#00FFFF>[MOD RPC]</color> <b>{pNameSniff}</b> unknown RPC: <color=#FFFF00>{callId}</color>");
                 }
             }
         }
@@ -156,6 +159,14 @@ public static class RPCSniffer_RawGameDataPatch
                     if (VanillaRPCs.Contains(callId))
                         continue;
 
+                    // Ignore RPCs about the local player / whitelisted players.
+                    PlayerControl rpcPlayer = ResolveRpcPlayer(__instance, netId);
+                    if (rpcPlayer != null)
+                    {
+                        if (PlayerControl.LocalPlayer != null && rpcPlayer == PlayerControl.LocalPlayer) continue;
+                        if (AeroMenuGUI.IsProtectedFromAnticheat(rpcPlayer)) continue;
+                    }
+
                     string objectLabel = ResolveRpcObjectLabel(__instance, netId);
                     string rpcLabel = ResolveRpcLabel(callId);
                     string line = $"Raw RPC recv: {rpcLabel} ({callId}), netId={netId}, object={objectLabel}, localClient={__instance.ClientId}, gameId={__instance.GameId}";
@@ -178,6 +189,17 @@ public static class RPCSniffer_RawGameDataPatch
             copy?.Recycle();
             try { parentReader.Position = originalPosition; } catch { }
         }
+    }
+
+    private static PlayerControl ResolveRpcPlayer(InnerNetClient client, uint netId)
+    {
+        try
+        {
+            if (client?.allObjects == null || !client.allObjects.AllObjectsFast.TryGetValue(netId, out InnerNetObject obj) || obj == null)
+                return null;
+            return obj.TryCast<PlayerControl>();
+        }
+        catch { return null; }
     }
 
     private static bool IsPlayerRpcTarget(InnerNetClient client, uint netId)

@@ -15,7 +15,7 @@ namespace AeroMenu
     // 2. It asks the matchmaker for public lobbies with the same settings that
     //    are nearly full (at least max - fill margin players, not full), picks
     //    the fullest one not tried recently and joins it.
-    // 3. It waits for the match. No start within the wait timeout -> next lobby.
+    // 3. It waits in the lobby until the match starts and the role screen appears.
     // 4. Match starts: impostor -> stop. Otherwise leave and hop to another lobby.
     public partial class AeroMenuGUI : MonoBehaviour
     {
@@ -25,7 +25,7 @@ namespace AeroMenu
         public static int rejoinForImpostorFillMargin = 2;    // min players = max - margin
         public static int rejoinForImpostorMaxTries;          // 0 = unlimited lobbies
         public static float rejoinForImpostorLeaveDelay = 1f;
-        public static int rejoinForImpostorLobbyWait = 120;   // seconds
+        public static int rejoinForImpostorLobbyWait = 0;     // 0 = wait until the role screen
 
         private enum RfiPhase { Idle, WaitMatch, Search, Joining }
 
@@ -36,6 +36,7 @@ namespace AeroMenu
         private static bool rfiCaptureOnLobby;
         private static float rfiNextTickAt;
         private static float rfiRoleSeenAt = -1f;
+        private static float rfiMatchEnteredAt = -1f;
         private static float rfiLobbyJoinedAt = -1f;
         private static float rfiNextSearchAt;
         private static float rfiJoinDeadline;
@@ -50,8 +51,10 @@ namespace AeroMenu
 
         // Results handed over from the matchmaker callback to the tick.
         private static readonly List<RfiCandidate> rfiResults = new List<RfiCandidate>();
+        private static readonly List<RfiCandidate> rfiQueue = new List<RfiCandidate>();
         private static bool rfiResultsReady;
         private static int rfiResultsListed;
+        private static int rfiJoinAttempts;
 
         private struct RfiCandidate
         {
@@ -63,6 +66,10 @@ namespace AeroMenu
             public bool Hns;
             public bool ModeKnown;
         }
+
+        // Minimum players accepted in a 15-player room. Fuller rooms are tried
+        // first, but a room that started at 10+ can fill before we join it.
+        private const int RfiMinActualPlayers = 9;
 
         private const float RfiRoleSettleSeconds = 0.6f;
         private const float RfiSearchRetrySeconds = 4f;
@@ -104,7 +111,7 @@ namespace AeroMenu
                 rejoinForImpostorFillMargin = Mathf.Clamp(PlayerPrefs.GetInt("M_RFI_FillMargin", 2), 0, 10);
                 rejoinForImpostorMaxTries = Mathf.Clamp(PlayerPrefs.GetInt("M_RFI_MaxTries", 0), 0, 99);
                 rejoinForImpostorLeaveDelay = Mathf.Clamp(PlayerPrefs.GetFloat("M_RFI_LeaveDelay", 1f), 0f, 5f);
-                rejoinForImpostorLobbyWait = Mathf.Clamp(PlayerPrefs.GetInt("M_RFI_LobbyWait", 120), 30, 600);
+                rejoinForImpostorLobbyWait = Mathf.Clamp(PlayerPrefs.GetInt("M_RFI_LobbyWait", 0), 0, 600);
                 rfiTargetSet = PlayerPrefs.GetInt("M_RFI_TargetSet", 0) == 1;
                 rfiTargetMax = PlayerPrefs.GetInt("M_RFI_TargetMax", 15);
                 rfiTargetImps = PlayerPrefs.GetInt("M_RFI_TargetImps", 2);
@@ -156,7 +163,10 @@ namespace AeroMenu
         {
             LoadRejoinForImpostorPrefs();
             rfiHops = 0;
+            rfiQueue.Clear();
+            rfiJoinAttempts = 0;
             rfiRoleSeenAt = -1f;
+            rfiMatchEnteredAt = -1f;
             rfiLobbyJoinedAt = -1f;
             rfiRequestInFlight = false;
             rfiResultsReady = false;
@@ -179,6 +189,7 @@ namespace AeroMenu
         private static void RfiLeaveAndSearch(string why)
         {
             rfiPhase = RfiPhase.Search;
+            rfiMatchEnteredAt = -1f;
             rfiRoleSeenAt = -1f;
             rfiLobbyJoinedAt = -1f;
             rfiNextSearchAt = Time.unscaledTime + 2.5f;
@@ -224,9 +235,9 @@ namespace AeroMenu
                     return;
                 }
 
-                if (inMatch) { TickRfiMatch(client, now); return; }
-                if (inLobby) { TickRfiLobby(client, now); return; }
-                TickRfiMenu(client, now);
+                if (inMatch) TickRfiMatch(client, now);
+                else if (inLobby) TickRfiLobby(client, now);
+                else TickRfiMenu(client, now);
             }
             catch { }
         }
@@ -241,12 +252,20 @@ namespace AeroMenu
                 CaptureLobbyTarget();
             }
             rfiLobbyJoinedAt = -1f;
+            if (rfiMatchEnteredAt < 0f) rfiMatchEnteredAt = now;
             if (client != null && client.GameId != 0) rfiCurrentGameId = client.GameId;
 
-            PlayerControl lp = PlayerControl.LocalPlayer;
-            if (lp == null || lp.Data == null || lp.Data.Role == null) { rfiState = "Match started, waiting for role"; return; }
+            // The role is only final once the game has shown the role screen.
+            bool roleScreenShown = false;
+            try { roleScreenShown = IntroCutscene.Instance != null; } catch { }
+            // Late joins may miss the cutscene; after 15s of role data, proceed.
+            bool lateJoinFallback = now - rfiMatchEnteredAt > 15f;
+            if (!roleScreenShown && !lateJoinFallback) { rfiState = "Match starting, waiting for role screen"; return; }
 
-            if (rfiRoleSeenAt < 0f) { rfiRoleSeenAt = now; rfiState = "Checking role"; return; }
+            PlayerControl lp = PlayerControl.LocalPlayer;
+            if (lp == null || lp.Data == null || lp.Data.Role == null) { rfiState = "Role screen shown, waiting for role data"; return; }
+
+            if (rfiRoleSeenAt < 0f) { rfiRoleSeenAt = now; rfiState = "Role screen shown, checking role"; return; }
             if (now - rfiRoleSeenAt < RfiRoleSettleSeconds) return;
 
             RoleTypes role = lp.Data.RoleType;
@@ -301,6 +320,8 @@ namespace AeroMenu
             {
                 rfiLobbyJoinedAt = now;
                 rfiCurrentGameId = gameId;
+                if (rfiQueue.Count > 0 && rfiQueue[0].GameId == gameId) rfiQueue.RemoveAt(0);
+                rfiJoinAttempts = 0;
                 rfiHops++;
                 if (gameId != 0) rfiVisited[gameId] = now;
             }
@@ -313,7 +334,9 @@ namespace AeroMenu
             }
 
             float waited = now - rfiLobbyJoinedAt;
-            if (waited >= rejoinForImpostorLobbyWait)
+            // Wait for the match / role screen. The timer is only an optional
+            // safety valve (0 disables it and waits indefinitely).
+            if (rejoinForImpostorLobbyWait > 0 && waited >= rejoinForImpostorLobbyWait)
             {
                 RfiLeaveAndSearch("No start in " + rejoinForImpostorLobbyWait + "s, next lobby");
                 return;
@@ -321,8 +344,10 @@ namespace AeroMenu
 
             int players = 0;
             try { players = PlayerControl.AllPlayerControls != null ? PlayerControl.AllPlayerControls.Count : 0; } catch { }
-            rfiState = "In " + SafeRoomName(gameId) + " (" + players + "p), waiting for match " +
-                       Mathf.CeilToInt(rejoinForImpostorLobbyWait - waited) + "s";
+            rfiState = "In " + SafeRoomName(gameId) + " (" + players + "p), waiting for role screen" +
+                       (rejoinForImpostorLobbyWait > 0
+                           ? " " + Mathf.CeilToInt(rejoinForImpostorLobbyWait - waited) + "s"
+                           : string.Empty);
         }
 
         private static void TickRfiMenu(AmongUsClient client, float now)
@@ -349,33 +374,47 @@ namespace AeroMenu
             if (rfiPhase == RfiPhase.Joining)
             {
                 if (now < rfiJoinDeadline) { rfiState = "Joining " + SafeRoomName(rfiCurrentGameId) + "..."; return; }
+                if (rfiJoinAttempts < 2)
+                {
+                    rfiState = "Join failed, retrying " + SafeRoomName(rfiCurrentGameId);
+                    rfiNextSearchAt = now + 1.5f;
+                }
+                else if (rfiQueue.Count > 0)
+                {
+                    rfiVisited[rfiQueue[0].GameId] = now;
+                    rfiQueue.RemoveAt(0);
+                    rfiJoinAttempts = 0;
+                    rfiState = rfiQueue.Count > 0 ? "Join failed, trying next lobby" : "Join failed, refreshing list";
+                    rfiNextSearchAt = now + 1.5f;
+                }
+                else rfiNextSearchAt = now + 1.5f;
                 rfiPhase = RfiPhase.Search;
-                rfiNextSearchAt = now + 1f;
-                rfiState = "Join failed, finding next lobby";
                 return;
             }
 
             if (rfiResultsReady)
             {
                 rfiResultsReady = false;
-                RfiCandidate best;
-                if (PickRfiCandidate(now, out best))
+                BuildRfiQueue(now);
+                if (rfiQueue.Count == 0)
                 {
-                    rfiVisited[best.GameId] = now;
-                    rfiCurrentGameId = best.GameId;
-                    rfiPhase = RfiPhase.Joining;
-                    rfiJoinDeadline = now + RfiJoinTimeoutSeconds;
-                    rfiState = "Joining " + SafeRoomName(best.GameId) + " (" + best.Players + "/" + best.Max + ")";
-                    if (client != null)
-                    {
-                        client.GameId = best.GameId;
-                        var co = client.CoJoinOnlineGameFromCode(best.GameId);
-                        if (co != null) client.StartCoroutine(co);
-                    }
+                    rfiNextSearchAt = now + RfiSearchRetrySeconds;
+                    rfiState = "No matching lobby (" + rfiResultsListed + " listed), retrying";
                     return;
                 }
-                rfiNextSearchAt = now + RfiSearchRetrySeconds;
-                rfiState = "No matching lobby (" + rfiResultsListed + " listed), retrying";
+            }
+
+            if (rfiQueue.Count > 0 && rfiPhase == RfiPhase.Search && client != null)
+            {
+                RfiCandidate c = rfiQueue[0];
+                rfiCurrentGameId = c.GameId;
+                rfiJoinAttempts++;
+                rfiPhase = RfiPhase.Joining;
+                rfiJoinDeadline = now + RfiJoinTimeoutSeconds;
+                rfiState = "Joining " + SafeRoomName(c.GameId) + " (" + c.Players + "/" + c.Max + ", try " + rfiJoinAttempts + ")";
+                client.GameId = c.GameId;
+                var co = client.CoJoinOnlineGameFromCode(c.GameId);
+                if (co != null) client.StartCoroutine(co);
                 return;
             }
 
@@ -675,12 +714,11 @@ namespace AeroMenu
             rfiResultsReady = true;
         }
 
-        private static bool PickRfiCandidate(float now, out RfiCandidate best)
+        private static void BuildRfiQueue(float now)
         {
-            best = default(RfiCandidate);
             PruneVisited(false);
-            int minPlayers = Mathf.Max(1, rfiTargetMax - rejoinForImpostorFillMargin);
-            bool found = false;
+            rfiQueue.Clear();
+            var temp = new List<RfiCandidate>();
             for (int i = 0; i < rfiResults.Count; i++)
             {
                 RfiCandidate c = rfiResults[i];
@@ -688,10 +726,12 @@ namespace AeroMenu
                 if (c.Max != rfiTargetMax || c.Imps != rfiTargetImps) continue;
                 if (c.ModeKnown && c.Hns != rfiTargetHns) continue;
                 if (rejoinForImpostorSameMap && c.Map != rfiTargetMap) continue;
-                if (c.Players < minPlayers || c.Players >= c.Max) continue;
-                if (!found || c.Players > best.Players) { best = c; found = true; }
+                int min = Mathf.Max(1, Mathf.Min(rfiTargetMax - rejoinForImpostorFillMargin, RfiMinActualPlayers));
+                if (c.Players < min || c.Players >= c.Max) continue;
+                temp.Add(c);
             }
-            return found;
+            temp.Sort((a, b) => b.Players.CompareTo(a.Players)); // fullest first
+            for (int i = 0; i < temp.Count && i < 8; i++) rfiQueue.Add(temp[i]);
         }
 
         private static void PruneVisited(bool all)
@@ -790,8 +830,8 @@ namespace AeroMenu
             int minPlayers = Mathf.Max(1, (rfiTargetSet ? rfiTargetMax : 15) - rejoinForImpostorFillMargin);
             DrawRfiStepper(L("Min players", "Мин. игроков"), ref rejoinForImpostorFillMargin, 0, 10, 1,
                 "max-" + rejoinForImpostorFillMargin + " (" + minPlayers + ")");
-            DrawRfiStepper(L("Lobby wait", "Ожидание лобби"), ref rejoinForImpostorLobbyWait, 30, 600, 30,
-                rejoinForImpostorLobbyWait + "s");
+            DrawRfiStepper(L("Lobby wait", "Ожидание лобби"), ref rejoinForImpostorLobbyWait, 0, 600, 30,
+                rejoinForImpostorLobbyWait == 0 ? "Wait for role screen" : rejoinForImpostorLobbyWait + "s");
             DrawRfiStepper(L("Max lobbies", "Макс. лобби"), ref rejoinForImpostorMaxTries, 0, 99, 1,
                 rejoinForImpostorMaxTries == 0 ? L("No limit", "Без лимита") : rejoinForImpostorMaxTries.ToString());
 

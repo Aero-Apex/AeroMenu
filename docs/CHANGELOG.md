@@ -1,5 +1,23 @@
 ﻿# Changelog
 
+## v1.0.6 — 2026-11-23
+
+### Added
+
+- Restart & Update button in MENU / General / AUTO UPDATE: stages the update, saves settings, restarts the game, applies the DLL and relaunches automatically.
+- Auto-updater retries failed checks, reports status/errors in the panel and writes [UPDATE] lines to BepInEx/LogOutput.log.
+
+### Changed
+
+- Rejoin Until Impostor waits in the lobby until the match starts and the role screen appears instead of leaving on a timer; late-join fallback added.
+- Rejoin hopper retries a lobby twice before moving on, accepts 9+ player rooms (fullest first), queues up to 8 candidates.
+
+### Fixed
+
+- Vanilla RPC IDs 66/67 were falsely reported as mod RPCs.
+- RPC sniffer ignores your own client and whitelisted players, and labels modded RPCs as [MOD RPC].
+- Fixed the double-v in the updater restart status.
+
 ## v1.0.5 — 2026-11-23
 
 ### Added
