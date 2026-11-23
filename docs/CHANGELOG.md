@@ -1,5 +1,17 @@
 ﻿# Changelog
 
+## v1.0.5 — 2026-11-23
+
+### Added
+
+- **Rejoin Until Impostor** (Self → Roles → Role Tools). Start it in a lobby: it copies that lobby's settings (max players, impostors, mode, map), then uses the Find Game list to join nearly full public lobbies with the same settings (at least max − 2 players by default, e.g. 13+ for a 15-player lobby). If your role isn't impostor when the match starts, it leaves and joins a different lobby; lobbies that don't start in time are skipped. Options: plain Impostor only, same map only, min players, lobby wait, max lobbies, leave delay. Your Find Game impostor/map filters are set to the target while it searches and restored afterwards (also after a restart).
+
+### Fixed
+
+- Scrolling the menu no longer drops FPS: sections scrolled out of view are skipped, and extra scroll events in a frame are merged. Measured menu cost went from ~6.8 ms to ~1.7–2.2 ms per frame.
+- Guarded `SpiritGuideRole.FixedUpdate`, which could throw a NullReferenceException every physics tick (thousands per match) and spiral the frame rate down.
+- Removed a startup warning from Il2CppInterop about an unsupported method parameter.
+
 ## v1.0.4 — 2026-11-22
 
 ### Added

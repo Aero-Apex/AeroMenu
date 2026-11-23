@@ -95,6 +95,8 @@ private void DrawRolesCompact(float columnWidth)
                 RoleManager.Instance?.SetRole(PlayerControl.LocalPlayer, forceRoleOptions[fakeRoleIdx]);
             GUILayout.EndHorizontal();
 
+            DrawRejoinForImpostor(columnWidth - 26f);
+
             GUILayout.Space(4);
             DrawRoleBuffSubTabs();
             GUILayout.Space(4);

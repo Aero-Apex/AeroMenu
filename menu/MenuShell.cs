@@ -86,6 +86,11 @@ private void EnsureMenuFrameGeometry()
 public void OnGUI()
         {
             if (isPanicked) return;
+            OnGUIInner();
+        }
+
+        private void OnGUIInner()
+        {
 
             Event e = Event.current;
 
@@ -639,6 +644,12 @@ private void TrackAnimatedSidebarHighlight(int tab, Rect rect)
 
         private void DrawAeroMenu(int windowID)
         {
+            if (!CoalesceMenuScroll()) return;
+            DrawAeroMenuInner(windowID);
+        }
+
+        private void DrawAeroMenuInner(int windowID)
+        {
             if (tabTransitionProgress < 1f)
             {
                 if (!tabAnimationsEnabled) { tabTransitionProgress = 1f; currentTab = targetTabIndex; }
@@ -753,6 +764,7 @@ private void TrackAnimatedSidebarHighlight(int tab, Rect rect)
 
             float bodyLeft = sideWFinal > 0f ? sideWFinal + 8f : 4f;
             float bodyWidth = Mathf.Max(64f, windowRect.width - bodyLeft - 6f);
+            BeginMenuCullingFrame(areaH - 4f);
             BeginPinnedArea(new Rect(bodyLeft, contentTop + 4f, bodyWidth, areaH - 4f));
             try
             {
@@ -781,10 +793,10 @@ private void TrackAnimatedSidebarHighlight(int tab, Rect rect)
                                     // Cards add 32px of padding around this width; keep the card inside the scroll view.
                                     float proWidth = Mathf.Max(160f, GetMenuWorkWidth(220f, 610f) - 18f - 32f);
                                     GUILayout.Space(10);
-                                    if (tabToDraw == 0) { try { DrawProM(proWidth); } catch { } try { DrawProR(proWidth); } catch { } try { DrawAutoUpdater(proWidth); } catch { } }
-                                    else if (tabToDraw == 1) { try { DrawProN(proWidth); } catch { } try { DrawProQ(proWidth); } catch { } try { DrawProT(proWidth); } catch { } try { DrawProU(proWidth); } catch { } }
-                                    else if (tabToDraw == 2) { try { DrawProO(proWidth); } catch { } }
-                                    else if (tabToDraw == 5) { try { DrawProP(proWidth); } catch { } try { DrawProS(proWidth); } catch { } try { DrawProV(proWidth); } catch { } }
+                                    if (tabToDraw == 0) { DrawCulled("proM", () => { try { DrawProM(proWidth); } catch { } }); DrawCulled("proR", () => { try { DrawProR(proWidth); } catch { } }); DrawCulled("autoUpdate", () => { try { DrawAutoUpdater(proWidth); } catch { } }); }
+                                    else if (tabToDraw == 1) { DrawCulled("proN", () => { try { DrawProN(proWidth); } catch { } }); DrawCulled("proQ", () => { try { DrawProQ(proWidth); } catch { } }); DrawCulled("proT", () => { try { DrawProT(proWidth); } catch { } }); DrawCulled("proU", () => { try { DrawProU(proWidth); } catch { } }); }
+                                    else if (tabToDraw == 2) { DrawCulled("proO", () => { try { DrawProO(proWidth); } catch { } }); }
+                                    else if (tabToDraw == 5) { DrawCulled("proP", () => { try { DrawProP(proWidth); } catch { } }); DrawCulled("proS", () => { try { DrawProS(proWidth); } catch { } }); DrawCulled("proV", () => { try { DrawProV(proWidth); } catch { } }); }
                         }
                         finally { GUILayout.EndVertical(); }
                         GUILayout.Space(10);

@@ -74,6 +74,7 @@ isWaitBindReviveAll || isWaitBindToggleAutoFix || isWaitBindCopyCode;
             TickExtras(isTypingOrBinding || gameBlockingInput);
             TickPro(isTypingOrBinding || gameBlockingInput);
             TickAutoUpdater();
+            TickRejoinForImpostor();
 
             if (!isTypingOrBinding && !gameBlockingInput && ToggleMenuPressed())
             {

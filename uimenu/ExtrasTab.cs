@@ -10,16 +10,18 @@ namespace AeroMenu
 
         // Each EXTRAS group is isolated: if one throws, its layout group is still
         // closed and the remaining groups keep drawing.
+        [Il2CppInterop.Runtime.Attributes.HideFromIl2Cpp]
         private void DrawExtrasSection(string id, System.Action<float> draw, float width)
         {
-            GUILayout.BeginVertical();
-            try { draw(width); }
-            catch (System.Exception ex)
+            DrawCulled("extras" + id, () =>
             {
-                if (extrasSectionErrorsLogged.Add(id + ex.GetType().Name))
-                    Plugin.Instance?.Log?.LogError("[EXTRAS] section " + id + " failed: " + ex);
-            }
-            finally { GUILayout.EndVertical(); }
+                try { draw(width); }
+                catch (System.Exception ex)
+                {
+                    if (extrasSectionErrorsLogged.Add(id + ex.GetType().Name))
+                        Plugin.Instance?.Log?.LogError("[EXTRAS] section " + id + " failed: " + ex);
+                }
+            });
         }
 
         private void DrawExtrasTab()
