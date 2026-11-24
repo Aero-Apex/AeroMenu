@@ -293,7 +293,7 @@ private void DrawMenuTab()
             GUILayout.Label(L("Bottom bar of the menu. Supports {key} and {version} placeholders.", "Нижняя панель меню. Поддерживает подстановки {key} и {version}."), menuDescStyle);
             GUILayout.Space(6);
 
-            if (!isEditingStatusText) statusTextEdit = statusBarText ?? string.Empty;
+            statusTextEdit = statusBarText ?? string.Empty;
             if (DrawPseudoInputButton(statusTextEdit, isEditingStatusText, 24f, 40))
             {
                 ClearAllEditingFlags();
@@ -348,7 +348,7 @@ private void DrawMenuTab()
             GUILayout.EndHorizontal();
             GUILayout.Space(6);
 
-            if (!isEditingAccentHex) accentHexEdit = customAccentHex ?? string.Empty;
+            accentHexEdit = customAccentHex ?? string.Empty;
             GUILayout.BeginHorizontal();
             if (DrawPseudoInputButton(accentHexEdit, isEditingAccentHex, 24f, 30))
             {

@@ -25,6 +25,10 @@ namespace AeroMenu
         private const int RadarWindowId = 843207;
         private static GUIStyle radarWinStyle;
         private static GUIStyle radarDotLabelStyle;
+        private static Texture2D radarPlayerTex;
+        private static Texture2D radarVisorTex;
+        private static Texture2D radarCrossTex;
+        private static Texture2D radarBodyTex;
         private static readonly Action<int> drawRadarWindow = DrawRadarWindow;
         private static float radarNextTpAt;
 
@@ -133,7 +137,13 @@ namespace AeroMenu
                 {
                     if (s == null) return null;
                     byte[] buf = new byte[s.Length];
-                    s.Read(buf, 0, buf.Length);
+                    int read = 0;
+                    while (read < buf.Length)
+                    {
+                        int n = s.Read(buf, read, buf.Length - read);
+                        if (n <= 0) break;
+                        read += n;
+                    }
                     Texture2D tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
                     if (!tex.LoadImage(buf)) return null;
                     tex.hideFlags = HideFlags.HideAndDontSave;
@@ -150,6 +160,14 @@ namespace AeroMenu
 
             if (radarDotLabelStyle == null)
                 radarDotLabelStyle = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontStyle = FontStyle.Bold, richText = false };
+
+            if (radarDrawIcons)
+            {
+                if (radarPlayerTex == null) radarPlayerTex = LoadRadarTex("AeroMenu.radar_player.png");
+                if (radarVisorTex == null) radarVisorTex = LoadRadarTex("AeroMenu.radar_player_visor.png");
+                if (radarCrossTex == null) radarCrossTex = LoadRadarTex("AeroMenu.radar_cross.png");
+                if (radarBodyTex == null) radarBodyTex = LoadRadarTex("AeroMenu.radar_dead_body.png");
+            }
         }
 
         private static void FitRadarRect(RadarMap map)
@@ -212,7 +230,10 @@ namespace AeroMenu
 
                         Color c = GetRadarPlayerColor(pc);
                         bool sq = IsRadarImp(pc) && (seeRoles || IsRadarLocalImp());
-                        DrawRadarGlyph(p, c, sq ? "■" : "●");
+                        if (radarDrawIcons && radarPlayerTex != null)
+                            DrawRadarIcon(p, c, sq, false);
+                        else
+                            DrawRadarGlyph(p, c, sq ? "■" : "●");
                     }
                     catch { }
                 }
@@ -233,7 +254,11 @@ namespace AeroMenu
                     if (body == null) continue;
                     Vector2 p = RadarPoint(map, body.TruePosition, pad);
                     if (!RadarInside(p)) continue;
-                    DrawRadarGlyph(p, GetRadarBodyColor(body), "✖");
+                    Color c = GetRadarBodyColor(body);
+                    if (radarDrawIcons && radarBodyTex != null)
+                        DrawRadarIcon(p, c, false, true);
+                    else
+                        DrawRadarGlyph(p, c, "✖");
                 }
                 catch { }
             }
@@ -262,6 +287,26 @@ namespace AeroMenu
             GUI.Label(new Rect(r.x + 1f, r.y + 1f, r.width, r.height), glyph, radarDotLabelStyle);
             GUI.color = new Color(c.r, c.g, c.b, 1f);
             GUI.Label(r, glyph, radarDotLabelStyle);
+            GUI.color = old;
+        }
+
+        private static void DrawRadarIcon(Vector2 p, Color c, bool imp, bool dead)
+        {
+            float sz = 20f * radarScale;
+            Rect r = new Rect(p.x - sz * 0.5f, p.y - sz * 0.5f, sz, sz);
+            Color old = GUI.color;
+            GUI.color = new Color(c.r, c.g, c.b, 1f);
+            GUI.DrawTexture(r, dead ? radarBodyTex : radarPlayerTex, ScaleMode.StretchToFill, true);
+            if (!dead && radarVisorTex != null)
+            {
+                GUI.color = imp ? new Color(1f, 0.25f, 0.2f, 1f) : new Color(0.72f, 0.86f, 0.96f, 1f);
+                GUI.DrawTexture(r, radarVisorTex, ScaleMode.StretchToFill, true);
+            }
+            if (dead && radarCrossTex != null)
+            {
+                GUI.color = Color.white;
+                GUI.DrawTexture(r, radarCrossTex, ScaleMode.StretchToFill, true);
+            }
             GUI.color = old;
         }
 

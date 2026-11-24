@@ -108,7 +108,7 @@ private static void ApplyCameraZoomTick()
                 }
                 else if (scrollWheel > 0f && mainCamera.orthographicSize > 3f)
                 {
-                    mainCamera.orthographicSize -= 1f;
+                    mainCamera.orthographicSize = Mathf.Max(3f, mainCamera.orthographicSize - 1f);
                     if (uiCamera != null) uiCamera.orthographicSize = Mathf.Max(3f, uiCamera.orthographicSize - 1f);
                     zoomLastMainSize = mainCamera.orthographicSize;
                     zoomLastUiSize = uiCamera != null ? uiCamera.orthographicSize : zoomBaseUiSize;

@@ -62,7 +62,6 @@ public static class ExtendedLobbyListPatch
             scroller.allowY = true;
             scroller.ScrollWheelSpeed = 0.4f;
             scroller.SetYBoundsMin(0f);
-            scroller.SetYBoundsMax(4f);
 
             BoxCollider2D collider = prefab.transform.parent.gameObject.AddComponent<BoxCollider2D>();
             collider.size = new Vector2(100f, 100f);
@@ -82,6 +81,10 @@ public static class ExtendedLobbyListPatch
                 newGc.transform.localPosition = new Vector3(newGc.transform.localPosition.x, newGc.transform.localPosition.y - 0.75f * list.Count, 25f);
                 list.Add(newGc);
             }
+
+            // The stock bound only reached the original rows. Extend it by the
+            // height of the added rows so they can actually be scrolled to.
+            scroller.SetYBoundsMax(Mathf.Max(4f, 0.75f * (list.Count - 1) + 4f));
 
             __instance.gameContainers = new Il2CppReferenceArray<GameContainer>(list.ToArray());
             return true;

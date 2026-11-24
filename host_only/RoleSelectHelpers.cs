@@ -67,7 +67,9 @@ private static bool IsGhostImpostorRoleSelection(int roleIndex)
 private static bool IsImpostorTeamRole(RoleTypes role)
         {
             int roleId = (int)role;
-            return role == RoleTypes.Impostor || role == RoleTypes.Shapeshifter || roleId == 9 || roleId == 18;
+            if (roleId == 9 || roleId == 18) return true; // Phantom, Viper
+            try { if (RoleManager.IsImpostorRole(role)) return true; } catch { }
+            return role == RoleTypes.Impostor || role == RoleTypes.Shapeshifter;
         }
 
 private static void EnsureForcedRoleOptionsForCurrentLobby()

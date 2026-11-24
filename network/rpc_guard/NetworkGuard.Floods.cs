@@ -334,15 +334,17 @@ private static bool IsLobbyJoinSyncGrace(PlayerControl player = null, int client
 		}
 
 		bool animated = true;
+		MessageReader copy = null;
 		try
 		{
-			MessageReader copy = MessageReader.Get(reader);
+			copy = MessageReader.Get(reader);
 			MessageExtensions.ReadNetObject<PlayerControl>(copy);
 			animated = copy.ReadBoolean();
 		}
 		catch
 		{
 		}
+		finally { copy?.Recycle(); }
 
 		if (MeetingOrExileActive() && !SamePlayer(player, target))
 		{
@@ -393,9 +395,10 @@ private static bool IsLobbyJoinSyncGrace(PlayerControl player = null, int client
 			return true;
 		}
 
+		MessageReader copy = null;
 		try
 		{
-			MessageReader copy = MessageReader.Get(reader);
+			copy = MessageReader.Get(reader);
 			string text = copy.ReadString();
 			if (IsDangerousChat(text))
 			{
@@ -408,6 +411,7 @@ private static bool IsLobbyJoinSyncGrace(PlayerControl player = null, int client
 			BlockRpc(player, clientId, "Malformed chat", error.Message);
 			return true;
 		}
+		finally { copy?.Recycle(); }
 
 		return false;
 	}
@@ -420,9 +424,10 @@ private static bool IsLobbyJoinSyncGrace(PlayerControl player = null, int client
 			return false;
 		}
 
+		MessageReader copy = null;
 		try
 		{
-			MessageReader copy = MessageReader.Get(reader);
+			copy = MessageReader.Get(reader);
 			level = copy.ReadPackedUInt32();
 			return true;
 		}
@@ -430,6 +435,7 @@ private static bool IsLobbyJoinSyncGrace(PlayerControl player = null, int client
 		{
 			return false;
 		}
+		finally { copy?.Recycle(); }
 	}
 
 	private static string suspiciousLevelsRaw;
@@ -493,9 +499,10 @@ private static bool TryReadReportedPlayerId(MessageReader reader, out byte playe
 			return false;
 		}
 
+		MessageReader copy = null;
 		try
 		{
-			MessageReader copy = MessageReader.Get(reader);
+			copy = MessageReader.Get(reader);
 			playerId = copy.ReadByte();
 			return true;
 		}
@@ -503,6 +510,7 @@ private static bool TryReadReportedPlayerId(MessageReader reader, out byte playe
 		{
 			return false;
 		}
+		finally { copy?.Recycle(); }
 	}
 
 private static bool TryReadPlayerObject(MessageReader reader, out PlayerControl player)
@@ -513,9 +521,10 @@ private static bool TryReadPlayerObject(MessageReader reader, out PlayerControl 
 			return false;
 		}
 
+		MessageReader copy = null;
 		try
 		{
-			MessageReader copy = MessageReader.Get(reader);
+			copy = MessageReader.Get(reader);
 			player = MessageExtensions.ReadNetObject<PlayerControl>(copy);
 			return player != null;
 		}
@@ -523,6 +532,7 @@ private static bool TryReadPlayerObject(MessageReader reader, out PlayerControl 
 		{
 			return false;
 		}
+		finally { copy?.Recycle(); }
 	}
 
 private static bool SamePlayer(PlayerControl left, PlayerControl right)
@@ -912,7 +922,11 @@ private static bool TryHandleKnownModRpc(PlayerControl player, byte rpcByte, int
 			return true;
 		}
 
-		string warnKey = clientId >= 0 ? $"{clientId}:{rule.DisplayName}" : null;
+		// Scope the warn-once key to the current game. Client ids are reused after
+		// reconnect/lobby changes, and WarnedModRpcOnce is never pruned, so an old
+		// entry would otherwise silently skip a new player's mod RPC forever.
+		int warnGameId = AmongUsClient.Instance != null ? ((InnerNetClient)AmongUsClient.Instance).GameId : 0;
+		string warnKey = clientId >= 0 ? $"{warnGameId}:{clientId}:{rule.DisplayName}" : null;
 		bool firstTime = warnKey == null || WarnedModRpcOnce.Add(warnKey);
 		if (!firstTime && action == "Warn")
 		{

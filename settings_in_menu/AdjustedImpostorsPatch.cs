@@ -42,12 +42,12 @@ using Vector3 = UnityEngine.Vector3;
 [HarmonyPatch(typeof(IGameOptionsExtensions), nameof(IGameOptionsExtensions.GetAdjustedNumImpostors))]
 public static class IGameOptionsExtensions_GetAdjustedNumImpostors_Patch
 {
-    public static bool Prefix(IGameOptions __instance, ref int __result)
+    public static bool Prefix([HarmonyArgument(0)] IGameOptions gameOptions, ref int __result)
     {
         try
         {
             if (!AeroMenuGUI.noSettingLimit) return true;
-            __result = __instance.NumImpostors;
+            __result = gameOptions.NumImpostors;
             return false;
         }
         catch { return true; }

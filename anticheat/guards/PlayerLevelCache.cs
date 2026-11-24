@@ -61,7 +61,9 @@ internal static class PlayerLevelCache
 	private static readonly Dictionary<int, uint> byClient = new Dictionary<int, uint>();
 	internal static void Remember(PlayerControl player, uint level)
 	{
-		try { if (player != null) byClient[player.OwnerId] = level; } catch { }
+		// The level RPC carries the internal 0-based level, but every display
+		// path in the menu shows it 1-based; normalize once when caching it.
+		try { if (player != null) byClient[player.OwnerId] = level == uint.MaxValue ? level : level + 1u; } catch { }
 	}
 	internal static bool TryGetDisplayLevel(int clientId, out uint level)
 	{

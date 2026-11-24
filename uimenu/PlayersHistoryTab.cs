@@ -77,7 +77,7 @@ private void DrawPlayersHistoryTab()
                 {
                     if (playerHistoryEntries.Count == 0)
                     {
-                        GUILayout.Label("<color=#777777>История пока пустая.</color>", centeredRichLabelStyle);
+                        GUILayout.Label(L("<color=#777777>History is empty.</color>", "<color=#777777>История пока пустая.</color>"), centeredRichLabelStyle);
                     }
                     else
                     {

@@ -91,8 +91,10 @@ private void DrawRolesCompact(float columnWidth)
                 fakeRoleIdx++;
                 if (fakeRoleIdx >= forceRoleOptions.Length) fakeRoleIdx = 0;
             }
+            // Use the shared role-change path: a bare local SetRole leaves the
+            // host's own role behaviour stale and never tells other clients.
             if (GUILayout.Button("Set", activeTabStyle, GUILayout.Width(38), GUILayout.Height(20)))
-                RoleManager.Instance?.SetRole(PlayerControl.LocalPlayer, forceRoleOptions[fakeRoleIdx]);
+                SetPlayerRole(PlayerControl.LocalPlayer, forceRoleOptions[fakeRoleIdx]);
             GUILayout.EndHorizontal();
 
             DrawRejoinForImpostor(columnWidth - 26f);

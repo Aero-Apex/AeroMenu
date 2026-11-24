@@ -68,10 +68,13 @@ private void DrawSelfTab()
                 else
                 {
                     GUILayout.BeginVertical(CreateCompactMenuCardStyle(), GUILayout.Width(selfContentWidth), GUILayout.ExpandHeight(false));
-                    if (currentSelfSubTab == 1) DrawRolesCompact(selfContentWidth);
-                    else if (currentSelfSubTab == 2) DrawPlayerMovementCompact(selfContentWidth);
-                    else if (currentSelfSubTab == 3) DrawChatSettingsCompact(selfContentWidth);
-                    GUILayout.EndVertical();
+                    try
+                    {
+                        if (currentSelfSubTab == 1) DrawRolesCompact(selfContentWidth);
+                        else if (currentSelfSubTab == 2) DrawPlayerMovementCompact(selfContentWidth);
+                        else if (currentSelfSubTab == 3) DrawChatSettingsCompact(selfContentWidth);
+                    }
+                    finally { GUILayout.EndVertical(); }
                 }
             }
             finally

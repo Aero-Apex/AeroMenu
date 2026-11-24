@@ -102,18 +102,34 @@ namespace AeroMenu
                     foreach (var c in crewmates) crewData.Add(c.Data);
                     GameManager.Instance.LogicRoleSelection.AssignRolesForTeam(impData, opts, (RoleTeamTypes)1, int.MaxValue, new Il2CppSystem.Nullable<RoleTypes>());
                     GameManager.Instance.LogicRoleSelection.AssignRolesForTeam(crewData, opts, (RoleTeamTypes)0, int.MaxValue, new Il2CppSystem.Nullable<RoleTypes>((RoleTypes)0));
+                    var explicitRoles = new Dictionary<byte, RoleTypes>();
                     foreach (var pc in allPlayers)
                     {
                         if (AeroMenuGUI.TryGetForcedRole(pc, out RoleTypes role) && role != RoleTypes.Crewmate && role != RoleTypes.Impostor)
                         {
                             RoleManager.Instance?.SetRole(pc, role);
-                            pc.RpcSetRole(role, false);
+                            explicitRoles[pc.PlayerId] = role;
                         }
                     }
-                    foreach (var pc in allPlayers) AeroMenuGUI.RefreshRoleBehaviour(pc);
+
+                    // Vanilla SelectRoles also broadcasts the final role to every
+                    // client. Skipping that loop left other players on their old
+                    // roles. Use the explicitly forced role where we have one, so
+                    // this does not depend on SetRole updating Data.RoleType.
+                    foreach (var pc in allPlayers)
+                    {
+                        if (pc == null || pc.Data == null || pc.Data.Role == null) continue;
+                        RoleTypes finalRole = explicitRoles.TryGetValue(pc.PlayerId, out RoleTypes forced) ? forced : pc.Data.RoleType;
+                        pc.RpcSetRole(finalRole, false);
+                        AeroMenuGUI.RefreshRoleBehaviour(pc);
+                    }
                     return false;
                 }
-                catch { return true; }
+                catch (Exception ex)
+                {
+                    Plugin.Instance?.Log?.LogError("[ROLE FORCE] SelectRoles failed: " + ex);
+                    return true;
+                }
             }
         }
 
@@ -202,6 +218,11 @@ namespace AeroMenu
                 else vanishedPlayers.Remove(__instance.PlayerId);
             }
 
+            public static void ClearVanishedState()
+            {
+                vanishedPlayers.Clear();
+            }
+
             public static bool IsVanished(PlayerControl player)
             {
                 if (player == null || player.Data == null) return false;
@@ -259,7 +280,9 @@ namespace AeroMenu
                 {
                     PlayerControl_SetRoleInvisibility_SeePhantoms_Patch.ApplyVisiblePhantom(__instance.myPlayer);
 
-                    if (AeroMenuGUI.seeGhosts && __instance.myPlayer.Data.IsDead && PlayerControl.LocalPlayer != null && !PlayerControl.LocalPlayer.Data.IsDead)
+                    if (AeroMenuGUI.seeGhosts && __instance.myPlayer.Data.IsDead &&
+                        PlayerControl.LocalPlayer != null && PlayerControl.LocalPlayer.Data != null &&
+                        !PlayerControl.LocalPlayer.Data.IsDead)
                     {
                         __instance.myPlayer.Visible = true;
                         var rend = __instance.myPlayer.GetComponent<SpriteRenderer>();
@@ -914,9 +937,12 @@ private void teleportToPlayer(PlayerControl t)
                 if (!AeroMenuGUI.UnlimitedInterrogateRange) return true;
                 try
                 {
+                    PlayerControl local = PlayerControl.LocalPlayer;
+                    if (local == null || PlayerControl.AllPlayerControls == null) return true;
+
                     var target = PlayerControl.AllPlayerControls.ToArray()
                         .Where(p => p != null && p.Data != null && __instance.IsValidTarget(p.Data) && !p.Data.IsDead && !p.Data.Disconnected)
-                        .OrderBy(p => Vector2.Distance(p.transform.position, PlayerControl.LocalPlayer.transform.position))
+                        .OrderBy(p => Vector2.Distance(p.transform.position, local.transform.position))
                         .FirstOrDefault();
                     if (target != null) __result = target;
                     return false;
@@ -930,7 +956,7 @@ private void teleportToPlayer(PlayerControl t)
         {
             public static bool Prefix(DoorBreakerGame __instance)
             {
-                if (!AeroMenuGUI.autoOpenDoors) return true;
+                if (!AeroMenuGUI.autoOpenDoors || __instance == null || __instance.MyDoor == null) return true;
                 try { ShipStatus.Instance.RpcUpdateSystem(SystemTypes.Doors, (byte)(__instance.MyDoor.Id | 64)); } catch { }
                 __instance.MyDoor.SetDoorway(true); __instance.Close();
                 return false;
@@ -942,7 +968,7 @@ private void teleportToPlayer(PlayerControl t)
         {
             public static bool Prefix(DoorCardSwipeGame __instance)
             {
-                if (!AeroMenuGUI.autoOpenDoors) return true;
+                if (!AeroMenuGUI.autoOpenDoors || __instance == null || __instance.MyDoor == null) return true;
                 try { ShipStatus.Instance.RpcUpdateSystem(SystemTypes.Doors, (byte)(__instance.MyDoor.Id | 64)); } catch { }
                 __instance.MyDoor.SetDoorway(true); __instance.Close();
                 return false;
@@ -971,28 +997,28 @@ private void teleportToPlayer(PlayerControl t)
                     new[] { typeof(NetworkedPlayerInfo), typeof(bool).MakeByRefType(), typeof(bool).MakeByRefType() });
             }
 
-            public static void Prefix(global::Console __instance, NetworkedPlayerInfo pc)
+            public static void Prefix(global::Console __instance, NetworkedPlayerInfo pc, out bool __state)
             {
+                __state = false;
                 try
                 {
-                    if (__instance == null || pc == null) return;
+                    if (__instance == null) return;
 
-                    if (!AeroMenuGUI.allowTasksAsImpostor) return;
+                    __state = __instance.AllowImpostor;
+                    if (pc == null || !AeroMenuGUI.allowTasksAsImpostor) return;
 
                     __instance.AllowImpostor = true;
                 }
                 catch { }
             }
 
-            public static void Postfix(global::Console __instance, NetworkedPlayerInfo pc, ref bool canUse, ref bool couldUse, ref float __result)
+            public static void Postfix(global::Console __instance, NetworkedPlayerInfo pc, ref bool canUse, ref bool couldUse, ref float __result, bool __state)
             {
                 try
                 {
-                    if (!AeroMenuGUI.allowTasksAsImpostor) return;
-                    if (__instance == null || pc == null || pc.Object != PlayerControl.LocalPlayer) return;
+                    if (__instance == null || !AeroMenuGUI.allowTasksAsImpostor) return;
+                    if (pc == null || pc.Object != PlayerControl.LocalPlayer) return;
                     if (!AeroMenuGUI.IsLocalImpostorRole(pc)) return;
-
-                    __instance.AllowImpostor = true;
 
                     if (!AeroMenuGUI.LocalPlayerHasTaskForConsole(__instance))
                     {
@@ -1005,6 +1031,14 @@ private void teleportToPlayer(PlayerControl t)
                         __result = Mathf.Min(__result, AeroMenuGUI.GetConsoleUsableDistance(__instance));
                 }
                 catch { }
+                finally
+                {
+                    // CanUse is evaluated for every player/console, not just the
+                    // local impostor. Restore the value captured in Prefix on
+                    // every path; otherwise AllowImpostor stays true forever.
+                    if (__instance != null)
+                        __instance.AllowImpostor = __state;
+                }
             }
         }
 
@@ -1058,6 +1092,9 @@ private void teleportToPlayer(PlayerControl t)
         {
             public static void Postfix()
             {
+                // Phantom visibility flags are per-round; stale ids would make a
+                // player that reuses the slot look vanished next match.
+                PlayerControl_SetRoleInvisibility_SeePhantoms_Patch.ClearVanishedState();
                 if (AeroMenuGUI.roleBuffImmortality)
                     AeroMenuGUI.SetImmortalityVentState(true);
             }

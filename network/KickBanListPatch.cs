@@ -95,8 +95,11 @@ public static class AmongUsClient_KickPlayer_BanList_Patch
                     }
                     catch { }
 
+                    int entriesBefore = AeroMenuGUI.bannedEntries != null ? AeroMenuGUI.bannedEntries.Count : 0;
                     AeroMenuGUI.AddToBanList(fc, puid, name, "Host ban");
-                    AeroMenuGUI.ShowNotification($"<color=#FF0000>[BAN]</color> {name} added to ban list!");
+                    int entriesAfter = AeroMenuGUI.bannedEntries != null ? AeroMenuGUI.bannedEntries.Count : entriesBefore;
+                    if (entriesAfter > entriesBefore)
+                        AeroMenuGUI.ShowNotification($"<color=#FF0000>[BAN]</color> {name} added to ban list!");
                 }
             }
             catch { }

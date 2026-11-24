@@ -1,5 +1,48 @@
 ﻿# Changelog
 
+## v1.0.9 — 2026-11-24
+
+### Fixed
+
+- Host role forcing now broadcasts the final role to every client; the old path only assigned locally, so other players kept their original roles.
+- In-game role changes apply locally and over RPC; the Roles tab "Set" button now uses the same path instead of changing only the host's local role.
+- SelectRoles failures are logged instead of silently falling back to vanilla assignment.
+- Task speed no longer accelerates the current minigame twice per tick.
+- Auto-ban records a newly seen friend code or product user ID when the other identifier is already banned.
+- AllowImpostor is restored to its original value when tasks-as-impostor is off, instead of staying true forever.
+
+## v1.0.8 — 2026-11-24
+
+### Fixed
+
+- Auto-updater no longer silently swallows a failed startup install: the status and log now say whether the staged DLL was installed or needs Restart & Update.
+- "Restart & Update" is now one click: if nothing is staged it downloads first, then restarts automatically once the DLL is ready.
+- A manual check no longer downgrades a local build that is newer than the published release.
+- Restart helper gets a longer hand-off window before the game is killed, avoiding races on slower machines.
+- Keep-whisper target is pinned by product user ID, so a reconnect cannot route private messages to a different player who reused the slot.
+- Whisper commands typed in portable chat are no longer broadcast to the whole lobby; they use the private send path and echo locally.
+
+## v1.0.7 — 2026-11-24
+
+### Fixed
+
+- Host chat moderation no longer flags the ordinary word "voffset"; only the `<voffset` rich-text tag is dangerous.
+- Friend-code validation accepts `_` and `-` in the name segment, stopping false "Broken FriendCode" host bans.
+- Auto-skip-vote now reads the real `VotedForId`/`DidVote` fields, so it actually skips.
+- Revive/Revive All preserve impostor-aligned roles (Shapeshifter, Phantom, Viper) and no longer misclassify Guardian Angel.
+- SnapTo teleports now send the same sequence ID the local transform committed, removing client desync.
+- Typing in portable chat or the custom Fake RPC field no longer fires keyboard binds.
+- Lobby cards now render room code, platform, capacity and age in the info line.
+- "Game preset" toggle is now required before Apply Preset runs.
+- Random Nickname is regenerated on config load instead of coming back inert.
+- Always Red is re-applied if another color change wins the race.
+- Loading a config actively undoes previously applied display tweaks hide-HUD/no-vignette/FOV.
+- ESP ignore list now hides name tags as well as tracers.
+- Active tab/button text picks black or white from accent luminance, so dark accents stay readable.
+- Status bar draws with a neutral GUI.color and restores the previous value.
+- Local-outfit RPC trust window now only covers the cosmetic RPCs actually sent, instead of bypassing validation for every RPC from that player.
+- Immortality vent state can be exited again; the guard no longer blocks the exit operation.
+
 ## v1.0.6 — 2026-11-23
 
 ### Added

@@ -238,8 +238,6 @@ public static class AmongUsClientUtils
                         if (__instance.myPlayer == PlayerControl.LocalPlayer) return true;
 
                         return false;
-
-                        return false;
                     }
                     catch { }
                 }
@@ -250,9 +248,11 @@ public static class AmongUsClientUtils
 
 public static int GetColorIdByName(string name)
         {
+            if (string.IsNullOrWhiteSpace(name)) return -1;
             string[] names = { "red", "blue", "green", "pink", "orange", "yellow", "black", "white", "purple", "brown", "cyan", "lime", "maroon", "rose", "banana", "gray", "tan", "coral", "fortegreen" };
+            string trimmed = name.Trim().ToLowerInvariant();
             for (int i = 0; i < names.Length; i++)
-                if (names[i] == name.ToLower().Trim()) return i;
+                if (names[i] == trimmed) return i;
             return -1;
         }
 
@@ -353,7 +353,9 @@ private void KillAll()
             {
                 foreach (var player in PlayerControl.AllPlayerControls.ToArray())
                 {
-                    TryHostAeroMurderPlayer(player);
+                    if (player != null && player != PlayerControl.LocalPlayer && player.Data != null &&
+                        !player.Data.IsDead && !player.Data.Disconnected)
+                        TryHostAeroMurderPlayer(player);
                 }
                 return;
             }
@@ -362,7 +364,7 @@ private void KillAll()
             var targets = PlayerControl.AllPlayerControls.ToArray();
             foreach (var t in targets)
             {
-                if (t != null && t != PlayerControl.LocalPlayer && !t.Data.IsDead && !t.Data.Disconnected)
+                if (t != null && t != PlayerControl.LocalPlayer && t.Data != null && !t.Data.IsDead && !t.Data.Disconnected)
                 {
                     PlayerControl.LocalPlayer.NetTransform.RpcSnapTo(t.transform.position);
                     PlayerControl.LocalPlayer.CmdCheckMurder(t);

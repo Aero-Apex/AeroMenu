@@ -20,9 +20,13 @@ namespace AeroMenu
         // ---------------------------------------------------------------------
         public static bool extraAutoOpenDoors = false;
         public static bool extraAutoFixLights = false;
+        public static bool extraAutoFixSabotages = false;
+        public static int extraAutoFixSabotagesSeconds = 2;
         public static bool extraAutoCloseDoors = false;
         public static bool extraAutoFillBots = false;
         public static int extraAutoFillBotsCount = 10;
+        public static bool extraAutoClearBotsAfterMatch = false;
+        public static int extraAutoClearBotsDelay = 3;
         public static bool extraAutoRefreshLobby = false;
         public static int extraAutoRefreshSeconds = 5;
 
@@ -31,16 +35,35 @@ namespace AeroMenu
         // ---------------------------------------------------------------------
         private static float nextAutoOpenDoorsAtL;
         private static float nextAutoFixLightsAtL;
+        private static float nextAutoFixSabotagesAtL;
         private static float nextAutoCloseDoorsAtL;
         private static float nextAutoRefreshLobbyAtL;
 
         private static int autoFillBotsLobbyTokenL = int.MinValue;
         private static bool autoFillBotsDoneForLobbyL;
 
+        private static bool autoClearBotsArmedL;
+        private static bool autoClearBotsDoneL;
+        private static float autoClearBotsClearAtL;
+
+        private static string autoFixSabotagesSecondsTextL;
         private static string autoFillBotsCountTextL;
+        private static string autoClearBotsDelayTextL;
         private static string autoRefreshSecondsTextL;
 
         private static readonly Dictionary<string, Type> extrasTypeCacheL = new Dictionary<string, Type>();
+
+        // Fixed, bounded set of non-light sabotage systems handled by auto repair.
+        // Electrical is intentionally excluded: the dedicated lights toggle owns it.
+        private static readonly SystemTypes[] autoRepairTargetsL =
+        {
+            SystemTypes.LifeSupp,
+            SystemTypes.Reactor,
+            SystemTypes.Laboratory,
+            SystemTypes.HeliSabotage,
+            SystemTypes.Comms,
+            SystemTypes.MushroomMixupSabotage
+        };
 
         private const BindingFlags ExtrasFlagsL = BindingFlags.Public | BindingFlags.NonPublic |
                                                   BindingFlags.Instance | BindingFlags.Static;
@@ -62,6 +85,10 @@ namespace AeroMenu
                     L("Auto Open Doors (Host)", "Авто-открытие дверей (Хост)"), 0, "extraAutoOpenDoors");
                 extraAutoFixLights = DrawToggle(extraAutoFixLights,
                     L("Auto Fix Lights (Host)", "Авто-ремонт света (Хост)"), 0, "extraAutoFixLights");
+                extraAutoFixSabotages = DrawToggle(extraAutoFixSabotages,
+                    L("Auto Fix Sabotages (Host)", "Авто-ремонт саботажей (Хост)"), 0, "extraAutoFixSabotages");
+                DrawIntRowL(w, L("Check interval (s)", "Интервал проверки (с)"),
+                    ref extraAutoFixSabotagesSeconds, 1, 60, ref autoFixSabotagesSecondsTextL);
                 extraAutoCloseDoors = DrawToggle(extraAutoCloseDoors,
                     L("Auto Close Doors (Host)", "Авто-закрытие дверей (Хост)"), 0, "extraAutoCloseDoors");
 
@@ -71,6 +98,10 @@ namespace AeroMenu
                     L("Auto Fill Bots (Host)", "Авто-заполнение ботами (Хост)"), 0, "extraAutoFillBots");
                 DrawIntRowL(w, L("Target players", "Цель игроков"),
                     ref extraAutoFillBotsCount, 1, 20, ref autoFillBotsCountTextL);
+                extraAutoClearBotsAfterMatch = DrawToggle(extraAutoClearBotsAfterMatch,
+                    L("Clear Bots After Match (Host)", "Удалить ботов после матча (Хост)"), 0, "extraAutoClearBotsAfterMatch");
+                DrawIntRowL(w, L("Clear delay (s)", "Задержка удаления (с)"),
+                    ref extraAutoClearBotsDelay, 0, 60, ref autoClearBotsDelayTextL);
 
                 GUILayout.Space(6f);
 
@@ -81,8 +112,8 @@ namespace AeroMenu
 
                 GUILayout.Space(6f);
                 GUILayout.Label(MenuText(L(
-                    "Host options work only while you host a game. Bots fill once per lobby.",
-                    "Опции хоста работают только когда вы хост. Боты добавляются один раз за лобби.")),
+                    "Host options work only while you host. Sabotage repairs skip lights (use the lights toggle). Bots fill once per lobby and can be cleared after a match.",
+                    "Опции хоста работают только когда вы хост. Ремонт саботажей не трогает свет (используйте отдельную опцию). Боты добавляются один раз за лобби и могут удаляться после матча.")),
                     menuDescStyle, GUILayout.Width(w));
             }
             catch { }
@@ -93,8 +124,10 @@ namespace AeroMenu
             // No hotkeys in this group, so inputBlocked is intentionally unused.
             try { TickAutoOpenDoorsL(); } catch { }
             try { TickAutoFixLightsL(); } catch { }
+            try { TickAutoFixSabotagesL(); } catch { }
             try { TickAutoCloseDoorsL(); } catch { }
             try { TickAutoFillBotsL(); } catch { }
+            try { TickAutoClearBotsL(); } catch { }
             try { TickAutoRefreshLobbyL(); } catch { }
         }
 
@@ -104,15 +137,21 @@ namespace AeroMenu
             {
                 extraAutoOpenDoors = PlayerPrefs.GetInt("M_ExtrasL_extraAutoOpenDoors", 0) == 1;
                 extraAutoFixLights = PlayerPrefs.GetInt("M_ExtrasL_extraAutoFixLights", 0) == 1;
+                extraAutoFixSabotages = PlayerPrefs.GetInt("M_ExtrasL_extraAutoFixSabotages", 0) == 1;
+                extraAutoFixSabotagesSeconds = Mathf.Clamp(PlayerPrefs.GetInt("M_ExtrasL_extraAutoFixSabotagesSeconds", 2), 1, 60);
                 extraAutoCloseDoors = PlayerPrefs.GetInt("M_ExtrasL_extraAutoCloseDoors", 0) == 1;
                 extraAutoFillBots = PlayerPrefs.GetInt("M_ExtrasL_extraAutoFillBots", 0) == 1;
                 extraAutoFillBotsCount = Mathf.Clamp(PlayerPrefs.GetInt("M_ExtrasL_extraAutoFillBotsCount", 10), 1, 20);
+                extraAutoClearBotsAfterMatch = PlayerPrefs.GetInt("M_ExtrasL_extraAutoClearBotsAfterMatch", 0) == 1;
+                extraAutoClearBotsDelay = Mathf.Clamp(PlayerPrefs.GetInt("M_ExtrasL_extraAutoClearBotsDelay", 3), 0, 60);
                 extraAutoRefreshLobby = PlayerPrefs.GetInt("M_ExtrasL_extraAutoRefreshLobby", 0) == 1;
                 extraAutoRefreshSeconds = Mathf.Clamp(PlayerPrefs.GetInt("M_ExtrasL_extraAutoRefreshSeconds", 5), 1, 3600);
             }
             catch { }
 
+            autoFixSabotagesSecondsTextL = extraAutoFixSabotagesSeconds.ToString();
             autoFillBotsCountTextL = extraAutoFillBotsCount.ToString();
+            autoClearBotsDelayTextL = extraAutoClearBotsDelay.ToString();
             autoRefreshSecondsTextL = extraAutoRefreshSeconds.ToString();
         }
 
@@ -122,9 +161,13 @@ namespace AeroMenu
             {
                 PlayerPrefs.SetInt("M_ExtrasL_extraAutoOpenDoors", extraAutoOpenDoors ? 1 : 0);
                 PlayerPrefs.SetInt("M_ExtrasL_extraAutoFixLights", extraAutoFixLights ? 1 : 0);
+                PlayerPrefs.SetInt("M_ExtrasL_extraAutoFixSabotages", extraAutoFixSabotages ? 1 : 0);
+                PlayerPrefs.SetInt("M_ExtrasL_extraAutoFixSabotagesSeconds", Mathf.Clamp(extraAutoFixSabotagesSeconds, 1, 60));
                 PlayerPrefs.SetInt("M_ExtrasL_extraAutoCloseDoors", extraAutoCloseDoors ? 1 : 0);
                 PlayerPrefs.SetInt("M_ExtrasL_extraAutoFillBots", extraAutoFillBots ? 1 : 0);
                 PlayerPrefs.SetInt("M_ExtrasL_extraAutoFillBotsCount", Mathf.Clamp(extraAutoFillBotsCount, 1, 20));
+                PlayerPrefs.SetInt("M_ExtrasL_extraAutoClearBotsAfterMatch", extraAutoClearBotsAfterMatch ? 1 : 0);
+                PlayerPrefs.SetInt("M_ExtrasL_extraAutoClearBotsDelay", Mathf.Clamp(extraAutoClearBotsDelay, 0, 60));
                 PlayerPrefs.SetInt("M_ExtrasL_extraAutoRefreshLobby", extraAutoRefreshLobby ? 1 : 0);
                 PlayerPrefs.SetInt("M_ExtrasL_extraAutoRefreshSeconds", Mathf.Clamp(extraAutoRefreshSeconds, 1, 3600));
             }
@@ -208,6 +251,43 @@ namespace AeroMenu
             catch { }
         }
 
+        private static void TickAutoFixSabotagesL()
+        {
+            if (!extraAutoFixSabotages) return;
+            if (!IsHostL() || !IsInActiveGameL()) return;
+            if (Time.unscaledTime < nextAutoFixSabotagesAtL) return;
+            nextAutoFixSabotagesAtL = Time.unscaledTime + Mathf.Clamp(extraAutoFixSabotagesSeconds, 1, 60);
+
+            try
+            {
+                ShipStatus ship = ShipStatus.Instance;
+                if (ship == null || ship.Systems == null) return;
+
+                for (int i = 0; i < autoRepairTargetsL.Length; i++)
+                {
+                    SystemTypes type = autoRepairTargetsL[i];
+                    try
+                    {
+                        object system = null;
+                        if (ship.Systems.TryGetValue(type, out var found)) system = found;
+                        if (system == null || !IsSystemActiveL(system)) continue;
+
+                        // Signals mirror host_only/SabotageActions.cs: 16/17 clear most
+                        // sabotages, 0 clears Mushroom Mixup.
+                        byte first = 16;
+                        byte second = 255;
+                        if (type == SystemTypes.MushroomMixupSabotage) first = 0;
+                        else if (type == SystemTypes.Comms || type == SystemTypes.HeliSabotage) second = 17;
+
+                        ship.RpcUpdateSystem(type, first);
+                        if (second != 255) ship.RpcUpdateSystem(type, second);
+                    }
+                    catch { }
+                }
+            }
+            catch { }
+        }
+
         private static void TickAutoCloseDoorsL()
         {
             if (!extraAutoCloseDoors) return;
@@ -278,6 +358,56 @@ namespace AeroMenu
                 if (addBots == null || !addBots.IsStatic) return;
 
                 addBots.Invoke(null, new object[] { need });
+            }
+            catch { }
+        }
+
+        private static void TickAutoClearBotsL()
+        {
+            if (!extraAutoClearBotsAfterMatch)
+            {
+                autoClearBotsArmedL = false;
+                autoClearBotsDoneL = false;
+                autoClearBotsClearAtL = 0f;
+                return;
+            }
+            if (!IsHostL()) return;
+
+            bool started = false;
+            try { started = AmongUsClient.Instance != null && AmongUsClient.Instance.IsGameStarted; }
+            catch { started = false; }
+
+            if (started)
+            {
+                // Arm only on a real match start, so loading into results does not fire.
+                autoClearBotsArmedL = true;
+                autoClearBotsDoneL = false;
+                autoClearBotsClearAtL = 0f;
+                return;
+            }
+
+            if (!autoClearBotsArmedL || autoClearBotsDoneL) return;
+
+            float now = Time.unscaledTime;
+            if (autoClearBotsClearAtL <= 0f)
+                autoClearBotsClearAtL = now + Mathf.Clamp(extraAutoClearBotsDelay, 0, 60);
+
+            if (now < autoClearBotsClearAtL) return;
+
+            autoClearBotsDoneL = true;
+            autoClearBotsArmedL = false;
+
+            try
+            {
+                Type botType = FindTypeL("AeroMenu.AeroBots");
+                if (botType == null) return;
+
+                MethodInfo clear = null;
+                try { clear = botType.GetMethod("ClearAllBots", ExtrasFlagsL); }
+                catch { }
+                if (clear == null || !clear.IsStatic) return;
+
+                clear.Invoke(null, null);
             }
             catch { }
         }

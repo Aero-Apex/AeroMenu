@@ -46,7 +46,8 @@ private static readonly string[] selfChatSubTabs = { "SETTINGS", "PORTABLE" };
 
 private void DrawChatSettingsCompact(float columnWidth)
         {
-            float contentWidth = Mathf.Min(Mathf.Max(120f, columnWidth - 8f), 600f);
+            // The caller wraps this in a padded compact card; subtract its padding too.
+            float contentWidth = Mathf.Min(Mathf.Max(120f, columnWidth - 28f), 600f);
             currentSelfChatSubTab = Mathf.Clamp(currentSelfChatSubTab, 0, selfChatSubTabs.Length - 1);
 
             GUILayout.BeginHorizontal(GUILayout.Width(contentWidth));
@@ -79,7 +80,9 @@ private void DrawChatSettingsCompact(float columnWidth)
             float gap = 6f;
             int columns = contentWidth >= 560f ? 3 : 2;
             float blockWidth = Mathf.Floor((contentWidth - (gap * (columns - 1))) / columns);
-            int toggleWidth = Mathf.RoundToInt(Mathf.Clamp(blockWidth - 16f, 150f, 210f));
+            // The old minimum of 150 was wider than a block on a narrow menu and pushed
+            // every toggle/slider outside the parent row. Keep controls inside the block.
+            int toggleWidth = Mathf.Clamp(Mathf.RoundToInt(blockWidth - 12f), 32, 210);
             GUIStyle compactCard = CreateCompactMenuCardStyle();
             GUIStyle smallLabel = compactLabelStyle10;
             const float blockHeight = 172f;
@@ -95,10 +98,12 @@ private void DrawChatSettingsCompact(float columnWidth)
 
             void DrawHistorySizeRow()
             {
+                float historyLabelWidth = Mathf.Min(76f, Mathf.Max(40f, toggleWidth * 0.45f));
+                float historyValueWidth = Mathf.Min(22f, Mathf.Max(16f, toggleWidth * 0.18f));
                 GUILayout.BeginHorizontal(GUILayout.Width(toggleWidth), GUILayout.Height(20));
-                GUILayout.Label("History Size", smallLabel, GUILayout.Width(76), GUILayout.Height(20));
-                GUILayout.Label($"{chatHistoryLimit}", smallLabel, GUILayout.Width(22), GUILayout.Height(20));
-                GUILayout.Space(5);
+                GUILayout.Label("History Size", smallLabel, GUILayout.Width(historyLabelWidth), GUILayout.Height(20));
+                GUILayout.Label($"{chatHistoryLimit}", smallLabel, GUILayout.Width(historyValueWidth), GUILayout.Height(20));
+                GUILayout.Space(3);
                 int prevLimit = chatHistoryLimit;
                 chatHistoryLimit = Mathf.Clamp((int)GUILayout.HorizontalSlider(chatHistoryLimit, 5f, 300f, sliderStyle, sliderThumbStyle, GUILayout.ExpandWidth(true)), 5, 300);
                 if (prevLimit != chatHistoryLimit)
@@ -119,7 +124,7 @@ private void DrawChatSettingsCompact(float columnWidth)
                 GUI.Box(chatInputRect, string.Empty, compactChatFieldStyle);
 
                 string drawText = string.IsNullOrEmpty(customChatMessage)
-                    ? L("Type a message...", "Р’РІРµРґРёС‚Рµ СЃРѕРѕР±С‰РµРЅРёРµ...")
+                    ? L("Type a message...", "Введите сообщение...")
                     : customChatMessage;
                 if (customChatInputFocused && (Time.unscaledTime % 1f) < 0.5f) drawText += "|";
 
@@ -165,17 +170,18 @@ private void DrawChatSettingsCompact(float columnWidth)
 
                 GUILayout.Space(3);
                 GUILayout.BeginHorizontal();
-                if (GUILayout.Button(L("Send", "РћС‚РїСЂР°РІРёС‚СЊ"), btnStyle, GUILayout.Height(22)))
+                if (GUILayout.Button(L("Send", "Отправить"), btnStyle, GUILayout.Height(22)))
                     TrySendCustomChatMessage(customChatMessage);
                 GUILayout.Space(5);
-                string spamBtnText = customChatSpamEnabled ? L("Spam ON", "РЎРїР°Рј Р’РљР›") : L("Spam OFF", "РЎРїР°Рј Р’Р«РљР›");
+                string spamBtnText = customChatSpamEnabled ? L("Spam ON", "Спам ВКЛ") : L("Spam OFF", "Спам ВЫКЛ");
                 if (GUILayout.Button(spamBtnText, customChatSpamEnabled ? activeTabStyle : btnStyle, GUILayout.Height(22)))
                     customChatSpamEnabled = !customChatSpamEnabled;
                 GUILayout.EndHorizontal();
 
                 GUILayout.Space(3);
                 GUILayout.BeginHorizontal();
-                GUILayout.Label($"{L("Delay:", "Р-Р°РґРµСЂР¶РєР°:")} {Mathf.Round(customChatSpamDelay * 10f) / 10f}s", toggleLabelStyle11, GUILayout.Width(82), GUILayout.Height(17));
+                float delayLabelWidth = Mathf.Min(82f, Mathf.Max(44f, toggleWidth * 0.5f));
+                GUILayout.Label($"{L("Delay:", "Задержка:")} {Mathf.Round(customChatSpamDelay * 10f) / 10f}s", toggleLabelStyle11, GUILayout.Width(delayLabelWidth), GUILayout.Height(17));
                 customChatSpamDelay = GUILayout.HorizontalSlider(customChatSpamDelay, 0.5f, 10f, sliderStyle, sliderThumbStyle, GUILayout.ExpandWidth(true));
                 GUILayout.EndHorizontal();
 
@@ -346,7 +352,7 @@ private void DrawGhostChatColorControl(float width)
             }
             GUILayout.EndHorizontal();
 
-            GUILayout.Label(RenderGhostChatMessageText(L("Preview ghost chat color", "РџСЂРёРјРµСЂ С†РІРµС‚Р° С‡Р°С‚Р° РїСЂРёР·СЂР°РєРѕРІ")), richClipLabelStyle11, GUILayout.Width(width), GUILayout.Height(16f));
+            GUILayout.Label(RenderGhostChatMessageText(L("Preview ghost chat color", "Пример цвета чата призраков")), richClipLabelStyle11, GUILayout.Width(width), GUILayout.Height(16f));
         }
     }
 }

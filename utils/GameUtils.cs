@@ -42,12 +42,18 @@ public static class Extra
 {
     public static ModPlayer Mod(this PlayerControl pc)
 	{
+		if (pc == null) return null;
 		return pc.gameObject.EnsureComponent<ModPlayer>();
 	}
 
 	public static T EnsureComponent<T>(this GameObject obj) where T : Component
 	{
-		return obj.GetComponent<T>() ?? obj.AddComponent<T>();
+		if (obj == null) return null;
+		// Unity overloads == so destroyed objects compare as null, but ?? only
+		// checks the CLR reference. A destroyed component wrapper would be
+		// returned here and never replaced with a live one.
+		T existing = obj.GetComponent<T>();
+		return existing != null ? existing : obj.AddComponent<T>();
 	}
 
 }

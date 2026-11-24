@@ -802,6 +802,7 @@ namespace AeroMenu
                     mainSawGame = false;
                     mainAt = -1f;
                     AeroMenuGUI.AutoHostAutoRunEnabled = false;
+                    AeroMenuGUI.settingsDirty = true;
                     mainState = "Back, waiting host";
                     return;
                 }

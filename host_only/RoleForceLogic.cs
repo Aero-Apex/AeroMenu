@@ -116,32 +116,42 @@ private static void SetForcedImp(PlayerControl pc)
         {
             if (pc == null) return;
             string fc = GetRoleForceKey(pc);
+
+            // Clear both identity keys before writing. A player may have been
+            // stored by PlayerId earlier (guest / FC not yet available) and be
+            // resolved by friend code now, or vice versa. Leaving the other key
+            // behind makes TryGetForcedRole return a stale role that overrides
+            // this impostor selection at role assignment time.
+            forcedPreGameRoleFcs.Remove(fc);
+            forcedImpostorFcs.Remove(fc);
+            forcedPreGameRoles.Remove(pc.PlayerId);
+            forcedImpostors.Remove(pc.PlayerId);
+
             if (!string.IsNullOrEmpty(fc))
-            {
-                forcedPreGameRoleFcs.Remove(fc);
                 forcedImpostorFcs.Add(fc);
-            }
             else
-            {
-                forcedPreGameRoles.Remove(pc.PlayerId);
                 forcedImpostors.Add(pc.PlayerId);
-            }
         }
 
 private static void SetForcedRole(PlayerControl pc, RoleTypes role)
         {
             if (pc == null) return;
             string fc = GetRoleForceKey(pc);
+
+            // Mirror SetForcedImp: drop every previous entry for this player
+            // under both friend code and PlayerId before applying the new role.
+            // Otherwise a stale impostor flag or an old role on the other key
+            // keeps winning in IsForcedImp/TryGetForcedRole and the player can
+            // be placed on the wrong team or assigned the wrong role.
+            forcedImpostorFcs.Remove(fc);
+            forcedPreGameRoleFcs.Remove(fc);
+            forcedImpostors.Remove(pc.PlayerId);
+            forcedPreGameRoles.Remove(pc.PlayerId);
+
             if (!string.IsNullOrEmpty(fc))
-            {
-                forcedImpostorFcs.Remove(fc);
                 forcedPreGameRoleFcs[fc] = role;
-            }
             else
-            {
-                forcedImpostors.Remove(pc.PlayerId);
                 forcedPreGameRoles[pc.PlayerId] = role;
-            }
 
             EnsureForcedRoleOptionsForCurrentLobby();
         }

@@ -22,7 +22,10 @@ namespace AeroMenu
             if (!AeroMenuGUI.spoofAprilFoolsDate) return;
 
             var dt = new System.DateTime(System.DateTime.UtcNow.Year, 4, 1, 7, 1, 0, System.DateTimeKind.Utc);
-            __result = new Il2CppSystem.DateTime(dt.Ticks);
+            // ApproximateServerTime normally returns a UTC DateTime. The ticks-only
+            // constructor yields Kind=Unspecified, so keep the UTC kind explicitly.
+            __result = Il2CppSystem.DateTime.SpecifyKind(
+                new Il2CppSystem.DateTime(dt.Ticks), Il2CppSystem.DateTimeKind.Utc);
         }
     }
 

@@ -113,8 +113,8 @@ private void SmartEndGame(string outcome)
 
             bool tempBlock = neverEndGame;
             neverEndGame = false;
-            GameManager.Instance.RpcEndGame((GameOverReason)reasonCode, false);
-            neverEndGame = tempBlock;
+            try { GameManager.Instance.RpcEndGame((GameOverReason)reasonCode, false); }
+            finally { neverEndGame = tempBlock; }
         }
 
 private static string SanitizeSpoofFriendCode(string input)

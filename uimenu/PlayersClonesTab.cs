@@ -77,14 +77,15 @@ namespace AeroMenu
 
             if (GUILayout.Button(L("Delete All Clones", "УДАЛИТЬ ВСЕХ КЛОНОВ"), btnStyle, GUILayout.Width(innerW), GUILayout.Height(25f)))
                 {
+                    // Never return out of OnGUI here: skipping the controls below
+                    // on the click event desynchronises GUILayout control IDs.
                     if (!NetworkedClones.Ready())
-                    {
                         ShowNotification("<color=#FF5555>[CLONES]</color> Host only.");
-                        return;
+                    else
+                    {
+                        int removed = NetworkedClones.ClearAll();
+                        ShowNotification("<color=#FF5555>[CLONES]</color> Removed clones: " + removed);
                     }
-
-                    int removed = NetworkedClones.ClearAll();
-                    ShowNotification("<color=#FF5555>[CLONES]</color> Removed clones: " + removed);
                 }
 
                 GUILayout.Space(4);
@@ -180,13 +181,12 @@ namespace AeroMenu
                     {
                         PlayerControl me = PlayerControl.LocalPlayer;
                         if (me == null || me.transform == null)
-                        {
                             ShowNotification("<color=#FF5555>[FLOOD]</color> No local player.");
-                            return;
+                        else
+                        {
+                            string msg = NetworkedClones.FormationOf(me, 1, cloneFormationCount, 1f);
+                            ShowNotification("<color=#AA77FF>[FLOOD]</color> " + msg);
                         }
-
-                        string msg = NetworkedClones.FormationOf(me, 1, cloneFormationCount, 1f);
-                        ShowNotification("<color=#AA77FF>[FLOOD]</color> " + msg);
                     }
                 }
                 finally { GUILayout.EndHorizontal(); }

@@ -26,6 +26,12 @@ namespace AeroMenu
 
         public static bool extraMuteAllToggle = false;
 
+        public static bool extraHostAnnounce = false;
+        public static string extraHostAnnounceText = string.Empty;
+
+        public static bool extraAfkKick = false;
+        public static int extraAfkKickSeconds = 120;
+
         // --------------------------------------------------------------------
         // Internal bookkeeping (all helpers/fields end with D)
         // --------------------------------------------------------------------
@@ -45,6 +51,12 @@ namespace AeroMenu
         private static int muteGameIdD = -1;
         private static bool muteAllAppliedD;
         private static bool muteAllPrevD;
+
+        private static float nextAfkCheckD;
+        private static int afkGameIdD = -1;
+        private static readonly Dictionary<int, Vector3> afkLastPosD = new Dictionary<int, Vector3>();
+        private static readonly Dictionary<int, float> afkLastMoveD = new Dictionary<int, float>();
+        private static readonly HashSet<int> afkKickedOwnersD = new HashSet<int>();
 
         private static Type cachedSnapTypeD;
         private static MethodInfo cachedSnapMethodD;
@@ -123,6 +135,52 @@ namespace AeroMenu
                         L("Mute all remote players", "Заглушить всех удалённых игроков"), toggleWidth);
                     GUILayout.Label(MenuText(L("Best-effort reflective mute toggle (host only).",
                         "Переключатель заглушения через рефлексию (только хост).")), menuDescStyle);
+                    GUILayout.Space(6);
+
+                    extraHostAnnounce = DrawToggle(extraHostAnnounce,
+                        L("Host announcement", "Объявление от хоста"), toggleWidth);
+                    if (extraHostAnnounce)
+                    {
+                        GUILayout.BeginHorizontal();
+                        try
+                        {
+                            GUILayout.Label(MenuText(L("Message:", "Сообщение:")), toggleLabelStyle, GUILayout.Width(inputWidth));
+                            string message = AeroTextField(extraHostAnnounceText ?? string.Empty,
+                                inputBlockStyle, GUILayout.Width(Mathf.Max(inputWidth, 120)));
+                            if (message != null && message.Length > 90) message = message.Substring(0, 90);
+                            extraHostAnnounceText = message ?? string.Empty;
+                        }
+                        finally { GUILayout.EndHorizontal(); }
+                        GUILayout.BeginHorizontal();
+                        try
+                        {
+                            if (GUILayout.Button(MenuText(L("Send to chat", "Отправить в чат")),
+                                    btnStyle, GUILayout.Height(24)))
+                                SendHostAnnouncementD(extraHostAnnounceText);
+                            if (GUILayout.Button(MenuText(L("Post room code", "Код комнаты в чат")),
+                                    btnStyle, GUILayout.Height(24)))
+                                PostRoomCodeD();
+                        }
+                        finally { GUILayout.EndHorizontal(); }
+                        GUILayout.Label(MenuText(L("Host only. Sends a visible chat message to every player.",
+                            "Только хост. Отправляет видимое сообщение в чат всем игрокам.")), menuDescStyle);
+                    }
+                    GUILayout.Space(6);
+
+                    extraAfkKick = DrawToggle(extraAfkKick,
+                        L("Kick idle players", "Кик неактивных игроков"), toggleWidth);
+                    GUILayout.BeginHorizontal();
+                    try
+                    {
+                        GUILayout.Label(MenuText(L("Idle (s):", "Неактив (с):")), toggleLabelStyle, GUILayout.Width(inputWidth));
+                        string idleText = AeroTextField(extraAfkKickSeconds.ToString(),
+                            inputBlockStyle, GUILayout.Width(inputWidth));
+                        if (int.TryParse(idleText, out int idle))
+                            extraAfkKickSeconds = Mathf.Clamp(idle, 30, 600);
+                    }
+                    finally { GUILayout.EndHorizontal(); }
+                    GUILayout.Label(MenuText(L("Host only. Kicks alive, non-bot players that stop moving for too long.",
+                        "Только хост. Кикает живых игроков не-ботов, которые слишком долго не двигаются.")), menuDescStyle);
                 }
                 catch { }
                 finally { GUILayout.EndVertical(); }
@@ -145,6 +203,7 @@ namespace AeroMenu
                 TickAutoEndD();
                 TickKickNoFriendCodeD();
                 TickMuteAllD();
+                TickAfkKickD();
             }
             catch { }
         }
@@ -164,6 +223,12 @@ namespace AeroMenu
                 extraKickNoFriendCode = LoadBool("M_ExtrasD_extraKickNoFriendCode", false);
 
                 extraMuteAllToggle = LoadBool("M_ExtrasD_extraMuteAllToggle", false);
+
+                extraHostAnnounce = LoadBool("M_ExtrasD_extraHostAnnounce", false);
+                extraHostAnnounceText = PlayerPrefs.GetString("M_ExtrasD_extraHostAnnounceText", string.Empty);
+
+                extraAfkKick = LoadBool("M_ExtrasD_extraAfkKick", false);
+                extraAfkKickSeconds = Mathf.Clamp(PlayerPrefs.GetInt("M_ExtrasD_extraAfkKickSeconds", 120), 30, 600);
             }
             catch { }
         }
@@ -183,6 +248,12 @@ namespace AeroMenu
                 SaveBool("M_ExtrasD_extraKickNoFriendCode", extraKickNoFriendCode);
 
                 SaveBool("M_ExtrasD_extraMuteAllToggle", extraMuteAllToggle);
+
+                SaveBool("M_ExtrasD_extraHostAnnounce", extraHostAnnounce);
+                PlayerPrefs.SetString("M_ExtrasD_extraHostAnnounceText", extraHostAnnounceText ?? string.Empty);
+
+                SaveBool("M_ExtrasD_extraAfkKick", extraAfkKick);
+                PlayerPrefs.SetInt("M_ExtrasD_extraAfkKickSeconds", Mathf.Clamp(extraAfkKickSeconds, 30, 600));
             }
             catch { }
         }
@@ -411,6 +482,137 @@ namespace AeroMenu
             catch { }
         }
 
+        private static void TickAfkKickD()
+        {
+            if (!extraAfkKick || !IsHostD()) return;
+
+            float now = Time.unscaledTime;
+            if (now < nextAfkCheckD) return;
+            nextAfkCheckD = now + 0.5f;
+
+            try
+            {
+                var all = PlayerControl.AllPlayerControls;
+                if (all == null) return;
+
+                int gameId = GetGameIdD();
+                if (gameId != afkGameIdD)
+                {
+                    afkGameIdD = gameId;
+                    afkLastPosD.Clear();
+                    afkLastMoveD.Clear();
+                    afkKickedOwnersD.Clear();
+                }
+
+                // A meeting holds everyone in place; do not treat that as idling.
+                if (MeetingHud.Instance != null)
+                {
+                    foreach (PlayerControl pc in all)
+                    {
+                        try
+                        {
+                            if (pc == null || pc.Data == null) continue;
+                            int owner = Convert.ToInt32(pc.OwnerId);
+                            if (owner >= 0) afkLastMoveD[owner] = now;
+                        }
+                        catch { }
+                    }
+                    return;
+                }
+
+                if (!IsGameStartedD()) return;
+
+                PlayerControl local = PlayerControl.LocalPlayer;
+                float timeout = Mathf.Clamp(extraAfkKickSeconds, 30, 600);
+
+                foreach (PlayerControl pc in all)
+                {
+                    try
+                    {
+                        if (pc == null || pc == local || pc.Data == null) continue;
+                        if (pc.Data.Disconnected || pc.Data.IsDead) continue;
+
+                        object bot = GetValueD(pc.Data, "Bot");
+                        if (bot is bool isBot && isBot) continue;
+
+                        int owner = Convert.ToInt32(pc.OwnerId);
+                        if (owner < 0 || afkKickedOwnersD.Contains(owner)) continue;
+
+                        Vector3 pos = pc.transform.position;
+                        if (!afkLastPosD.TryGetValue(owner, out Vector3 last))
+                        {
+                            afkLastPosD[owner] = pos;
+                            afkLastMoveD[owner] = now;
+                            continue;
+                        }
+
+                        if ((pos - last).sqrMagnitude > 0.04f)
+                        {
+                            afkLastPosD[owner] = pos;
+                            afkLastMoveD[owner] = now;
+                            continue;
+                        }
+
+                        if (!afkLastMoveD.TryGetValue(owner, out float moved))
+                        {
+                            afkLastMoveD[owner] = now;
+                            continue;
+                        }
+
+                        if (now - moved < timeout) continue;
+
+                        afkKickedOwnersD.Add(owner);
+                        AmongUsClient.Instance.KickPlayer(owner, false);
+                        ShowNotification("<color=#FFAC1C>[AFK]</color> " + (pc.Data.PlayerName ?? "player"));
+                    }
+                    catch { }
+                }
+            }
+            catch { }
+        }
+
+        // --------------------------------------------------------------------
+        // Host announcement (button tools)
+        // --------------------------------------------------------------------
+
+        private static void SendHostAnnouncementD(string message)
+        {
+            if (!IsHostD()) return;
+            if (string.IsNullOrWhiteSpace(message)) return;
+
+            string text = message.Trim();
+            if (text.Length > 90) text = text.Substring(0, 90);
+
+            SendChatAsHostD("[HOST] " + text);
+            ShowNotification(L("<color=#7CFC98>[HOST]</color> Announcement sent.",
+                "<color=#7CFC98>[HOST]</color> Объявление отправлено."));
+        }
+
+        private static void PostRoomCodeD()
+        {
+            if (!IsHostD()) return;
+            try
+            {
+                string code = GetCurrentRoomCodeForStatus();
+                if (string.IsNullOrWhiteSpace(code)) return;
+                if (string.Equals(code, "No room", StringComparison.OrdinalIgnoreCase)) return;
+
+                SendChatAsHostD("[HOST] " + L("Room code:", "Код комнаты:") + " " + code);
+            }
+            catch { }
+        }
+
+        private static void SendChatAsHostD(string text)
+        {
+            try
+            {
+                PlayerControl local = PlayerControl.LocalPlayer;
+                if (local == null || string.IsNullOrEmpty(text)) return;
+                local.RpcSendChat(text);
+            }
+            catch { }
+        }
+
         // --------------------------------------------------------------------
         // Reflection helpers
         // --------------------------------------------------------------------
@@ -436,6 +638,11 @@ namespace AeroMenu
                 muteGameIdD = -1;
                 muteAllAppliedD = false;
                 muteAllPrevD = false;
+                nextAfkCheckD = 0f;
+                afkGameIdD = -1;
+                afkLastPosD.Clear();
+                afkLastMoveD.Clear();
+                afkKickedOwnersD.Clear();
             }
             catch { }
         }

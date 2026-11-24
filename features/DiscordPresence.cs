@@ -73,7 +73,10 @@ public sealed class AeroDiscordPresence : MonoBehaviour
         if (Time.unscaledTime < _next) return;
         _next = Time.unscaledTime + Tick;
 
-        try { Push(); }
+        try
+        {
+            if (!Push()) { Drop(); _retryAt = Time.unscaledTime + 30f; }
+        }
         catch { Drop(); _retryAt = Time.unscaledTime + 30f; }
     }
 
@@ -102,7 +105,11 @@ public sealed class AeroDiscordPresence : MonoBehaviour
                     if (Frame(0, "{\"v\":1,\"client_id\":\"" + AppId + "\"}"))
                     {
                         if (gen != _gen) { try { p.Dispose(); } catch { } _pipe = null; return; }
+                        _dialFail = false;
                         _up = true;
+                        // Drop() may have run between the generation check above and
+                        // this write; never leave _up set without a live pipe.
+                        if (gen != _gen) { Drop(); return; }
                         return;
                     }
                     try { p.Dispose(); } catch { }
@@ -116,7 +123,7 @@ public sealed class AeroDiscordPresence : MonoBehaviour
     }
 
     [HideFromIl2Cpp]
-    private void Push()
+    private bool Push()
     {
         string details = "AeroMenu · " + Plugin.DisplayVersion;
         string state = Scene();
@@ -153,11 +160,14 @@ public sealed class AeroDiscordPresence : MonoBehaviour
         }
 
         string body = sb.ToString();
-        if (body == _last) return;
-        _last = body;
+        if (body == _last) return true;
 
         sb.Append("}},\"nonce\":\"").Append(Guid.NewGuid().ToString()).Append("\"}");
-        Frame(1, sb.ToString());
+        // Frame() swallows write errors: only cache a payload that was actually
+        // sent, and report failures so Update can drop and redial the pipe.
+        if (!Frame(1, sb.ToString())) return false;
+        _last = body;
+        return true;
     }
 
     [HideFromIl2Cpp]

@@ -404,7 +404,10 @@ namespace AeroMenu
                 }
             }
 
-            if (rfiQueue.Count > 0 && rfiPhase == RfiPhase.Search && client != null)
+            // Respect the post-leave settle delay here too: after a failed role
+            // the client can reach the menu before rfiNextSearchAt, and joining
+            // immediately races the pending disconnect.
+            if (rfiQueue.Count > 0 && rfiPhase == RfiPhase.Search && client != null && now >= rfiNextSearchAt)
             {
                 RfiCandidate c = rfiQueue[0];
                 rfiCurrentGameId = c.GameId;

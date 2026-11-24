@@ -345,7 +345,9 @@ private static bool IsBrokenFriendCode(string friendCode)
             if (string.IsNullOrWhiteSpace(parts[0]) || string.IsNullOrWhiteSpace(parts[1])) return true;
             if (parts[0].Length < 3 || parts[0].Length > 16) return true;
             if (parts[1].Length < 3 || parts[1].Length > 8) return true;
-            if (!parts[0].All(char.IsLetterOrDigit)) return true;
+            // Among Us friend codes can contain underscores and dashes in the
+            // name segment; rejecting them produced false host bans.
+            if (!parts[0].All(c => char.IsLetterOrDigit(c) || c == '_' || c == '-')) return true;
             if (!parts[1].All(char.IsDigit)) return true;
 
             return false;
@@ -840,19 +842,23 @@ private void CommitIdentityLevel()
 
 private void DrawSelfSpoof()
         {
-            float contentWidth = GetMenuWorkWidth(220f, 610f);
+            // SelfTab already reserves 18px for the surrounding card; using the raw
+            // GetMenuWorkWidth value here pushed this row past the scroll view edge.
+            float contentWidth = Mathf.Max(180f, GetMenuWorkWidth(220f, 610f) - 18f);
             GUIStyle compactCard = CreateCompactMenuCardStyle();
             GUIStyle statusStyle = compactStatusStyle;
-            float sideWidth = 150f;
-            float mainWidth = contentWidth - sideWidth - 8f;
-            float identityLabelWidth = Mathf.Clamp(mainWidth * 0.31f, 100f, 132f);
+            bool stacked = contentWidth < 380f;
+            float sideWidth = stacked ? contentWidth : Mathf.Clamp(contentWidth * 0.3f, 120f, 150f);
+            float mainWidth = stacked ? contentWidth : Mathf.Max(120f, contentWidth - sideWidth - 8f);
+            float identityLabelWidth = Mathf.Clamp(mainWidth * (stacked ? 0.4f : 0.31f), stacked ? 96f : 100f, 132f);
             const float platformCardHeight = 84f;
             const float taskCardHeight = 135f;
             const float sideCardGap = 6f;
 
-            GUILayout.BeginHorizontal(GUILayout.Width(contentWidth));
+            if (stacked) GUILayout.BeginVertical(GUILayout.Width(contentWidth));
+            else GUILayout.BeginHorizontal(GUILayout.Width(contentWidth));
 
-            GUILayout.BeginVertical(compactCard, GUILayout.Width(mainWidth), GUILayout.Height(identityCardHeight));
+            GUILayout.BeginVertical(compactCard, GUILayout.Width(mainWidth), GUILayout.Height(stacked ? 175f : identityCardHeight));
             DrawMenuSectionHeader("IDENTITY");
             GUILayout.Space(2);
             DrawIdentityLevelRow(identityLabelWidth);
@@ -906,15 +912,17 @@ private void DrawSelfSpoof()
             GUILayout.EndVertical();
 
             // A fixed height can be smaller than the enlarged controls at some menu
-            // scales. On repaint, match the visible lower edge to TASKS itself.
-            if (Event.current != null && Event.current.type == EventType.Repaint)
+            // scales. On repaint, match the visible lower edge to TASKS itself. In the
+            // stacked layout TASKS sits below IDENTITY, so the delta is meaningless.
+            if (!stacked && Event.current != null && Event.current.type == EventType.Repaint)
             {
                 float correction = tasksCardRect.yMax - identityCardRect.yMax;
                 if (Mathf.Abs(correction) > 0.5f)
                     identityCardHeight = Mathf.Max(1f, identityCardHeight + correction);
             }
 
-            GUILayout.EndHorizontal();
+            if (stacked) GUILayout.EndVertical();
+            else GUILayout.EndHorizontal();
         }
 
 private void CompleteLocalTasks()

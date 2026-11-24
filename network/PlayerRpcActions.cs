@@ -77,8 +77,10 @@ private static int SendAllPlayersSnapTo(Vector2 pos)
 
 private static void WriteSnapTo(MessageWriter batch, PlayerControl player, Vector2 pos)
         {
-            player.NetTransform.SnapTo(pos, (ushort)(player.NetTransform.lastSequenceId + 1));
-            ushort seq = (ushort)(player.NetTransform.lastSequenceId + 2);
+            // Local SnapTo advances lastSequenceId; the RPC must carry the same
+            // sequence the local transform committed or clients desync.
+            ushort seq = (ushort)(player.NetTransform.lastSequenceId + 1);
+            player.NetTransform.SnapTo(pos, seq);
 
             batch.StartMessage((byte)GameDataTypes.RpcFlag);
             batch.WritePacked(player.NetTransform.NetId);

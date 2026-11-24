@@ -12,7 +12,7 @@ namespace AeroMenu
 
         private readonly object sync = new object();
         private readonly List<ILogListener> listeners;
-        private bool disposed;
+        private volatile bool disposed;
 
         private RepeatedLogFilter(IEnumerable<ILogListener> originalListeners)
         {
@@ -57,7 +57,7 @@ namespace AeroMenu
 
         public void LogEvent(object sender, LogEventArgs eventArgs)
         {
-            if (eventArgs == null) return;
+            if (disposed || eventArgs == null) return;
 
             bool isImportant = (eventArgs.Level & (LogLevel.Warning | LogLevel.Error | LogLevel.Fatal)) != 0;
             if (!AeroMenuGUI.detailedLogsEnabled)
@@ -135,6 +135,11 @@ namespace AeroMenu
             {
                 if (disposed) return;
                 disposed = true;
+            }
+
+            lock (InstallLock)
+            {
+                if (instance == this) instance = null;
             }
 
             foreach (ILogListener listener in listeners)

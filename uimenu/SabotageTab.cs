@@ -45,6 +45,12 @@ namespace AeroMenu
     {
 private static readonly string[] sabotageMenuTabs = { L("SABOTAGES", "САБОТАЖИ"), "LOBBY SETTINGS", "H&S", L("ANIMATIONS", "АНИМАЦИИ"), L("MAPS", "КАРТЫ") };
 
+private readonly float[] sabotageTabWidths = new float[5];
+
+private float sabotageTabLayoutWidth = -1f;
+
+private readonly GUIContent sabotageTabSizeContent = new GUIContent();
+
 private readonly List<SystemTypes> doorRooms = new List<SystemTypes>();
 
 private void UpdateDoorRooms()
@@ -67,11 +73,36 @@ private void DrawSabotageAnimationTab()
             string[] tabs = sabotageMenuTabs;
             currentSabotageSubTab = Mathf.Clamp(currentSabotageSubTab, 0, tabs.Length - 1);
 
+            // Auto-width tab buttons keep TextClipping.Overflow text and push the last tabs
+            // outside the body at narrow menu sizes. Measure once, then scale to fit.
+            const float tabGap = 4f;
+            if (sabotageTabLayoutWidth != tabWidth)
+            {
+                float total = tabGap * (tabs.Length - 1);
+                for (int i = 0; i < tabs.Length; i++)
+                {
+                    sabotageTabSizeContent.text = tabs[i];
+                    sabotageTabWidths[i] = Mathf.Max(28f, Mathf.Ceil(subTabStyle.CalcSize(sabotageTabSizeContent).x) + 14f);
+                    total += sabotageTabWidths[i];
+                }
+                if (total > tabWidth)
+                {
+                    float available = tabWidth - tabGap * (tabs.Length - 1);
+                    float scale = available / Mathf.Max(1f, total - tabGap * (tabs.Length - 1));
+                    for (int i = 0; i < tabs.Length; i++)
+                        sabotageTabWidths[i] = Mathf.Max(16f, Mathf.Floor(sabotageTabWidths[i] * scale));
+                }
+                sabotageTabLayoutWidth = tabWidth;
+            }
+
+            GUIStyle sabotageTabStyle = new GUIStyle(subTabStyle) { clipping = TextClipping.Clip, wordWrap = false };
+            GUIStyle sabotageActiveTabStyle = new GUIStyle(activeSubTabStyle) { clipping = TextClipping.Clip, wordWrap = false };
             GUILayout.BeginHorizontal(GUILayout.Width(tabWidth), GUILayout.Height(24));
             for (int i = 0; i < tabs.Length; i++)
             {
-                if (GUILayout.Button(tabs[i], currentSabotageSubTab == i ? activeSubTabStyle : subTabStyle, GUILayout.Height(22)))
+                if (GUILayout.Button(tabs[i], currentSabotageSubTab == i ? sabotageActiveTabStyle : sabotageTabStyle, GUILayout.Width(sabotageTabWidths[i]), GUILayout.Height(22)))
                     SetMultiTab("sabotage", ref currentSabotageSubTab, i, tabs.Length);
+                if (i < tabs.Length - 1) GUILayout.Space(tabGap);
             }
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
@@ -105,8 +136,10 @@ private void DrawSabotagesTab()
 
             float sabotageInnerWidth = Mathf.Max(compactLayout ? 84f : 118f, sabotageColumnWidth - cardPaddingWidth - 4f);
             float doorInnerWidth = Mathf.Max(compactLayout ? 84f : 118f, doorColumnWidth - cardPaddingWidth - 10f);
-            float doorScrollWidth = Mathf.Max(86f, doorInnerWidth + 8f);
-            float doorListWidth = Mathf.Max(72f, doorInnerWidth - 48f);
+            // DrawDoorTargetRow needs room for its label plus three 22-32px buttons;
+            // 72px clipped the O/L/C controls on the narrow layout.
+            float doorListWidth = Mathf.Max(108f, doorInnerWidth - 48f);
+            float doorScrollWidth = Mathf.Max(86f, doorInnerWidth + 8f, doorListWidth + 24f);
             float sabotagePairGap = 4f;
             float sabotageHalfWidth = Mathf.Floor((sabotageInnerWidth - sabotagePairGap) * 0.5f);
             float doorPairWidth = Mathf.Floor((doorInnerWidth - 6f) * 0.5f);

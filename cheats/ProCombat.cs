@@ -342,6 +342,53 @@ namespace AeroMenu
             catch { return false; }
         }
 
+        // Fields and properties are both used by the game's vote types; member
+        // lookups must cover properties (e.g. PlayerVoteArea.VotedForId).
+        private static bool TryGetNumericMemberN(object target, Type type, out double value, params string[] names)
+        {
+            value = 0d;
+            try
+            {
+                if (target == null || type == null || names == null) return false;
+                for (int i = 0; i < names.Length; i++)
+                {
+                    object raw = GetMemberN(target, type, names[i]);
+                    if (raw == null) continue;
+                    value = Convert.ToDouble(raw);
+                    return true;
+                }
+            }
+            catch { }
+            return false;
+        }
+
+        private static bool TrySetNumericMemberN(object target, Type type, double value, params string[] names)
+        {
+            try
+            {
+                if (target == null || type == null || names == null) return false;
+                for (int i = 0; i < names.Length; i++)
+                {
+                    string name = names[i];
+                    if (string.IsNullOrEmpty(name)) continue;
+                    FieldInfo field = type.GetField(name, FlagsN);
+                    if (field != null && !field.IsStatic && !field.IsLiteral && IsNumericN(field.FieldType))
+                    {
+                        field.SetValue(target, Convert.ChangeType(value, field.FieldType));
+                        return true;
+                    }
+                    PropertyInfo property = type.GetProperty(name, FlagsN);
+                    if (property != null && property.CanWrite && IsNumericN(property.PropertyType))
+                    {
+                        property.SetValue(target, Convert.ChangeType(value, property.PropertyType), null);
+                        return true;
+                    }
+                }
+            }
+            catch { }
+            return false;
+        }
+
         private static void SetNumericFieldValueN(FieldInfo field, object target, double value)
         {
             try
@@ -748,22 +795,32 @@ namespace AeroMenu
                     if (state == null) continue;
                     Type stateType = state.GetType();
 
-                    FieldInfo voteFor = FindNumericFieldN(stateType, "voteFor", "VoteFor", "votedFor", "VotedFor");
-                    if (voteFor != null)
+                    // PlayerVoteArea stores the vote in VotedForId (a property),
+                    // not in a votedFor/voteFor field; the old field-only lookup
+                    // never found it, so vote immunity was a no-op.
+                    double current;
+                    if (!TryGetNumericMemberN(state, stateType, out current,
+                        "VotedForId", "votedForId", "VotedFor", "votedFor", "voteFor", "VoteFor"))
+                        current = 255d;
+                    if (Math.Abs(current - localId) < 0.5d)
                     {
-                        double current;
-                        if (!GetNumericFieldValueN(voteFor, state, out current)) current = 255d;
-                        if (Math.Abs(current - localId) < 0.5d)
-                            SetNumericFieldValueN(voteFor, state, boostId);
+                        if (!TrySetNumericMemberN(state, stateType, boostId,
+                            "VotedForId", "votedForId", "VotedFor", "votedFor", "voteFor", "VoteFor"))
+                        {
+                            try
+                            {
+                                MethodInfo setVote = stateType.GetMethod("SetVote", FlagsN, null, new[] { typeof(byte) }, null);
+                                if (setVote != null) setVote.Invoke(state, new object[] { boostId });
+                            }
+                            catch { }
+                        }
                     }
 
-                    FieldInfo votes = FindNumericFieldN(stateType, "votes", "Votes", "voteCount", "VoteCount", "numVotes");
-                    if (votes != null)
-                    {
-                        byte id = ToByteN(GetMemberN(state, stateType, "PlayerId", "playerId"));
-                        if (id == localId) SetNumericFieldValueN(votes, state, 0d);
-                        else if (id == boostId) SetNumericFieldValueN(votes, state, 99d);
-                    }
+                    byte stateId = ToByteN(GetMemberN(state, stateType, "PlayerId", "playerId"));
+                    if (stateId == localId)
+                        TrySetNumericMemberN(state, stateType, 0d, "votes", "Votes", "voteCount", "VoteCount", "numVotes");
+                    else if (stateId == boostId)
+                        TrySetNumericMemberN(state, stateType, 99d, "votes", "Votes", "voteCount", "VoteCount", "numVotes");
                 }
             }
             catch { }
@@ -792,7 +849,7 @@ namespace AeroMenu
                 if (typeMinigameN == null) return;
                 object current = GetStaticMemberN(typeMinigameN, "Instance", "instance");
                 if (current != null) AccelerateMinigameN(current);
-                AccelerateAllMinigamesN();
+                else AccelerateAllMinigamesN();
             }
             catch { }
         }

@@ -56,6 +56,11 @@ namespace AeroMenu
                     foreach (FieldInfo f in fields)
                     {
                         if (f == null || f.FieldType != typeof(bool)) continue;
+                        // Only public setting fields are real features. Private/internal
+                        // static bools are runtime state (spawn-in-progress, applied
+                        // flags, updater busy flags, ...) and must not be toggleable.
+                        // Keep the one private user setting that is drawn as a toggle.
+                        if (!f.IsPublic && !f.Name.Equals("randomOutfitSaveToProfile", StringComparison.Ordinal)) continue;
                         if (!IsExposedFeature(f.Name)) continue;
                         searchFeatures.Add(new SearchableFeature
                         {
@@ -102,10 +107,15 @@ namespace AeroMenu
             if (name.Equals("stylesInited", StringComparison.OrdinalIgnoreCase)) return false;
             if (name.Equals("wasShowMenu", StringComparison.OrdinalIgnoreCase)) return false;
             if (name.Equals("settingsDirty", StringComparison.OrdinalIgnoreCase)) return false;
-            if (name.StartsWith("is", StringComparison.OrdinalIgnoreCase)) return false;
-            if (name.IndexOf("Wait", StringComparison.OrdinalIgnoreCase) >= 0) return false;
-            if (name.IndexOf("Editing", StringComparison.OrdinalIgnoreCase) >= 0) return false;
-            if (name.IndexOf("Dirty", StringComparison.OrdinalIgnoreCase) >= 0) return false;
+            // These are transient focus/state flags, not user features. Do not
+            // filter every "is*"/"*Wait*" name: IsScanning, isManualMapSpawn and
+            // AutoHostWaitLoadedPlayers are real toggles that must be searchable.
+            if (name.Equals("isPanicked", StringComparison.OrdinalIgnoreCase)) return false;
+            if (name.Equals("customChatInputFocused", StringComparison.OrdinalIgnoreCase)) return false;
+            if (name.Equals("customSpoofRpcInputFocused", StringComparison.OrdinalIgnoreCase)) return false;
+            if (name.StartsWith("isWait", StringComparison.OrdinalIgnoreCase)) return false;
+            if (name.StartsWith("isEditing", StringComparison.OrdinalIgnoreCase)) return false;
+            if (name.EndsWith("Dirty", StringComparison.OrdinalIgnoreCase)) return false;
             return true;
         }
 

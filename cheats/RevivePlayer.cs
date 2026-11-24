@@ -107,20 +107,18 @@ public static void RevivePlayer(PlayerControl target)
                 bool wasImpTeam = false;
                 try
                 {
-                    if (target.Data.Role != null)
-                    {
-                        int roleId = (int)target.Data.Role.Role;
-                        wasImpTeam = roleId == 1 || roleId == 5 || roleId == 7 || roleId == 9 || roleId == 18;
-                    }
-                    else
-                    {
-                        var rt = target.Data.RoleType;
-                        wasImpTeam = rt == RoleTypes.Impostor || rt == RoleTypes.Shapeshifter || (int)rt == 9 || (int)rt == 18;
-                    }
+                    // A dead player holds a ghost role; ImpostorGhost (7) must still
+                    // count as impostor team or they revive as a crewmate.
+                    wasImpTeam = IsImpostorTeamRole(target.Data.RoleType) || (int)target.Data.RoleType == 7;
                 }
                 catch { }
 
-                target.RpcSetRole(wasImpTeam ? RoleTypes.Impostor : RoleTypes.Crewmate, true);
+                RoleTypes revivedRole = wasImpTeam ? RoleTypes.Impostor : RoleTypes.Crewmate;
+                // RpcSetRole alone leaves the local role behaviour stale until a late
+                // RPC comes back, so apply it locally as well.
+                try { RoleManager.Instance?.SetRole(target, revivedRole); } catch { }
+                target.RpcSetRole(revivedRole, true);
+                RefreshRoleBehaviour(target);
 
                 var netObj = GameData.Instance?.GetComponent<InnerNetObject>();
                 if (netObj != null) netObj.SetDirtyBit(uint.MaxValue);

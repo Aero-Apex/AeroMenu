@@ -26,6 +26,8 @@ namespace AeroMenu
         private static readonly Dictionary<int, Color> rgbTaskTextCols = new Dictionary<int, Color>();
         private static readonly Dictionary<int, Color[]> rgbTaskRendCols = new Dictionary<int, Color[]>();
         private static readonly Dictionary<int, Texture[]> rgbTaskRendTex = new Dictionary<int, Texture[]>();
+        private static readonly Dictionary<int, Color[]> rgbTaskRendEmissionCols = new Dictionary<int, Color[]>();
+        private static readonly Dictionary<int, bool[]> rgbTaskRendEmissionKeywords = new Dictionary<int, bool[]>();
         private static Texture2D rgbTaskWhiteTex;
 
         private static void TickRgbTaskBar()
@@ -188,13 +190,23 @@ namespace AeroMenu
                 {
                     Color[] cols = new Color[mats.Length];
                     Texture[] tex = new Texture[mats.Length];
+                    Color[] emCols = new Color[mats.Length];
+                    bool[] emKw = new bool[mats.Length];
                     for (int i = 0; i < mats.Length; i++)
                     {
                         cols[i] = mats[i] != null && mats[i].HasProperty("_Color") ? mats[i].color : Color.white;
                         tex[i] = mats[i] != null && mats[i].HasProperty("_MainTex") ? mats[i].GetTexture("_MainTex") : null;
+                        if (mats[i] != null && mats[i].HasProperty("_EmissionColor"))
+                        {
+                            emCols[i] = mats[i].GetColor("_EmissionColor");
+                            emKw[i] = mats[i].IsKeywordEnabled("_EMISSION");
+                        }
+                        else emCols[i] = Color.black;
                     }
                     rgbTaskRendCols[id] = cols;
                     rgbTaskRendTex[id] = tex;
+                    rgbTaskRendEmissionCols[id] = emCols;
+                    rgbTaskRendEmissionKeywords[id] = emKw;
                 }
 
                 if (!rgbTaskRends.Contains(rend)) rgbTaskRends.Add(rend);
@@ -595,7 +607,16 @@ namespace AeroMenu
                         if (mats[m].HasProperty("_Color")) mats[m].color = cols[m];
                         if (mats[m].HasProperty("_BaseColor")) mats[m].SetColor("_BaseColor", cols[m]);
                         if (mats[m].HasProperty("_TintColor")) mats[m].SetColor("_TintColor", cols[m]);
-                        if (mats[m].HasProperty("_EmissionColor")) mats[m].SetColor("_EmissionColor", Color.black);
+                        if (mats[m].HasProperty("_EmissionColor"))
+                        {
+                            if (rgbTaskRendEmissionCols.TryGetValue(id, out var emCols) && m < emCols.Length)
+                                mats[m].SetColor("_EmissionColor", emCols[m]);
+                            if (rgbTaskRendEmissionKeywords.TryGetValue(id, out var emKw) && m < emKw.Length)
+                            {
+                                if (emKw[m]) mats[m].EnableKeyword("_EMISSION");
+                                else mats[m].DisableKeyword("_EMISSION");
+                            }
+                        }
                         if (rgbTaskRendTex.TryGetValue(id, out var tex) && m < tex.Length && mats[m].HasProperty("_MainTex"))
                             mats[m].SetTexture("_MainTex", tex[m]);
                     }
@@ -612,6 +633,8 @@ namespace AeroMenu
             rgbTaskTextCols.Clear();
             rgbTaskRendCols.Clear();
             rgbTaskRendTex.Clear();
+            rgbTaskRendEmissionCols.Clear();
+            rgbTaskRendEmissionKeywords.Clear();
         }
 
         private static void ApplyPanicMode()

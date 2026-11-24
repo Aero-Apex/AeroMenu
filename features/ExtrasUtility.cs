@@ -70,8 +70,6 @@ namespace AeroMenu
             GUIStyle buttonStyle = btnStyle ?? GUI.skin.button;
             GUIStyle fieldStyle = inputBlockStyle ?? GUI.skin.textField;
 
-            HandleBindCaptureF();
-
             GUILayout.BeginVertical(menuCardStyle);
             try
             {
@@ -314,7 +312,10 @@ namespace AeroMenu
 
         internal static void DrawExtrasFOverlay()
         {
-            // Group F draws no full-screen overlay.
+            // Capture here instead of inside DrawExtrasF: that section is culled
+            // when scrolled out of view, which would leave a pending bind stuck
+            // (and every hotkey blocked) until the section became visible again.
+            if (showMenu) HandleBindCaptureF();
         }
 
         // ====================================================================
@@ -334,7 +335,7 @@ namespace AeroMenu
             return key == KeyCode.None ? "NONE" : key.ToString();
         }
 
-        private void HandleBindCaptureF()
+        private static void HandleBindCaptureF()
         {
             try
             {

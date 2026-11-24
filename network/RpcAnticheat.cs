@@ -249,6 +249,14 @@ private static bool BlockVentKickRpc(ShipStatus ship, byte callId, Hazel.Message
                 PlayerControl plr = MessageExtensions.ReadNetObject<PlayerControl>(copy);
                 if (system != SystemTypes.Ventilation) return false;
 
+                // Enter/Exit/Move are normal host broadcasts and must reach every
+                // client. Only BootImpostors is the vent-kick exploit payload, so
+                // apply that filter before deciding to block the RPC at all.
+                copy.ReadUInt16();
+                VentilationSystem.Operation op = (VentilationSystem.Operation)copy.ReadByte();
+                copy.ReadByte();
+                if (op != VentilationSystem.Operation.BootImpostors) return false;
+
                 if (!AmongUsClient.Instance.AmHost)
                 {
                     string name = plr != null && plr.Data != null ? plr.Data.PlayerName : "Unknown";
@@ -258,14 +266,10 @@ private static bool BlockVentKickRpc(ShipStatus ship, byte callId, Hazel.Message
 
                 if (plr == null || plr == PlayerControl.LocalPlayer) return false;
 
-                copy.ReadUInt16();
-                VentilationSystem.Operation op = (VentilationSystem.Operation)copy.ReadByte();
-                copy.ReadByte();
-                if (op != VentilationSystem.Operation.BootImpostors) return false;
-
                 int owner = AeroNetGuard.NetworkGuard.ResolveCurrentRpcSenderClientId(ship, callId);
-                if (owner < 0 && plr.Data != null) owner = plr.Data.ClientId;
-                if (owner < 0) owner = plr.OwnerId;
+                // The player named in the payload is attacker-controlled. Never use
+                // it to identify the sender when the real sender cannot be resolved,
+                // otherwise an innocent player can be banned.
                 if (owner < 0) return true;
 
                 if (!IsProtectedFromAnticheat(owner))
@@ -361,6 +365,24 @@ private static void BanVentExploitOwner(PlayerControl plr, int owner, string rea
                 (byte)RpcCalls.ProtectPlayer
             };
 
+            // A bare '<' is common in names ("<3", "a<b") and is not a rich-text
+            // tag. Only treat it as one when it is followed by a tag name/closer
+            // and a matching '>'.
+            private static bool ContainsRichTextTag(string text)
+            {
+                if (string.IsNullOrEmpty(text)) return false;
+                for (int i = 0; i < text.Length - 2; i++)
+                {
+                    if (text[i] != '<') continue;
+                    char next = text[i + 1];
+                    if (next == '/' || char.IsLetter(next))
+                    {
+                        if (text.IndexOf('>', i + 2) > i + 2) return true;
+                    }
+                }
+                return false;
+            }
+
             private static bool IsFlooded(Dictionary<byte, Queue<float>> map, byte playerId, int maxCalls, float windowSeconds)
             {
                 float now = Time.unscaledTime;
@@ -387,7 +409,8 @@ private static void BanVentExploitOwner(PlayerControl plr, int owner, string rea
                     !AeroMenuGUI.blockSabotageRPC &&
                     !AeroMenuGUI.blockGameRpcInLobby &&
                     !AeroMenuGUI.blockChatFloodRpc &&
-                    !AeroMenuGUI.blockMeetingFloodRpc) return true;
+                    !AeroMenuGUI.blockMeetingFloodRpc &&
+                    !AeroMenuGUI.enableQuickChatEmptyGuard) return true;
                 if (__instance == null || __instance == PlayerControl.LocalPlayer || __instance.Data == null) return true;
 
                 if (AeroMenuGUI.blockMeetingFloodRpc &&
@@ -498,7 +521,7 @@ private static void BanVentExploitOwner(PlayerControl plr, int owner, string rea
                         {
                             string reqName = reader.ReadString();
                             if (reqName.Length > 12) { isCheat = true; cheatReason = "Name length too long"; }
-                            if (reqName.Contains("<")) { isCheat = true; cheatReason = "HTML Tags in name"; }
+                            if (ContainsRichTextTag(reqName)) { isCheat = true; cheatReason = "HTML Tags in name"; }
                         }
                         else if (callId == (byte)RpcCalls.SetScanner)
                         {

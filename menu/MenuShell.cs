@@ -114,7 +114,7 @@ public void OnGUI()
 
             if (e != null && e.isKey && e.type == EventType.KeyDown)
             {
-                if (isWaitingForBindAlt && e.keyCode != KeyCode.None)
+                if (isWaitingForBindAlt && e.keyCode != KeyCode.None && e.keyCode != KeyCode.Escape)
                 {
                     menuToggleKeyAlt = e.keyCode;
                     isWaitingForBindAlt = false;
@@ -133,6 +133,8 @@ public void OnGUI()
                     }
                     isEditingName = isEditingLevel = isEditingFriendCode = isEditingLocalFriendCode = isEditingDeviceId = isEditingGhostChatColor = isEditingBan = isEditingBugRoomTimedAutoRun = isEditingSearch = isEditingStatusText = isEditingAccentHex = false;
                     customSpoofRpcInputFocused = false;
+                    // ResetAllBindWaits() does not clear the secondary menu-key wait.
+                    isWaitingForBindAlt = false;
                     ResetAllBindWaits();
                     e.Use();
                 }
@@ -279,6 +281,13 @@ public void OnGUI()
                                 lockedPlayersList.Add(p);
                         }
                     }
+                }
+                else
+                {
+                    // Hotkeys keep working with the menu closed; a stale list would
+                    // target players who already left. Empty it so consumers fall
+                    // back to the live AllPlayerControls list.
+                    lockedPlayersList.Clear();
                 }
 
                 for (int i = screenNotifications.Count - 1; i >= 0; i--)
@@ -593,6 +602,9 @@ private void SetMenuTab(int tab)
             customSpoofRpcInputFocused = false;
             aeroFocusedField = -1;
             ResetAllBindWaitsStatic();
+            // ResetAllBindWaitsStatic() predates these two binds.
+            isWaitBindToggleAutoFix = false;
+            isWaitBindCopyCode = false;
         }
 
 // GUILayout.BeginArea(Rect) drops the rect's x/y in this Il2Cpp/Wine build
@@ -830,6 +842,8 @@ private void TrackAnimatedSidebarHighlight(int tab, Rect rect)
         {
             if (!showStatusBar || statusBarBgStyle == null || statusBarLeftStyle == null) return;
 
+            Color previousColor = GUI.color;
+            GUI.color = Color.white;
             try
             {
                 float h = 20f;
@@ -854,6 +868,7 @@ private void TrackAnimatedSidebarHighlight(int tab, Rect rect)
                     rightText, statusBarRightStyle);
             }
             catch { }
+            finally { GUI.color = previousColor; }
         }
 
 private void DrawMenuCharacter(float bodyX, float bodyY, float bodyW, float bodyH, float alpha)

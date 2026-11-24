@@ -53,7 +53,8 @@ public static class MoreLobbyInfo_GameContainer_SetupGameInfo_Postfix
                     ? $"<color=#{AeroMenuGUI.GetMenuControlAccentHex()}>{entry.HostName}</color>"
                     : AeroMenuGUI.ApplyMenuShimmer(entry.HostName);
                 entry.Text.text = $"<size=75%><b>{styledName}</b></size>";
-
+                string details = $"{entry.Capacity}  {entry.RoomCode}  {entry.Platform}  {entry.LobbyTime}";
+                entry.InfoText.text = StyleInfo(details);
             }
             catch
             {
@@ -84,6 +85,9 @@ public static class MoreLobbyInfo_GameContainer_SetupGameInfo_Postfix
                     StyledNames[i].RoomCode = roomCode;
                     StyledNames[i].Platform = platform;
                     StyledNames[i].LobbyTime = lobbyTime;
+                    // SetupGameInfo has just written the fresh vanilla text, so keep
+                    // the restore value in sync with the latest listing.
+                    StyledNames[i].OriginalInfoText = infoText.text;
                     return;
                 }
             }
@@ -105,7 +109,7 @@ public static class MoreLobbyInfo_GameContainer_SetupGameInfo_Postfix
 
     public static void Postfix(GameContainer __instance)
     {
-        if (__instance == null || __instance.capacity == null) return;
+        if (__instance == null || __instance.capacity == null || __instance.gameListing == null) return;
 
         // Anchor the label to this card's background and derive the target from
         // its real bounds. This stays stable across resolution and list scaling.

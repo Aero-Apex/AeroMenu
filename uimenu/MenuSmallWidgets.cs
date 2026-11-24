@@ -46,15 +46,22 @@ private bool DrawColoredActionButton(string text, Color color, float width, floa
         {
             text = MenuText(text);
             GUIStyle style = coloredActionButtonStyle;
-            Color themedColor = RgbMenuTextActive() ? GetMenuAccentColor() : (whiteMenuTheme ? GetThemeAccentColor(color) : color);
+            bool rgbText = RgbMenuTextActive();
+            Color accent = GetMenuAccentColor(rgbText);
+            Color themedColor = rgbText ? accent : (whiteMenuTheme ? GetThemeAccentColor(color) : color);
             Color hoverColor = whiteMenuTheme
                 ? Color.Lerp(themedColor, Color.black, 0.18f)
                 : Color.Lerp(themedColor, Color.white, 0.22f);
+            // The active background is the accent texture, which can be almost
+            // white or almost black; fixed black/white text is unreadable on one
+            // end of that range. Pick the contrast colour from its luminance.
+            float accentLuma = 0.299f * accent.r + 0.587f * accent.g + 0.114f * accent.b;
+            Color onAccent = accentLuma > 0.55f ? new Color(0.08f, 0.08f, 0.08f, 1f) : Color.white;
 
             style.normal.textColor = themedColor;
             style.hover.textColor = hoverColor;
             style.focused.textColor = themedColor;
-            style.active.textColor = whiteMenuTheme ? Color.white : Color.black;
+            style.active.textColor = onAccent;
             style.clipping = exactWidth ? TextClipping.Clip : TextClipping.Overflow;
             style.wordWrap = false;
 

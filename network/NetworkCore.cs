@@ -441,7 +441,9 @@ public class ModPlayer : MonoBehaviour
                 InnerNetObject innerNetObject = default;
                 while (message.Position < message.Length)
                 {
-
+                    // Without this increment the spam guard never trips and
+                    // RpcCheck always receives numData == 0.
+                    num++;
                     if (num > 75)
                     {
                         Crash("Spam of Data");

@@ -418,7 +418,27 @@ namespace AeroMenu
                 }
 
                 if (applied > 0)
+                {
+                    // Reflection only changed the option objects. The host must
+                    // adopt them and sync, or the lobby keeps its old rules.
+                    try
+                    {
+                        GameOptionsManager mgr = GameOptionsManager.Instance;
+                        if (mgr != null && mgr.CurrentGameOptions != null)
+                            mgr.GameHostOptions = mgr.CurrentGameOptions;
+                    }
+                    catch { }
+                    try
+                    {
+                        object logic = GameManager.Instance != null ? GameManager.Instance.LogicOptions : null;
+                        MethodInfo sync = logic == null ? null :
+                            logic.GetType().GetMethod("SyncOptions", BindingFlags.Public | BindingFlags.Instance);
+                        if (sync != null) sync.Invoke(logic, null);
+                    }
+                    catch { }
+
                     ShowNotification("<color=#7CFC98>[VANILLA]</color> Applied " + applied + " rules.");
+                }
                 else
                     ShowNotification("<color=#FF4444>[VANILLA]</color> Could not apply rules.");
             }

@@ -82,10 +82,12 @@ public static class RPCSniffer_Patch
 
         if (PlayerControl.LocalPlayer != null && __instance == PlayerControl.LocalPlayer) return true;
 
-        AeroMenuGUI.RecordPlayerRpc(__instance, callId);
-
         // Never report whitelisted / protected players (friends, known AeroMenu users).
+        // This must run before recording too, otherwise their custom RPCs still end
+        // up in the persistent "RPC calls" history.
         if (AeroMenuGUI.IsProtectedFromAnticheat(__instance)) return true;
+
+        AeroMenuGUI.RecordPlayerRpc(__instance, callId);
 
         if (AeroMenuGUI.LogAllRPCs)
         {
@@ -197,7 +199,26 @@ public static class RPCSniffer_RawGameDataPatch
         {
             if (client?.allObjects == null || !client.allObjects.AllObjectsFast.TryGetValue(netId, out InnerNetObject obj) || obj == null)
                 return null;
-            return obj.TryCast<PlayerControl>();
+
+            PlayerControl player = obj.TryCast<PlayerControl>();
+            if (player != null) return player;
+
+            // Custom RPCs are frequently addressed to a player-owned child object
+            // (CustomNetworkTransform, PlayerPhysics). Resolving only the direct
+            // PlayerControl target let those RPCs bypass the local/whitelist filter.
+            try
+            {
+                Transform t = obj.transform;
+                while (t != null)
+                {
+                    PlayerControl parent = t.GetComponent<PlayerControl>();
+                    if (parent != null) return parent;
+                    t = t.parent;
+                }
+            }
+            catch { }
+
+            return null;
         }
         catch { return null; }
     }

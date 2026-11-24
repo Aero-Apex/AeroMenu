@@ -38,6 +38,15 @@ namespace AeroMenu
         // Room code generator.
         public static bool proRoomCodeGen;
 
+        // Countdown timer.
+        public static bool proCountdownTimer;
+        public static bool proCountdownOverlay;
+        public static string proCountdownSeconds = "60";
+
+        // Random picker.
+        public static bool proRandomPicker;
+        public static string proPickerEntries = string.Empty;
+
         // ====================================================================
         // Private working state (all suffixed with R)
         // ====================================================================
@@ -47,6 +56,13 @@ namespace AeroMenu
         private static string proRCalcResultR = string.Empty;
         private static string proRCalcErrorR = string.Empty;
         private static string proRLastCodeR = string.Empty;
+
+        private static float proRCountdownRemainingR;
+        private static float proRCountdownLastR;
+        private static bool proRCountdownRunningR;
+        private static string proRCountdownTextR = "00:00";
+
+        private static string proRPickerResultR = string.Empty;
 
         private static string proRClockTextR = string.Empty;
         private static float proRClockNextR;
@@ -197,6 +213,92 @@ namespace AeroMenu
                                                    "Создаёт случайную строку из 6 символов, похожую на код комнаты.")),
                                         menuDescStyle);
                     }
+                    GUILayout.Space(8);
+
+                    // --- Countdown timer -------------------------------------
+                    DrawMenuSectionHeader(L("COUNTDOWN TIMER", "ОБРАТНЫЙ ОТСЧЁТ"));
+                    proCountdownTimer = DrawToggle(proCountdownTimer,
+                        L("Enable Countdown Timer", "Включить обратный отсчёт"),
+                        toggleW, "proCountdownTimer");
+                    if (proCountdownTimer)
+                    {
+                        GUILayout.Label(MenuText(L("Seconds (1-86400):", "Секунды (1-86400):")), menuDescStyle);
+                        string typedSeconds = AeroTextField(proCountdownSeconds ?? string.Empty,
+                            fieldStyle, GUILayout.Height(24));
+                        if (!string.Equals(typedSeconds, proCountdownSeconds, StringComparison.Ordinal))
+                        {
+                            proCountdownSeconds = typedSeconds ?? string.Empty;
+                            SaveProR();
+                        }
+
+                        GUILayout.BeginHorizontal();
+                        if (GUILayout.Button(MenuText(L("Start", "Старт")), buttonStyle,
+                                             GUILayout.Width(80), GUILayout.Height(24)))
+                            StartCountdownR();
+                        if (GUILayout.Button(MenuText(L("Pause", "Пауза")), buttonStyle,
+                                             GUILayout.Width(80), GUILayout.Height(24)))
+                            PauseCountdownR();
+                        if (GUILayout.Button(MenuText(L("Reset", "Сброс")), buttonStyle,
+                                             GUILayout.Width(80), GUILayout.Height(24)))
+                            ResetCountdownR();
+                        GUILayout.FlexibleSpace();
+                        GUILayout.EndHorizontal();
+
+                        proCountdownOverlay = DrawToggle(proCountdownOverlay,
+                            L("Show Timer Overlay", "Показывать оверлей таймера"),
+                            toggleW, "proCountdownOverlay");
+
+                        string timerStatusR = proRCountdownRunningR
+                            ? L("Running: ", "Идёт: ") + proRCountdownTextR
+                            : (proRCountdownRemainingR > 0f
+                                ? L("Paused: ", "Пауза: ") + proRCountdownTextR
+                                : L("Ready. Enter seconds and press Start.",
+                                    "Готово. Введите секунды и нажмите Старт."));
+                        GUILayout.Label(MenuText(timerStatusR), activeTabStyle);
+                        GUILayout.Label(MenuText(L("Counts down in real time and can show a small overlay.",
+                                                   "Отсчитывает время в реальном времени и может показывать оверлей.")),
+                                        menuDescStyle);
+                    }
+                    GUILayout.Space(8);
+
+                    // --- Random picker ---------------------------------------
+                    DrawMenuSectionHeader(L("RANDOM PICKER", "СЛУЧАЙНЫЙ ВЫБОР"));
+                    proRandomPicker = DrawToggle(proRandomPicker,
+                        L("Enable Random Picker", "Включить случайный выбор"),
+                        toggleW, "proRandomPicker");
+                    if (proRandomPicker)
+                    {
+                        GUILayout.Label(MenuText(L("One option per line:", "По одному варианту на строку:")),
+                                        menuDescStyle);
+                        string typedEntries = AeroTextArea(proPickerEntries ?? string.Empty,
+                            areaStyle, GUILayout.Height(90));
+                        if (!string.Equals(typedEntries, proPickerEntries, StringComparison.Ordinal))
+                        {
+                            proPickerEntries = typedEntries ?? string.Empty;
+                            SaveProR();
+                        }
+
+                        GUILayout.BeginHorizontal();
+                        if (GUILayout.Button(MenuText(L("Pick Random", "Выбрать случайно")), buttonStyle,
+                                             GUILayout.Width(140), GUILayout.Height(24)))
+                            PickRandomEntryR();
+                        if (GUILayout.Button(MenuText(L("Clear", "Очистить")), buttonStyle,
+                                             GUILayout.Width(80), GUILayout.Height(24)))
+                        {
+                            proPickerEntries = string.Empty;
+                            proRPickerResultR = string.Empty;
+                            SaveProR();
+                        }
+                        GUILayout.FlexibleSpace();
+                        GUILayout.EndHorizontal();
+
+                        if (!string.IsNullOrEmpty(proRPickerResultR))
+                            GUILayout.Label(MenuText(L("Picked: ", "Выбрано: ") + proRPickerResultR),
+                                            activeTabStyle);
+                        GUILayout.Label(MenuText(L("Picks one option at random from the list above.",
+                                                   "Выбирает случайный вариант из списка выше.")),
+                                        menuDescStyle);
+                    }
                 }
                 finally
                 {
@@ -224,6 +326,26 @@ namespace AeroMenu
             }
             catch { }
 
+            try
+            {
+                // Countdown runs on the real clock even while typing in the menu.
+                if (proCountdownTimer && proRCountdownRunningR)
+                {
+                    float nowR = Time.realtimeSinceStartup;
+                    float deltaR = Mathf.Max(0f, nowR - proRCountdownLastR);
+                    proRCountdownLastR = nowR;
+                    proRCountdownRemainingR = Mathf.Max(0f, proRCountdownRemainingR - deltaR);
+                    proRCountdownTextR = FormatCountdownR(proRCountdownRemainingR);
+                    if (proRCountdownRemainingR <= 0f)
+                    {
+                        proRCountdownRunningR = false;
+                        ShowNotification(L("<color=#00FFAA>[UTIL]</color> Countdown finished.",
+                                           "<color=#00FFAA>[УТИЛИТА]</color> Обратный отсчёт завершён."));
+                    }
+                }
+            }
+            catch { }
+
             // This group has no hotkeys; honour the input guard explicitly.
             if (inputBlocked) return;
         }
@@ -245,11 +367,23 @@ namespace AeroMenu
 
                 proRoomCodeGen = LoadBool("M_ProR_proRoomCodeGen", false);
 
+                proCountdownTimer = LoadBool("M_ProR_proCountdownTimer", false);
+                proCountdownOverlay = LoadBool("M_ProR_proCountdownOverlay", true);
+                proCountdownSeconds = PlayerPrefs.GetString("M_ProR_proCountdownSeconds", "60") ?? "60";
+
+                proRandomPicker = LoadBool("M_ProR_proRandomPicker", false);
+                proPickerEntries = PlayerPrefs.GetString("M_ProR_proPickerEntries", string.Empty) ?? string.Empty;
+
                 proRCalcResultR = string.Empty;
                 proRCalcErrorR = string.Empty;
                 proRLastCodeR = string.Empty;
                 proRClockTextR = string.Empty;
                 proRClockNextR = 0f;
+                proRCountdownRemainingR = 0f;
+                proRCountdownLastR = 0f;
+                proRCountdownRunningR = false;
+                proRCountdownTextR = "00:00";
+                proRPickerResultR = string.Empty;
             }
             catch { }
         }
@@ -270,13 +404,22 @@ namespace AeroMenu
                 PlayerPrefs.SetString("M_ProR_proNotesText", proNotesText ?? string.Empty);
 
                 SaveBool("M_ProR_proRoomCodeGen", proRoomCodeGen);
+
+                SaveBool("M_ProR_proCountdownTimer", proCountdownTimer);
+                SaveBool("M_ProR_proCountdownOverlay", proCountdownOverlay);
+                PlayerPrefs.SetString("M_ProR_proCountdownSeconds", proCountdownSeconds ?? "60");
+
+                SaveBool("M_ProR_proRandomPicker", proRandomPicker);
+                PlayerPrefs.SetString("M_ProR_proPickerEntries", proPickerEntries ?? string.Empty);
             }
             catch { }
         }
 
         internal static void DrawProROverlay()
         {
-            if (!proRealClock) return;
+            if (!proRealClock &&
+                !(proCountdownTimer && proCountdownOverlay &&
+                  (proRCountdownRunningR || proRCountdownRemainingR > 0f))) return;
             if (Screen.width <= 1 || Screen.height <= 1) return;
 
             Event e = Event.current;
@@ -290,24 +433,41 @@ namespace AeroMenu
 
                 float panelW = Mathf.Min(260f, Screen.width - 24f);
                 if (panelW < 120f) return;
-                float panelH = 76f;
                 float x = Screen.width - panelW - 14f;
                 float y = 14f;
 
-                GUI.color = new Color(0.04f, 0.05f, 0.08f, 0.82f);
-                GUI.DrawTexture(new Rect(x, y, panelW, panelH), proRPanelTexR, ScaleMode.StretchToFill, true);
-                GUI.color = previousColor;
+                if (proRealClock)
+                {
+                    DrawProPanelR(x, y, panelW, 76f,
+                                  L("REAL TIME", "РЕАЛЬНОЕ ВРЕМЯ"), proRClockTextR, previousColor);
+                    y += 84f;
+                }
 
-                GUI.Label(new Rect(x + 10f, y + 8f, panelW - 20f, 18f),
-                          MenuText(L("REAL TIME", "РЕАЛЬНОЕ ВРЕМЯ")), proRClockTitleStyleR);
-                GUI.Label(new Rect(x + 10f, y + 28f, panelW - 20f, 42f),
-                          proRClockTextR, proRClockStyleR);
+                if (proCountdownTimer && proCountdownOverlay &&
+                    (proRCountdownRunningR || proRCountdownRemainingR > 0f))
+                {
+                    DrawProPanelR(x, y, panelW, 76f,
+                                  L("COUNTDOWN", "ОБРАТНЫЙ ОТСЧЁТ"), proRCountdownTextR, previousColor);
+                }
             }
             catch { }
             finally
             {
                 GUI.color = previousColor;
             }
+        }
+
+        private static void DrawProPanelR(float x, float y, float w, float h,
+                                          string title, string body, Color previousColor)
+        {
+            GUI.color = new Color(0.04f, 0.05f, 0.08f, 0.82f);
+            GUI.DrawTexture(new Rect(x, y, w, h), proRPanelTexR, ScaleMode.StretchToFill, true);
+            GUI.color = previousColor;
+
+            GUI.Label(new Rect(x + 10f, y + 8f, w - 20f, 18f),
+                      MenuText(title), proRClockTitleStyleR);
+            GUI.Label(new Rect(x + 10f, y + 28f, w - 20f, 42f),
+                      body, proRClockStyleR);
         }
 
         // ====================================================================
@@ -460,6 +620,84 @@ namespace AeroMenu
                                    "<color=#00FFAA>[УТИЛИТА]</color> Скопирован код: ") + "<b>" + codeR + "</b>");
             }
             catch { }
+        }
+
+        private static float ParseCountdownSecondsR()
+        {
+            float valueR;
+            string rawR = (proCountdownSeconds ?? string.Empty).Trim().Replace(',', '.');
+            if (!float.TryParse(rawR, System.Globalization.NumberStyles.Float,
+                                System.Globalization.CultureInfo.InvariantCulture, out valueR))
+                valueR = 60f;
+            if (float.IsNaN(valueR) || float.IsInfinity(valueR)) valueR = 60f;
+            return Mathf.Clamp(valueR, 1f, 86400f);
+        }
+
+        private static string FormatCountdownR(float secondsR)
+        {
+            int totalR = Mathf.CeilToInt(Mathf.Max(0f, secondsR));
+            int hoursR = totalR / 3600;
+            int minutesR = (totalR % 3600) / 60;
+            int secsR = totalR % 60;
+            if (hoursR > 0)
+                return hoursR.ToString("00") + ":" + minutesR.ToString("00") + ":" + secsR.ToString("00");
+            return minutesR.ToString("00") + ":" + secsR.ToString("00");
+        }
+
+        private static void StartCountdownR()
+        {
+            if (proRCountdownRunningR) return;
+            if (proRCountdownRemainingR <= 0f)
+                proRCountdownRemainingR = ParseCountdownSecondsR();
+            proRCountdownRunningR = true;
+            proRCountdownLastR = Time.realtimeSinceStartup;
+            proRCountdownTextR = FormatCountdownR(proRCountdownRemainingR);
+            ShowNotification(L("<color=#00FFAA>[UTIL]</color> Countdown started.",
+                               "<color=#00FFAA>[УТИЛИТА]</color> Обратный отсчёт начат."));
+        }
+
+        private static void PauseCountdownR()
+        {
+            if (!proRCountdownRunningR) return;
+            proRCountdownRunningR = false;
+            ShowNotification(L("<color=#FFAA00>[UTIL]</color> Countdown paused.",
+                               "<color=#FFAA00>[УТИЛИТА]</color> Обратный отсчёт на паузе."));
+        }
+
+        private static void ResetCountdownR()
+        {
+            proRCountdownRunningR = false;
+            proRCountdownRemainingR = 0f;
+            proRCountdownTextR = "00:00";
+            ShowNotification(L("<color=#FFAA00>[UTIL]</color> Countdown reset.",
+                               "<color=#FFAA00>[УТИЛИТА]</color> Обратный отсчёт сброшен."));
+        }
+
+        private static void PickRandomEntryR()
+        {
+            string sourceR = proPickerEntries ?? string.Empty;
+            if (sourceR.Length > 4000) sourceR = sourceR.Substring(0, 4000);
+
+            List<string> optionsR = new List<string>();
+            string[] linesR = sourceR.Replace("\r", "\n").Split('\n');
+            for (int i = 0; i < linesR.Length && optionsR.Count < 100; i++)
+            {
+                string lineR = linesR[i].Trim();
+                if (lineR.Length > 0 && lineR.Length <= 120)
+                    optionsR.Add(lineR);
+            }
+
+            if (optionsR.Count == 0)
+            {
+                proRPickerResultR = string.Empty;
+                ShowNotification(L("<color=#FFAA00>[UTIL]</color> Add at least one option first.",
+                                   "<color=#FFAA00>[УТИЛИТА]</color> Сначала добавьте хотя бы один вариант."));
+                return;
+            }
+
+            proRPickerResultR = optionsR[proRngR.Next(optionsR.Count)];
+            ShowNotification(L("<color=#00FFAA>[UTIL]</color> Picked: ",
+                               "<color=#00FFAA>[УТИЛИТА]</color> Выбрано: ") + "<b>" + proRPickerResultR + "</b>");
         }
 
         // --------------------------------------------------------------------

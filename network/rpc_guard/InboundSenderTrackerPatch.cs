@@ -61,12 +61,17 @@ internal static class NetworkInboundSenderPatch
 {
 	public static void Prefix(InnerNetClient __instance, [HarmonyArgument(0)] DataReceivedEventArgs e)
 	{
-		if (!AeroMenu.AeroMenuGUI.oldAntiCheatVersion &&
+		if (__instance == null) return;
+
+		// The tracked checks below are host-only. Non-host clients still need the
+		// sender tracker for flood attribution, so do not gate them on host flags.
+		if (__instance.AmHost &&
+			!AeroMenu.AeroMenuGUI.oldAntiCheatVersion &&
 			!AeroMenu.AeroMenuGUI.banVoteKickVoters &&
 			!AeroMenu.AeroMenuGUI.blockVentKickExploit &&
 			!AeroMenu.AeroMenuGUI.blockSpoofRPC &&
 			!AeroMenu.AeroMenuGUI.enableUnownedSpawnGuard &&
-			!(AeroMenu.AeroMenuGUI.overflowProtection && __instance != null && __instance.AmHost))
+			!AeroMenu.AeroMenuGUI.overflowProtection)
 			return;
 		using (AeroNetGuard.NetGuardProfiler.Sample("Net.TrackSender"))
 			NetworkGuard.TrackInboundSender(__instance, e);

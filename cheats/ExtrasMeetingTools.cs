@@ -128,6 +128,8 @@ namespace AeroMenu
                     if (meetingCam != extraMeetingCam) extraMeetingCam = meetingCam;
                     GUILayout.Label(L("Move the camera with WASD during meetings. The original position is restored afterwards.",
                                       "Двигайте камеру клавишами WASD во время собрания. Исходная позиция восстанавливается после его окончания."), menuDescStyle);
+                    GUILayout.Space(6);
+                    DrawMeetingQuickTools(width);
                 }
                 finally
                 {
@@ -160,6 +162,7 @@ namespace AeroMenu
                 autoCloseTextH = extraAutoCloseSeconds.ToString();
                 extraAutoReportBody = LoadBool("M_ExtrasH_extraAutoReportBody", false);
                 extraMeetingCam = LoadBool("M_ExtrasH_extraMeetingCam", false);
+                LoadMeetingQuickTools();
 
                 // Clear runtime caches so Tick re-evaluates from a clean slate.
                 countdownFieldH = null;
@@ -186,12 +189,16 @@ namespace AeroMenu
                 PlayerPrefs.SetInt("M_ExtrasH_extraAutoCloseSeconds", Mathf.Clamp(extraAutoCloseSeconds, 1, 120));
                 SaveBool("M_ExtrasH_extraAutoReportBody", extraAutoReportBody);
                 SaveBool("M_ExtrasH_extraMeetingCam", extraMeetingCam);
+                SaveMeetingQuickTools();
             }
             catch { }
         }
 
         internal static void DrawExtrasHOverlay()
         {
+            // Quick tools manage their own on/off state and meeting checks.
+            try { DrawMeetingQuickToolsOverlay(); } catch { }
+
             if (!extraEjectionCountdown) return;
 
             try
@@ -402,7 +409,7 @@ namespace AeroMenu
                     try { id = Convert.ToByte(idValue); } catch { continue; }
                     if (id != localId) continue;
 
-                    object voteFor = GetFirstValueH(state, stateType, new string[] { "VoteFor", "voteFor" });
+                    object voteFor = GetFirstValueH(state, stateType, new string[] { "VotedForId", "votedForId", "VoteFor", "voteFor" });
                     if (voteFor != null)
                     {
                         byte vote;
@@ -410,7 +417,7 @@ namespace AeroMenu
                         return vote != NoVoteValueH;
                     }
 
-                    object hasVoted = GetFirstValueH(state, stateType, new string[] { "HasVoted", "hasVoted", "Voted" });
+                    object hasVoted = GetFirstValueH(state, stateType, new string[] { "DidVote", "didVote", "HasVoted", "hasVoted", "Voted" });
                     if (hasVoted is bool voted) return voted;
 
                     return true;
@@ -828,7 +835,7 @@ namespace AeroMenu
                 {
                     move.Normalize();
                     camera.transform.position = camera.transform.position +
-                                                move * (MeetingCamSpeedH * Time.unscaledTime);
+                                                move * (MeetingCamSpeedH * Time.unscaledDeltaTime);
                 }
             }
             catch { }

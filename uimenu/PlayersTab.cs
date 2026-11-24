@@ -42,6 +42,9 @@ namespace AeroMenu
 {
     public partial class AeroMenuGUI : MonoBehaviour
     {
+        // Players tab: query used by the player-info search tool.
+        private static string playersFindQuery = string.Empty;
+
 private void DrawPlayersTab()
         {
             if (lastPlayersSubTabForScroll != currentPlayersSubTab)
@@ -481,6 +484,22 @@ private void DrawPlayersTab()
                     SendFriendInviteToPlayer(target);
 
                 GUILayout.Space(8);
+                GUILayout.Label(L("FIND PLAYER:", "ПОИСК ИГРОКА:"), labelStyle11);
+                GUILayout.BeginHorizontal();
+                string findTyped = AeroTextField(playersFindQuery ?? string.Empty,
+                    inputBlockStyle ?? GUI.skin.textField, GUILayout.Height(24));
+                if (!string.Equals(findTyped, playersFindQuery, StringComparison.Ordinal))
+                    playersFindQuery = findTyped ?? string.Empty;
+                if (DrawFixedMenuButton("SELECT", btnStyle, 72f, 24f))
+                    SelectPlayerByQuery(playersFindQuery);
+                GUILayout.EndHorizontal();
+                GUILayout.Label(L("Matches name, ID, PUID or friend code.", "По имени, ID, PUID или friend code."), labelStyle11);
+
+                GUILayout.Space(4);
+                if (DrawFixedMenuButton(L("COPY ALL PLAYER INFO", "КОПИРОВАТЬ ДАННЫЕ ВСЕХ ИГРОКОВ"), btnStyle, playerActionContentWidth, 24f))
+                    CopyAllPlayerInfoToClipboard();
+
+                GUILayout.Space(8);
                 GUILayout.Label(L("Report reason:", "Причина репорта:"), labelStyle11);
                 GUILayout.BeginHorizontal();
                 if (GUILayout.Button("<", btnStyle, GUILayout.Width(28), GUILayout.Height(24)))
@@ -546,6 +565,101 @@ private void DrawPlayersTab()
             finally
             {
                 EndMultiTabContent(oldMatrix, oldColor);
+            }
+        }
+
+private static string CleanPlayerNameForUi(string name)
+        {
+            if (string.IsNullOrEmpty(name)) return "Unknown";
+            string clean = Regex.Replace(name, "<.*?>", string.Empty);
+            return string.IsNullOrWhiteSpace(clean) ? "Unknown" : clean;
+        }
+
+private void SelectPlayerByQuery(string query)
+        {
+            string needle = (query ?? string.Empty).Trim();
+            if (needle.Length == 0)
+            {
+                ShowNotification("<color=#FFD700>[FIND]</color> Enter a name, ID, PUID or friend code.");
+                return;
+            }
+
+            int limit = Mathf.Min(lockedPlayersList.Count, 32);
+            bool byId = byte.TryParse(needle, out byte wantedId);
+
+            // Names and numeric IDs first: short identity fragments should not overshadow a clear name match.
+            for (int i = 0; i < limit; i++)
+            {
+                PlayerControl pc = lockedPlayersList[i];
+                if (pc == null || pc.Data == null || pc.PlayerId >= 100) continue;
+                string name = pc.Data.PlayerName ?? string.Empty;
+                if ((byId && pc.PlayerId == wantedId) ||
+                    name.IndexOf(needle, StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    selectedAntiCheatPlayerId = pc.PlayerId;
+                    ShowNotification($"<color=#00FF00>[FIND]</color> Selected <b>{CleanPlayerNameForUi(name)}</b>.");
+                    return;
+                }
+            }
+
+            // Fall back to identity values for players whose visible name does not contain the query.
+            for (int i = 0; i < limit; i++)
+            {
+                PlayerControl pc = lockedPlayersList[i];
+                if (pc == null || pc.Data == null || pc.PlayerId >= 100) continue;
+                string puid = GetPlayerPuid(pc);
+                string fc = GetDisplayedFriendCode(pc.Data, string.Empty);
+                if ((!string.IsNullOrWhiteSpace(puid) && puid != "Unknown" &&
+                     puid.IndexOf(needle, StringComparison.OrdinalIgnoreCase) >= 0) ||
+                    (!string.IsNullOrWhiteSpace(fc) && fc != "Hidden" && fc != "Unknown" &&
+                     fc.IndexOf(needle, StringComparison.OrdinalIgnoreCase) >= 0))
+                {
+                    selectedAntiCheatPlayerId = pc.PlayerId;
+                    ShowNotification($"<color=#00FF00>[FIND]</color> Selected <b>{CleanPlayerNameForUi(pc.Data.PlayerName)}</b> by identity.");
+                    return;
+                }
+            }
+
+            ShowNotification("<color=#FF0000>[FIND]</color> No player matches that query.");
+        }
+
+private void CopyAllPlayerInfoToClipboard()
+        {
+            int limit = Mathf.Min(lockedPlayersList.Count, 32);
+            StringBuilder sb = new StringBuilder();
+            int added = 0;
+
+            for (int i = 0; i < limit; i++)
+            {
+                PlayerControl pc = lockedPlayersList[i];
+                if (pc == null || pc.Data == null || pc.PlayerId >= 100) continue;
+
+                string puid = GetPlayerPuid(pc);
+                string fc = GetDisplayedFriendCode(pc.Data, string.Empty);
+                if (string.IsNullOrWhiteSpace(fc) || fc == "Hidden") fc = "Unknown";
+
+                if (added > 0) sb.Append('\n');
+                sb.Append('[').Append(pc.PlayerId).Append("] ")
+                  .Append(CleanPlayerNameForUi(pc.Data.PlayerName))
+                  .Append(" | PUID: ").Append(puid)
+                  .Append(" | FC: ").Append(fc);
+                added++;
+            }
+
+            if (added == 0)
+            {
+                ShowNotification("<color=#FF0000>[ROSTER]</color> No players to copy.");
+                return;
+            }
+
+            try
+            {
+                GUIUtility.systemCopyBuffer = sb.ToString();
+                ShowNotification($"<color=#00FF00>[ROSTER]</color> Copied {added} player(s) to clipboard.");
+            }
+            catch
+            {
+                ShowNotification("<color=#FF0000>[ROSTER]</color> Clipboard copy failed.");
             }
         }
 

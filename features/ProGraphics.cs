@@ -152,8 +152,10 @@ namespace AeroMenu
         {
             // This group has no hotkeys - inputBlocked is intentionally unused.
             try { UpdateFpsM(); } catch { }
-            try { UpdateVsyncM(); } catch { }
+            // Quality levels overwrite VSync/AA, so apply quality first and let
+            // those two features re-apply their own values in the same tick.
             try { UpdateQualityM(); } catch { }
+            try { UpdateVsyncM(); } catch { }
             try { UpdateAntiAliasingM(); } catch { }
             try { UpdateResolutionM(); } catch { }
             try { UpdateOverlayTextM(); } catch { }
@@ -178,12 +180,9 @@ namespace AeroMenu
                 proResolutionScaleValue = Mathf.Clamp(
                     PlayerPrefs.GetFloat("M_ProM_proResolutionScaleValue", 1f), ProScaleMinM, ProScaleMaxM);
 
-                // Force Tick to re-evaluate every feature on the next frame.
-                proFpsAppliedM = false;
-                proVsyncAppliedM = false;
-                proQualityAppliedM = false;
-                proAaAppliedM = false;
-                proResAppliedM = false;
+                // Force Tick to re-evaluate enabled features on the next frame by
+                // invalidating the value mirrors. Keep the "applied" flags: they
+                // are what let Tick restore a feature that is now disabled.
                 proFpsLastM = 0;
                 proVsyncLastM = -1;
                 proQualityLastM = -1;
@@ -333,6 +332,7 @@ namespace AeroMenu
                     if (!proQualityAppliedM || proQualityLastM != level)
                     {
                         QualitySettings.SetQualityLevel(level, true);
+                        QualityLevelAppliedM();
                         proQualityLastM = level;
                         proQualityAppliedM = true;
                     }
@@ -340,7 +340,10 @@ namespace AeroMenu
                 else if (proQualityAppliedM)
                 {
                     if (proQualityOriginalM >= 0)
+                    {
                         QualitySettings.SetQualityLevel(proQualityOriginalM, true);
+                        QualityLevelAppliedM();
+                    }
                     proQualityAppliedM = false;
                     proQualityLastM = -1;
                 }
@@ -411,6 +414,16 @@ namespace AeroMenu
         // ====================================================================
         // Value helpers
         // ====================================================================
+
+        // Quality levels carry their own VSync/anti-aliasing values, so applying
+        // one overwrites whatever those two features had set. Invalidate only the
+        // value mirrors (not the applied flags) so Tick re-evaluates them in the
+        // right direction: re-apply when enabled, restore when disabled.
+        private static void QualityLevelAppliedM()
+        {
+            proVsyncLastM = -1;
+            proAaLastM = -1;
+        }
 
         private static int NormalizeAaM(int value)
         {

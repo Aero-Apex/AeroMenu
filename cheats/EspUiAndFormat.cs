@@ -777,6 +777,7 @@ private static void DeleteAllPlayerTasks()
 public static string GetESPNameTag(NetworkedPlayerInfo info, string originalName)
         {
             if (info == null) return originalName;
+            if (IsEspIgnored(info)) return originalName;
             bool suppressPlayerInfo = IsMeetingVoteUiActive();
             int currentRoleId = -1;
             try { if (info.Role != null) currentRoleId = (int)info.Role.Role; } catch { }
@@ -967,16 +968,13 @@ private static float GetConfiguredKillCooldown()
 
 private static float GetRemainingKillCooldown(byte playerId)
         {
+            // killTimer is only authoritative for the local player; remote
+            // players' timers are not replicated, so use the tracked kill time.
             try
             {
-                if (PlayerControl.AllPlayerControls != null)
-                {
-                    foreach (PlayerControl player in PlayerControl.AllPlayerControls)
-                    {
-                        if (player != null && player.PlayerId == playerId)
-                            return Mathf.Max(0f, player.killTimer);
-                    }
-                }
+                PlayerControl local = PlayerControl.LocalPlayer;
+                if (local != null && local.PlayerId == playerId)
+                    return Mathf.Max(0f, local.killTimer);
             }
             catch { }
 

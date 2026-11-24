@@ -57,7 +57,7 @@ namespace AeroMenu
             GUILayout.BeginVertical(menuCardStyle, GUILayout.Width(outerContentWidth), GUILayout.Height(154f));
             try
             {
-                DrawMenuSectionHeader(L("VOTEKICK MENU", "РђР’РўРћ-Р“РћР›РћРЎРћР’РђРќРР•"));
+                DrawMenuSectionHeader(L("VOTEKICK MENU", "АВТО-ГОЛОСОВАНИЕ"));
 
                 GUILayout.BeginHorizontal(GUILayout.Width(innerWidth), GUILayout.Height(18f));
                 string statusText = VotekickStatusText();
@@ -115,14 +115,14 @@ namespace AeroMenu
             {
                 foreach (var pc in PlayerControl.AllPlayerControls)
                 {
-                    if (pc != null && pc.Data != null && pc.PlayerId < 100 && pc != PlayerControl.LocalPlayer && !NetworkedClones.IsClone(pc))
+                    if (pc != null && pc.Data != null && !pc.Data.Disconnected && pc.PlayerId < 100 && pc != PlayerControl.LocalPlayer && !NetworkedClones.IsClone(pc))
                         curPlayers++;
                 }
             }
 
             GUILayout.Space(6);
             GUILayout.BeginVertical(menuCardStyle, GUILayout.Width(outerContentWidth));
-            DrawMenuSectionHeader($"{L("TARGET VOTE", "Р’Р«Р‘РћР  Р¦Р•Р›Р")} ({curPlayers})");
+            DrawMenuSectionHeader($"{L("TARGET VOTE", "ВЫБОР ЦЕЛИ")} ({curPlayers})");
 
             if (PlayerControl.AllPlayerControls != null)
             {
@@ -133,7 +133,7 @@ namespace AeroMenu
                     foreach (var pc in PlayerControl.AllPlayerControls)
                     {
                         if (NetworkedClones.IsClone(pc)) continue;
-                        if (pc == null || pc.Data == null || pc.PlayerId >= 100 || pc == PlayerControl.LocalPlayer) continue;
+                        if (pc == null || pc.Data == null || pc.Data.Disconnected || pc.PlayerId >= 100 || pc == PlayerControl.LocalPlayer) continue;
 
                         GUILayout.BeginHorizontal(boxStyle, GUILayout.Width(innerWidth), GUILayout.Height(26));
                         try

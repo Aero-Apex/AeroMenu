@@ -70,8 +70,19 @@ public static void MakePlayerGhost(PlayerControl target, bool impostorGhost = fa
                 {
                     RoleTypes fallbackRole = impostorGhost ? RoleTypes.Impostor : (IsImpostorTeamRole(target.Data.RoleType) ? RoleTypes.Impostor : RoleTypes.Crewmate);
                     SetPlayerRole(target, fallbackRole);
-                    TryActivateGhostState(target, out methodUsed);
+                    methodUsed = $"SetRole:{fallbackRole}";
                 }
+
+                // Setting a ghost role alone never flips Data.IsDead, so the
+                // target would stay alive with a ghost role. Kill it explicitly.
+                string deathMethod;
+                if (!TryActivateGhostState(target, out deathMethod))
+                {
+                    if (notify) ShowNotification("<color=#FF0000>[ERROR]</color> Could not kill target!");
+                    return;
+                }
+                if (!string.IsNullOrEmpty(deathMethod))
+                    methodUsed = string.IsNullOrEmpty(methodUsed) ? deathMethod : methodUsed + "+" + deathMethod;
 
                 var netObj = GameData.Instance?.GetComponent<InnerNetObject>();
                 if (netObj != null) netObj.SetDirtyBit(uint.MaxValue);
@@ -268,19 +279,7 @@ public static void ReviveAllPlayers()
                     catch { }
 
                     bool wasImpTeam = false;
-                    try
-                    {
-                        if (pc.Data.Role != null)
-                        {
-                            int roleId = (int)pc.Data.Role.Role;
-                            wasImpTeam = roleId == 1 || roleId == 5 || roleId == 7 || roleId == 9 || roleId == 18;
-                        }
-                        else
-                        {
-                            var rt = pc.Data.RoleType;
-                            wasImpTeam = rt == RoleTypes.Impostor || rt == RoleTypes.Shapeshifter || (int)rt == 9 || (int)rt == 18;
-                        }
-                    }
+                    try { wasImpTeam = IsImpostorTeamRole(pc.Data.RoleType); }
                     catch { }
 
                     pc.RpcSetRole(wasImpTeam ? RoleTypes.Impostor : RoleTypes.Crewmate, true);
@@ -327,7 +326,11 @@ public static void SetPlayerRole(PlayerControl target, RoleTypes newRole)
                 SetHideAndSeekSeekerOption(target.PlayerId);
             }
 
+            // Apply locally as well as over the wire; RpcSetRole alone leaves
+            // the host's own role behaviour stale until a late RPC comes back.
+            try { RoleManager.Instance?.SetRole(target, roleToSet); } catch { }
             target.RpcSetRole(roleToSet, true);
+            RefreshRoleBehaviour(target);
             new LateTask(() => RefreshRoleBehaviour(target), 0.35f, $"RefreshRole:{target.PlayerId}");
         }
 
@@ -345,7 +348,7 @@ private void DrawRolesTab()
             GUILayout.Label(GetLocalRoleDisplayName(forceRoleOptions[fakeRoleIdx]), middleLabelStyle, GUILayout.Width(100), GUILayout.Height(22));
             if (GUILayout.Button(">", btnStyle, GUILayout.Width(25), GUILayout.Height(22))) { fakeRoleIdx++; if (fakeRoleIdx >= forceRoleOptions.Length) fakeRoleIdx = 0; }
             GUILayout.Space(15);
-            if (GUILayout.Button("Set", activeTabStyle, GUILayout.Width(45), GUILayout.Height(22))) RoleManager.Instance?.SetRole(PlayerControl.LocalPlayer, forceRoleOptions[fakeRoleIdx]);
+            if (GUILayout.Button("Set", activeTabStyle, GUILayout.Width(45), GUILayout.Height(22))) SetPlayerRole(PlayerControl.LocalPlayer, forceRoleOptions[fakeRoleIdx]);
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
             GUILayout.EndVertical();

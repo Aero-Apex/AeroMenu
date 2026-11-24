@@ -128,16 +128,21 @@ private static bool TelekillPlayerPPM(PlayerControl target)
                 Vector3 old = local.transform.position;
                 local.NetTransform.RpcSnapTo(target.transform.position);
 
-                bool ok;
-                if (AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost)
-                    ok = TryHostAeroMurderPlayer(target);
-                else
+                bool ok = false;
+                try
                 {
-                    local.CmdCheckMurder(target);
-                    ok = true;
+                    if (AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost)
+                        ok = TryHostAeroMurderPlayer(target);
+                    else
+                    {
+                        local.CmdCheckMurder(target);
+                        ok = true;
+                    }
                 }
-
-                local.NetTransform.RpcSnapTo(old);
+                finally
+                {
+                    local.NetTransform.RpcSnapTo(old);
+                }
                 return ok;
             }
             catch { return false; }
@@ -211,9 +216,9 @@ private static float GetVanillaKillDistance()
             try
             {
                 int killDistance = GameOptionsManager.Instance.CurrentGameOptions.GetInt(Int32OptionNames.KillDistance);
-                if (killDistance <= 0) return 1f;
-                if (killDistance == 1) return 1.8f;
-                return 2.5f;
+                if (killDistance <= 0) return 1.8f;
+                if (killDistance == 1) return 2.5f;
+                return 3.2f;
             }
             catch { return 2.5f; }
         }

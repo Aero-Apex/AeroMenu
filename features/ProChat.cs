@@ -436,6 +436,13 @@ namespace AeroMenu
 
         private static void ScanChatQ(object chat)
         {
+            // Start a fresh scan generation. PruneStatesQ drops states whose
+            // targets were not touched this scan, so the flag must be cleared
+            // first - otherwise every state stays "seen" forever and stale
+            // chat-bubble states accumulate for the whole session.
+            for (int i = 0; i < proChatStatesQ.Count; i++)
+                proChatStatesQ[i].seen = false;
+
             List<object> bubbles = GetChatBubblesQ(chat);
             object localData = GetLocalPlayerDataQ();
             Color roleColor = proChatRoleColors ? GetLocalRoleColorQ() : Color.white;

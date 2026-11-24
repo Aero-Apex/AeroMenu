@@ -651,9 +651,18 @@ private float DrawSettingSlider(string label, float width, float val, float min,
 
 private void DrawMissingGameOption(string label, float width)
         {
-            GUIStyle st = lobbyLabelStyle11;
-            st.normal.textColor = whiteMenuTheme ? new Color(0.42f, 0.42f, 0.42f, 1f) : new Color(0.42f, 0.42f, 0.42f, 1f);
-            GUILayout.Label($"{label}: n/a", st, GUILayout.Width(width), GUILayout.Height(22f));
+            Color prev = lobbyLabelStyle11.normal.textColor;
+            lobbyLabelStyle11.normal.textColor = whiteMenuTheme
+                ? new Color(0.42f, 0.42f, 0.42f, 1f)
+                : new Color(0.62f, 0.62f, 0.62f, 1f);
+            try
+            {
+                GUILayout.Label($"{label}: n/a", lobbyLabelStyle11, GUILayout.Width(width), GUILayout.Height(22f));
+            }
+            finally
+            {
+                lobbyLabelStyle11.normal.textColor = prev;
+            }
         }
 
 private static object GetGameOptionsObj()

@@ -592,7 +592,8 @@ namespace AeroMenu
                 : time + "   |   " + L("Session", "\u0421\u0435\u0441\u0441\u0438\u044F") + " " + extrasASessionElapsedText;
 
             float w = Mathf.Max(190f, 34f + text.Length * 8.5f);
-            float y = extraCompass ? 52f : 6f;
+            // The compass heading label occupies y=37..53 when the compass is on.
+            float y = extraCompass ? 54f : 6f;
             Rect rect = new Rect((Screen.width - w) * 0.5f, y, w, 26f);
 
             GUI.color = Color.white;

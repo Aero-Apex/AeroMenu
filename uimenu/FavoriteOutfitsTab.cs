@@ -54,8 +54,19 @@ public void Update()
             MoreLobbyInfo_GameContainer_SetupGameInfo_Postfix.UpdateStyledNames();
             NetworkedClones.Tick(showMenu);
 
-            if (!showMenu) aeroFocusedField = -1;
+            // Chat / custom-RPC inputs only set their focus flag from a MouseDown in
+            // OnGUI. If their screen is closed before Escape/Enter is pressed, no
+            // event clears the flag and every keybind (including the menu toggle)
+            // stays blocked forever. Only honour a flag while its screen is drawn.
+            bool selfChatVisible = showMenu && currentTab == 1 && targetTabIndex == 1 && currentSelfSubTab == 3;
+            bool spoofRpcVisible = showMenu && currentTab == 7 && targetTabIndex == 7;
+            if (!selfChatVisible) customChatInputFocused = false;
+            if (!selfChatVisible || currentSelfChatSubTab != 1) isEditingPortableChat = false;
+            if (!spoofRpcVisible) customSpoofRpcInputFocused = false;
+            if (!showMenu || currentTab != targetTabIndex) aeroFocusedField = -1;
+
             bool isTypingOrBinding = AeroTextFieldFocused || isEditingName || isEditingLevel || isEditingFriendCode || isEditingLocalFriendCode || isEditingGhostChatColor || isEditingBan || customChatInputFocused ||
+                                     isEditingPortableChat || (customSpoofRpcInputFocused && selectedSpoofMenuIndex == spoofMenuNames.Length - 1) ||
                                      isEditingDeviceId || isEditingFpsLimit || isEditingBugRoomTimedAutoRun || isEditingSearch ||
                                      isEditingStatusText || isEditingAccentHex ||
                                      isWaitingForBind || isWaitingForBindAlt || isWaitBindMassMorph || isWaitBindSpawnLobby ||

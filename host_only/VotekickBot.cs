@@ -110,6 +110,7 @@ private Vector2 votekickScrollPosition = Vector2.zero;
 private void StartVotekickEveryoneRun()
         {
             votekickEveryone = true;
+            votekickCode = 0;
             votekickCyclesDone = 0;
             votekickPhase = VoteKickPhase.Room;
             votekickAt = Time.unscaledTime + VotekickSettleDelay;
@@ -400,6 +401,12 @@ public static void ToggleVotekickHostTarget()
                 return;
             }
 
+            if (host.Data == null || host.Data.Disconnected)
+            {
+                ShowNotification("<color=#FF4444>[VOTEKICK]</color> Host is disconnected.");
+                return;
+            }
+
             ToggleVotekickTarget(host.PlayerId);
             string nm = host.Data != null && !string.IsNullOrEmpty(host.Data.PlayerName) ? host.Data.PlayerName : "?";
             ShowNotification(IsVotekickTarget(host.PlayerId)
@@ -461,7 +468,7 @@ private void SendVotekickEveryoneStay()
 
 public static void ExecuteVotekickTarget(PlayerControl target)
         {
-            if (target == null || target.Data == null) return;
+            if (target == null || target.Data == null || target.Data.Disconnected) return;
 
             if (TryVotekickVote(target.Data.ClientId))
             {

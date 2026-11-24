@@ -62,12 +62,14 @@ internal static class LobbyTeleportPositionTracker
 	private const float SpawnGraceSeconds = 3f;
 	private static readonly Dictionary<byte, Vector2> lastPos = new Dictionary<byte, Vector2>();
 	private static readonly Dictionary<byte, float> firstSeenAt = new Dictionary<byte, float>();
+	private static readonly Dictionary<byte, int> ownerByPlayerId = new Dictionary<byte, int>();
 	private static int trackedGameId = -1;
 
 	internal static void Reset()
 	{
 		lastPos.Clear();
 		firstSeenAt.Clear();
+		ownerByPlayerId.Clear();
 		trackedGameId = -1;
 	}
 
@@ -75,6 +77,7 @@ internal static class LobbyTeleportPositionTracker
 	{
 		lastPos.Remove(playerId);
 		firstSeenAt.Remove(playerId);
+		ownerByPlayerId.Remove(playerId);
 	}
 
 	internal static void CheckPlayer(PlayerControl player)
@@ -91,10 +94,20 @@ internal static class LobbyTeleportPositionTracker
 				trackedGameId = gameId;
 				lastPos.Clear();
 				firstSeenAt.Clear();
+				ownerByPlayerId.Clear();
 			}
 
 			float now = Time.realtimeSinceStartup;
 			byte pid = player.PlayerId;
+			int clientId = NetworkGuard.ResolvePlayerClientId(player);
+			if (clientId >= 0 && ownerByPlayerId.TryGetValue(pid, out int knownOwner) &&
+				knownOwner >= 0 && knownOwner != clientId)
+			{
+				// PlayerIds are recycled when someone leaves; a different owner
+				// means this is a new player, so the old position/grace is stale.
+				ForgetPlayer(pid);
+			}
+			if (clientId >= 0) ownerByPlayerId[pid] = clientId;
 			Vector2 cur = ((Component)player).transform.position;
 
 			if (!firstSeenAt.ContainsKey(pid))
@@ -121,7 +134,6 @@ internal static class LobbyTeleportPositionTracker
 			float dist = Vector2.Distance(prev, cur);
 			if (dist < TeleportThreshold) return;
 
-			int clientId = NetworkGuard.ResolvePlayerClientId(player);
 			NetworkGuard.FlagLobbyTeleport(player, clientId, dist);
 		}
 		catch { }

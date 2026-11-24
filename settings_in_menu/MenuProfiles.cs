@@ -51,7 +51,7 @@ private float menuProfileStatusUntil = 0f;
 private static readonly string[] menuProfileBoolKeys = {
             "M_ActivateCompletedCosmicubes", "M_AllowDuplicateColors", "M_AllowLinksAndSymbols", "M_AllowTasksAsImpostor",
             "M_AlwaysChat", "M_AlwaysShowLobbyTimer", "M_AntiPasosHostBan", "M_AntiPasosLocalBan",
-            "M_AutoBanEnabled", "M_AutoBanPlatformSpoof", "M_AutoBreakSabotage", "M_AutoClearClonesBeforeGame", "M_AutoCopyCodeAndLeave",
+            "M_AutoBanEnabled", "M_AutoBanPlatformSpoof", "M_AutoBreakSabotage", "M_AutoClearClonesBeforeGame", "M_AutoCompleteTasks", "M_AutoCopyCodeAndLeave",
             "M_AutoFollowCursor", "M_AutoGhostAfterStart", "M_AutoHostAutoRunEnabled", "M_AutoHostCancelBelowMin",
             "M_AutoHostEnabled", "M_AutoHostForceLastMinute", "M_AutoHostInstantStart", "M_AutoHostNotifications",
             "M_AutoHostShieldBreakEnabled", "M_AutoHostWaitLoadedPlayers", "M_AutoKickBugs", "M_AutoKickLowLevel",
@@ -66,7 +66,7 @@ private static readonly string[] menuProfileBoolKeys = {
             "M_EnableChatBubbleCopy", "M_EnableChatHistory", "M_EnableChatLog", "M_EnableChatNickCopy",
             "M_EnableClipboard", "M_EnableColorCommand", "M_EnableCustomNotifs", "M_EnableExtendedChat",
             "M_EnableFastChat", "M_EnableLevelSpoof", "M_EnableMenuScaleInput", "M_EspShimmerMode",
-            "M_ExtendedLobby", "M_Freecam", "M_FullBright", "M_GuestExtraFeatures",
+            "M_ExtendedLobby", "M_ForceVote", "M_Freecam", "M_FullBright", "M_GuestExtraFeatures",
             "M_GlitchRoomBypassShield", "M_GlitchRoomGodMode", "M_GlitchRoomGodModeAll", "M_HardMenu", "M_HideRadarInMeeting", "M_HostAutoKillRandom", "M_HostAutoKillTarget",
             "M_KillWhileVanishedHostOnly", "M_LimitFps", "M_LobbyAllColor", "M_LobbyRainbowAll",
             "M_LocalAlwaysRed", "M_LocalFakeFCEnabled", "M_LocalFortegreen", "M_LocalNameSpoof", "M_LocalSnipeColor", "M_LockRadar", "M_LogAllRPCs",
@@ -76,7 +76,7 @@ private static readonly string[] menuProfileBoolKeys = {
             "M_ReadGhostChat", "M_RemovePenalty", "M_ReplayDrawIcons", "M_ReplayOnlyLastSeconds",
             "M_RevealMeetingRoles", "M_RevealVotes", "M_RgbMenuText", "M_RgbTaskBar",
             "M_RoleBuffImmortality", "M_SeeGhosts", "M_SeeKillCooldown", "M_SeePhantoms",
-            "M_SeeProtections", "M_SeeRoles", "M_ShowBodyTracers", "M_ShowCrewmateTracers",
+            "M_SeeProtections", "M_SeeRoles", "M_ShowBodyTracers", "M_ShowChatRoles", "M_ShowCrewmateTracers",
             "M_ShowDeadTracers", "M_ShowEspBoxes", "M_ShowEspVoteKicks", "M_ShowImpostorTracers",
             "M_ShowPlayerInfo", "M_ShowRadar", "M_ShowRadarDeadBodies", "M_ShowRadarGhosts",
             "M_ShowReplay", "M_ShowTracers", "M_ShowWatermarkInfo", "M_SkipKillAnimation",
@@ -291,7 +291,11 @@ private bool LoadMenuProfile()
                 PlayerPrefs.Save();
                 LoadConfig();
                 ApplyFpsLimit();
-                if (!rgbMenuMode && currentMenuColorIndex >= 0 && currentMenuColorIndex < menuColors.Length)
+                InitStyles();
+                if (enableBackground) LoadBackgroundImage();
+                if (enableMenuCharacter) LoadMenuCharacter();
+                if (!rgbMenuMode && string.IsNullOrWhiteSpace(customAccentHex) &&
+                    currentMenuColorIndex >= 0 && currentMenuColorIndex < menuColors.Length)
                     UpdateAccentColor(menuColors[currentMenuColorIndex]);
                 SaveConfig();
                 SetMenuProfileStatus($"Loaded Profile {selectedMenuProfileIndex + 1}");

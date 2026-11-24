@@ -1,5 +1,6 @@
 #nullable disable
 
+using System;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Hazel;
@@ -14,6 +15,95 @@ namespace AeroMenu
         private static readonly Regex RichTextTag = new Regex("<.*?>");
         private static byte keepTargetId = byte.MaxValue;
         private static string keepTargetName = "";
+        private static string keepTargetPuid = "";
+
+
+        /// <summary>
+        /// Handles a whisper command typed into raw/portable chat so it is never
+        /// broadcast through RpcSendChat. Echo is a local-only message for the log.
+        /// </summary>
+        public static bool TryHandleRaw(string text, out string echo)
+        {
+            echo = string.Empty;
+            if (string.IsNullOrWhiteSpace(text)) return false;
+            string lowerText = text.ToLowerInvariant();
+
+            if (lowerText.StartsWith("/w ") || lowerText.StartsWith("/pm ") || lowerText.StartsWith("/msg "))
+            {
+                string[] parts = text.Split(new[] { ' ' }, 3);
+                if (parts.Length < 3 || string.IsNullOrWhiteSpace(parts[2]))
+                {
+                    echo = "<color=#FF0000>[ERROR]</color> Usage: /w [ID, color, or name] [message]";
+                    return true;
+                }
+
+                PlayerControl target = FindTarget(parts[1].ToLowerInvariant().Trim());
+                if (!IsValidTarget(target))
+                {
+                    echo = "<color=#FF0000>[ERROR]</color> Player not found. Enter an ID, color, or name.";
+                    return true;
+                }
+
+                string safe = StripRichText(parts[2]);
+                SendWhisper(target, safe, false);
+                echo = WhisperEcho(target, safe);
+                return true;
+            }
+
+            if (lowerText == "/unkeepw" || lowerText.StartsWith("/unkeepw "))
+            {
+                ClearKeepTarget();
+                echo = "<color=#FFAC1C>[WHISPER]</color> Keep whisper disabled.";
+                return true;
+            }
+
+            if (lowerText.StartsWith("/keepw "))
+            {
+                string keepInput = text.Substring(7).Trim();
+                if (string.IsNullOrWhiteSpace(keepInput))
+                {
+                    echo = "<color=#FF0000>[ERROR]</color> Usage: /keepw [ID, color, or name]";
+                    return true;
+                }
+
+                PlayerControl keepTarget = FindTarget(keepInput.ToLowerInvariant());
+                if (!IsValidTarget(keepTarget))
+                {
+                    echo = "<color=#FF0000>[ERROR]</color> Player not found. Enter an ID, color, or name.";
+                    return true;
+                }
+
+                keepTargetId = keepTarget.PlayerId;
+                keepTargetName = StripRichText(keepTarget.Data.PlayerName);
+                keepTargetPuid = GetPuid(keepTarget);
+                echo = $"<color=#FFAC1C>[WHISPER]</color> Keep target: <b>{keepTargetName}</b>. Use /unkeepw to stop.";
+                return true;
+            }
+
+            if (HasKeepTarget() && !lowerText.StartsWith("/"))
+            {
+                PlayerControl target = FindTargetById(keepTargetId);
+                if (!IsValidTarget(target) || !KeepTargetStillMatches(target))
+                {
+                    ClearKeepTarget();
+                    echo = "<color=#FF0000>[ERROR]</color> Keep whisper target left or is unavailable.";
+                    return true;
+                }
+
+                string safe = StripRichText(text);
+                SendWhisper(target, safe, false);
+                echo = WhisperEcho(target, safe);
+                return true;
+            }
+
+            return false;
+        }
+
+        private static string WhisperEcho(PlayerControl target, string safeMessage)
+        {
+            string targetName = target?.Data == null ? "player" : StripRichText(target.Data.PlayerName);
+            return $"<color=#FFAC1C>You whisper to {targetName}:\n{safeMessage}</color>";
+        }
 
         /// <summary>
         /// Sends a private message when the chat input contains a whisper command.
@@ -57,6 +147,7 @@ namespace AeroMenu
 
                 keepTargetId = keepTarget.PlayerId;
                 keepTargetName = StripRichText(keepTarget.Data.PlayerName);
+                keepTargetPuid = GetPuid(keepTarget);
                 ShowLocalMessage($"<color=#FFAC1C>[WHISPER]</color> Keep target: <b>{keepTargetName}</b>. Use /unkeepw to stop.");
                 ClearInput(chat);
                 return true;
@@ -121,6 +212,23 @@ namespace AeroMenu
         {
             keepTargetId = byte.MaxValue;
             keepTargetName = "";
+            keepTargetPuid = "";
+        }
+
+        private static string GetPuid(PlayerControl player)
+        {
+            try
+            {
+                string puid = AeroMenuGUI.GetPlayerPuid(player);
+                return string.Equals(puid, "Unknown", StringComparison.OrdinalIgnoreCase) ? string.Empty : (puid ?? string.Empty);
+            }
+            catch { return string.Empty; }
+        }
+
+        private static bool KeepTargetStillMatches(PlayerControl player)
+        {
+            if (string.IsNullOrEmpty(keepTargetPuid)) return true;
+            return string.Equals(keepTargetPuid, GetPuid(player), StringComparison.OrdinalIgnoreCase);
         }
 
         private static bool TrySendToKeepTarget(string safeMessage)
@@ -129,10 +237,11 @@ namespace AeroMenu
                 return true;
 
             PlayerControl target = FindTargetById(keepTargetId);
-            if (!IsValidTarget(target))
+            if (!IsValidTarget(target) || !KeepTargetStillMatches(target))
             {
                 string name = string.IsNullOrWhiteSpace(keepTargetName) ? "target" : keepTargetName;
-                ShowLocalMessage($"<color=#FF0000>[ERROR]</color> Keep whisper target left or is unavailable: {name}.");
+                ShowLocalMessage($"<color=#FF0000>[ERROR]</color> Keep whisper target left, changed, or is unavailable: {name}.");
+                ClearKeepTarget();
                 return false;
             }
 
@@ -140,7 +249,7 @@ namespace AeroMenu
             return true;
         }
 
-        private static void SendWhisper(PlayerControl target, string safeMessage)
+        private static void SendWhisper(PlayerControl target, string safeMessage, bool echoLocally = true)
         {
             if (AmongUsClient.Instance == null || PlayerControl.LocalPlayer == null || string.IsNullOrWhiteSpace(safeMessage))
                 return;
@@ -154,8 +263,11 @@ namespace AeroMenu
             writer.Write($"Whispers in your ear:\n{safeMessage}");
             AmongUsClient.Instance.FinishRpcImmediately(writer);
 
-            string targetName = StripRichText(target.Data.PlayerName);
-            ShowLocalMessage($"<color=#FFAC1C>You whisper to {targetName}:\n{safeMessage}</color>");
+            if (echoLocally)
+            {
+                string targetName = StripRichText(target.Data.PlayerName);
+                ShowLocalMessage($"<color=#FFAC1C>You whisper to {targetName}:\n{safeMessage}</color>");
+            }
         }
 
         private static PlayerControl FindTarget(string targetInput)

@@ -12,6 +12,7 @@ namespace AeroMenu
 
         private static float nextColorSnipeAt;
         private static float nextFortegreenAt;
+        private static float nextAlwaysRedAt;
 
         private static void ApplyLocalColorOverride()
         {
@@ -36,6 +37,14 @@ namespace AeroMenu
         private static void TickLocalColorOverride()
         {
             TickFortegreenColor();
+
+            if (!localAlwaysRed) { nextAlwaysRedAt = 0f; return; }
+            PlayerControl plr = PlayerControl.LocalPlayer;
+            if (plr == null || plr.Data == null || plr.Data.DefaultOutfit == null) return;
+            if (plr.Data.DefaultOutfit.ColorId == 0) { nextAlwaysRedAt = 0f; return; }
+            if (Time.unscaledTime < nextAlwaysRedAt) return;
+            nextAlwaysRedAt = Time.unscaledTime + 1f;
+            SendAlwaysRed();
         }
 
         private static void TickLocalColorSnipe()

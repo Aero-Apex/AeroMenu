@@ -18,6 +18,7 @@ namespace AeroMenu
             public NetworkedPlayerInfo Info;
             public string Name;
             public int ColorId;
+            public uint NetId;
         }
 
         private static readonly List<Bot> bots = new List<Bot>();
@@ -121,7 +122,8 @@ namespace AeroMenu
 
                 Bot b = new Bot { Name = botNames[UnityEngine.Random.Range(0, botNames.Length)], ColorId = NextFreeColor(), Info = info };
                 ApplyProfile(b);                bots.Add(b);
-                try { botNetIds.Add(bot.NetId); } catch { }
+                b.NetId = bot.NetId;
+                try { botNetIds.Add(b.NetId); } catch { }
                 return true;
             }
             catch
@@ -251,7 +253,9 @@ namespace AeroMenu
                                 if (bot.MyPhysics != null) bot.MyPhysics.enabled = false;
                                 b.Info = TryAddPlayer(bot);
                                 ApplyProfile(b);
-                                try { botNetIds.Add(bot.NetId); } catch { }
+                                try { if (b.NetId != 0) botNetIds.Remove(b.NetId); } catch { }
+                                b.NetId = bot.NetId;
+                                try { botNetIds.Add(b.NetId); } catch { }
                             }
                             catch
                             {
@@ -285,7 +289,9 @@ namespace AeroMenu
                                 if (bot.MyPhysics != null) bot.MyPhysics.enabled = false;
                                 try { SetInfoObject(info, bot); } catch { }
                                 ApplyProfile(b);
-                                try { botNetIds.Add(bot.NetId); } catch { }
+                                try { if (b.NetId != 0) botNetIds.Remove(b.NetId); } catch { }
+                                b.NetId = bot.NetId;
+                                try { botNetIds.Add(b.NetId); } catch { }
                             }
                             catch
                             {

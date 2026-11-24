@@ -157,25 +157,16 @@ public static class PublicFriendCodeConfirmPatch
 
         try
         {
-            FriendsListManager mgr = FriendsListManager.Instance;
-            if (mgr == null) return true;
-
+            // SaveUsername already forwards UsernameText to SetFriendCode, which
+            // PublicFriendCodeRegistrationPatch rewrites to the spoofed value.
+            // Let the original run so its completion callback still updates the
+            // local friend code and closes the screen; the no-op callback used
+            // here previously left the spoof unapplied locally.
             if (__instance.UsernameText != null)
                 __instance.UsernameText.text = value;
-
-            // The compiler-generated callback field was renamed/removed in newer game builds.
-            // Use a no-op completion callback so spoofing still compiles and applies locally.
-            var callback = Il2CppInterop.Runtime.DelegateSupport.ConvertDelegate<Il2CppSystem.Action<
-                Assets.InnerNet.ResponseState, Assets.InnerNet.Response<Assets.InnerNet.ResponseFriendCode>>>(
-                new System.Action<Assets.InnerNet.ResponseState, Assets.InnerNet.Response<Assets.InnerNet.ResponseFriendCode>>(
-                    (state, response) => { }));
-            mgr.SetFriendCode(value, callback);
-            return false;
         }
-        catch
-        {
-            return true;
-        }
+        catch { }
+        return true;
     }
 }
 

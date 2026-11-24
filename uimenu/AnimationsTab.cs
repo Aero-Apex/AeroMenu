@@ -64,7 +64,10 @@ namespace AeroMenu
             {
                 if (__instance == null || __instance.textArea == null || __instance.charCountText == null) return;
 
-                __instance.textArea.characterLimit = 120;
+                // Keep in sync with ChatJailbreak_ChatController_Update_Postfix,
+                // which sets this every frame. Forcing 120 here made the
+                // "Extended Chat" toggle ineffective.
+                __instance.textArea.characterLimit = AeroMenuGUI.enableExtendedChat ? 120 : 100;
 
                 int length = __instance.textArea.text.Length;
 
@@ -371,7 +374,6 @@ public static class ClipboardBridge
         {
             private static bool isPastingChatInput = false;
             private static bool allTextSelected = false;
-            private static int currentPasteCharPos = 0;
             private static int lastClipboardFrame = -1;
 
             public static void Run(TextBoxTMP box)
@@ -444,23 +446,28 @@ public static class ClipboardBridge
                 string input = isPastingChatInput ? GUIUtility.systemCopyBuffer : Input.inputString;
                 if (string.IsNullOrEmpty(input)) return true;
 
-                string currentText = box.text ?? string.Empty;
-                int caretPos = Mathf.Clamp(box.caretPos, 0, currentText.Length);
-                string text = allTextSelected ? input : currentText.Insert(caretPos, input);
                 if (allTextSelected)
                 {
                     box.SetText(string.Empty, string.Empty);
                     allTextSelected = false;
                 }
 
-                currentPasteCharPos = Mathf.Clamp(currentPasteCharPos, 0, Mathf.Max(0, text.Length - 1));
-                char currentChar = text[currentPasteCharPos];
-                currentPasteCharPos = currentPasteCharPos >= text.Length - 1 ? 0 : currentPasteCharPos + 1;
-
                 if (allowLinksAndSymbols)
                 {
+                    // Check the characters being inserted, not an arbitrary
+                    // position in the pre-existing text. The old rotating
+                    // currentPasteCharPos could let blocked symbols through and
+                    // reject perfectly valid characters.
                     HashSet<char> blockedSymbols = new HashSet<char> { '\b', '\r', '\n', '>', '<', '[' };
-                    result = !blockedSymbols.Contains(currentChar);
+                    foreach (char c in input)
+                    {
+                        if (blockedSymbols.Contains(c))
+                        {
+                            result = false;
+                            return false;
+                        }
+                    }
+                    result = true;
                     return false;
                 }
 

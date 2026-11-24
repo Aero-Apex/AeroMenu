@@ -166,6 +166,11 @@ namespace AeroMenu
         {
             if (!extraFrameTimeGraph && !extraFpsMinMax && !extraMemoryUsage && !extraBuildInfoPanel) return;
 
+            // Like every other overlay group, draw only on Repaint. Without this
+            // guard the panel and the frame-texture upload run on each IMGUI event.
+            Event e = Event.current;
+            if (e == null || e.type != EventType.Repaint) return;
+
             try
             {
                 EnsureExtrasStylesK();
@@ -425,8 +430,8 @@ namespace AeroMenu
                 {
                     try
                     {
-                        PlatformID pid = Environment.OSVersion.Platform;
-                        isMac = pid == PlatformID.MacOSX || pid == PlatformID.Unix;
+                        // PlatformID.Unix also covers Linux; do not misclassify it as macOS.
+                        isMac = Environment.OSVersion.Platform == PlatformID.MacOSX;
                     }
                     catch { }
                 }
@@ -455,6 +460,16 @@ namespace AeroMenu
                 }
 
                 if (!opened && !isMac)
+                {
+                    try
+                    {
+                        System.Diagnostics.Process.Start("xdg-open", arg);
+                        opened = true;
+                    }
+                    catch { }
+                }
+
+                if (!opened)
                 {
                     try
                     {

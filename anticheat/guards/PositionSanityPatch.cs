@@ -141,13 +141,16 @@ internal static class CntPositionSanityPatch
 				return;
 			}
 
+			// Deserialize writes attacker-controlled values into the sync fields, which
+			// FixedUpdate applies to the transform later. Normalize them before the
+			// position check so a still-valid transform cannot hide a bad pending value.
+			NormalizeSyncFields(__instance);
+
 			Vector3 p = t.position;
 			bool invalid = float.IsNaN(p.x) || float.IsNaN(p.y) || float.IsNaN(p.z) ||
 				float.IsInfinity(p.x) || float.IsInfinity(p.y) || float.IsInfinity(p.z) ||
 				Mathf.Abs(p.x) > MaxCoord || Mathf.Abs(p.y) > MaxCoord || Mathf.Abs(p.z) > MaxCoord;
 			if (!invalid) return;
-
-			NormalizeSyncFields(__instance);
 
 			Vector3 q = t.position;
 			if (float.IsNaN(q.x) || float.IsNaN(q.y) || float.IsNaN(q.z) ||

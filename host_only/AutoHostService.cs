@@ -1059,7 +1059,7 @@ public static class AeroAutoHostService
             private static float StartDelaySeconds => Mathf.Clamp(AeroMenuGUI.AutoHostStartDelaySeconds, 0f, 180f);
             private static float AutoRunStartDelaySeconds => Mathf.Clamp(AeroMenuGUI.AutoHostAutoRunDelaySeconds, 0.25f, 10f);
             private static float BackoffSeconds => Mathf.Clamp(AeroMenuGUI.AutoHostBackoffSeconds, 2f, 60f);
-            private static float CountdownRemaining => countdownStartedAt < 0f ? 0f : Mathf.Clamp((activeCountdownDelay >= 0f ? activeCountdownDelay : StartDelaySeconds) - (Time.unscaledTime - countdownStartedAt), 0f, StartDelaySeconds);
+            private static float CountdownRemaining => countdownStartedAt < 0f ? 0f : Mathf.Clamp((activeCountdownDelay >= 0f ? activeCountdownDelay : StartDelaySeconds) - (Time.unscaledTime - countdownStartedAt), 0f, activeCountdownDelay >= 0f ? activeCountdownDelay : StartDelaySeconds);
             private static float BackoffRemaining => backoffUntil < 0f ? 0f : Mathf.Clamp(backoffUntil - Time.unscaledTime, 0f, BackoffSeconds);
             private static float LobbyLifeRemaining => lobbyOpenedAt < 0f ? -1f : Mathf.Clamp(LobbyLifetimeSeconds - (Time.unscaledTime - lobbyOpenedAt), 0f, LobbyLifetimeSeconds);
             private static float WarmupRemaining => lobbyOpenedAt < 0f ? 0f : Mathf.Clamp(AeroMenuGUI.AutoHostWarmupSeconds - (Time.unscaledTime - lobbyOpenedAt), 0f, 120f);

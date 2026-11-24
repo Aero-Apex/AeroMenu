@@ -113,7 +113,23 @@ public static Color GetMenuAccentColor(bool allowRgbText = true)
             if (activeTabStyle != null) activeTabStyle.normal.background = texAccent;
             if (activeSubTabStyle != null) activeSubTabStyle.normal.background = texAccent;
             if (btnStyle != null) btnStyle.active.background = texAccent;
+            UpdateOnAccentTextColors(GetMenuAccentColor());
             if (inputBlockStyle != null) inputBlockStyle.normal.textColor = rgbText ? effectiveColor : (whiteMenuTheme ? new Color(0.15f, 0.15f, 0.15f, 1f) : color);
+        }
+
+private void UpdateOnAccentTextColors(Color accent)
+        {
+            float luma = 0.299f * accent.r + 0.587f * accent.g + 0.114f * accent.b;
+            Color onAccent = luma > 0.55f ? new Color(0.08f, 0.08f, 0.08f, 1f) : Color.white;
+            if (btnStyle != null) btnStyle.active.textColor = onAccent;
+            if (activeTabStyle != null) activeTabStyle.normal.textColor = onAccent;
+            if (activeSubTabStyle != null) activeSubTabStyle.normal.textColor = onAccent;
+            if (compactActiveSubTabStyle != null) compactActiveSubTabStyle.normal.textColor = onAccent;
+            if (activeHostSubTabStyle10 != null) activeHostSubTabStyle10.normal.textColor = onAccent;
+            if (activeHostSubTabStyle11 != null) activeHostSubTabStyle11.normal.textColor = onAccent;
+            if (clippedActiveButtonStyle != null) clippedActiveButtonStyle.normal.textColor = onAccent;
+            if (centeredActiveTabStyle != null) centeredActiveTabStyle.normal.textColor = onAccent;
+            if (activePseudoInputStyle != null) activePseudoInputStyle.normal.textColor = onAccent;
         }
 
 private static void UpdateCachedSidebarAccent(GUIStyle style, Color color)
@@ -311,6 +327,10 @@ private void UpdateMenuTrackTex(Texture2D tex, Color color)
             Color textMain = isLightTheme ? new Color(0.12f, 0.12f, 0.12f, 1f) : new Color(0.94f, 0.94f, 0.94f, 1f);
             Color textMuted = isLightTheme ? new Color(0.28f, 0.28f, 0.28f, 1f) : new Color(0.82f, 0.82f, 0.82f, 1f);
             Color textHover = isLightTheme ? new Color(0.06f, 0.06f, 0.06f, 1f) : Color.white;
+            // Accent backgrounds range from near-white to near-black; pick the
+            // text colour from the accent's luminance instead of fixed black.
+            float accentLuma = 0.299f * accent.r + 0.587f * accent.g + 0.114f * accent.b;
+            Color onAccent = accentLuma > 0.55f ? new Color(0.08f, 0.08f, 0.08f, 1f) : Color.white;
             Color headerText = RgbMenuTextActive() ? accent : (isLightTheme ? new Color(0.15f, 0.15f, 0.15f, 1f) : accent);
             Color inputBgCol = isLightTheme ? new Color(1f, 1f, 1f, 0.86f) : new Color(0.08f, 0.08f, 0.08f, 0.85f);
 
@@ -433,7 +453,7 @@ private void UpdateMenuTrackTex(Texture2D tex, Color color)
             btnStyle.normal.textColor = textMain;
             btnStyle.hover.textColor = textHover;
             btnStyle.active.background = texAccent;
-            btnStyle.active.textColor = Color.black;
+            btnStyle.active.textColor = onAccent;
             btnStyle.alignment = TextAnchor.MiddleCenter;
             btnStyle.border = CreateRectOffset(6, 6, 6, 6);
             btnStyle.fontSize = 12;
@@ -443,7 +463,7 @@ private void UpdateMenuTrackTex(Texture2D tex, Color color)
 
             activeTabStyle = new GUIStyle(btnStyle);
             activeTabStyle.normal.background = texAccent;
-            activeTabStyle.normal.textColor = Color.black;
+            activeTabStyle.normal.textColor = onAccent;
 
             subTabStyle = new GUIStyle(btnStyle);
             subTabStyle.padding = CreateRectOffset(8, 8, 2, 2);
@@ -839,6 +859,7 @@ private void LoadMenuCharacter()
 
 public static string ApplyMenuShimmer(string text)
         {
+            if (string.IsNullOrEmpty(text)) return string.Empty;
             if (!RgbMenuTextActive() && MenuAccentPairActive())
                 return ApplyMenuAccentGradient(text);
 
@@ -1080,6 +1101,7 @@ public static bool IsScanning = false;
 private void ResetAllBindWaits()
         {
             isWaitingForBind = false;
+            isWaitingForBindAlt = false;
             isWaitBindMassMorph = false;
             isWaitBindSpawnLobby = false;
             isWaitBindDespawnLobby = false;

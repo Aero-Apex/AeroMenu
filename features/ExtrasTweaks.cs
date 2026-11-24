@@ -46,6 +46,7 @@ namespace AeroMenu
         private static bool cursorSavedVisibleC = true;
         private static bool cursorCapturedC;
         private static bool cursorAppliedC;
+        private static bool forceApplyC;
 
         // Applied-state mirrors so Tick only reacts on real transitions.
         private static bool hudAppliedC;
@@ -102,7 +103,8 @@ namespace AeroMenu
                 {
                     fovTextC = typed ?? string.Empty;
                     float parsed;
-                    if (float.TryParse(fovTextC, NumberStyles.Float, CultureInfo.InvariantCulture, out parsed))
+                    if (float.TryParse(fovTextC, NumberStyles.Float, CultureInfo.InvariantCulture, out parsed) &&
+                        !float.IsNaN(parsed) && !float.IsInfinity(parsed))
                         extraFovValue = Mathf.Clamp(parsed, FovMinC, FovMaxC);
                 }
                 GUILayout.Label("[" + FormatFovC(extraFovValue) + "]", GUILayout.Width(56));
@@ -148,24 +150,40 @@ namespace AeroMenu
             try
             {
                 bool hideHud = extraHideHud;
-                if (hideHud != hudAppliedC || hideHud)
-                {
-                    ApplyHideHudC(hideHud);
-                    hudAppliedC = hideHud;
-                }
-
                 bool noVignette = extraNoVignette;
-                if (noVignette != vignetteAppliedC || noVignette)
-                {
-                    ApplyNoVignetteC(noVignette);
-                    vignetteAppliedC = noVignette;
-                }
-
                 bool customFov = extraCustomFov;
-                if (customFov != fovAppliedC || customFov)
+
+                if (forceApplyC)
                 {
+                    // A config load must actively undo disabled tweaks too;
+                    // stale state from the previous session would stick otherwise.
+                    ApplyHideHudC(hideHud);
+                    ApplyNoVignetteC(noVignette);
                     ApplyFovC(customFov);
+                    hudAppliedC = hideHud;
+                    vignetteAppliedC = noVignette;
                     fovAppliedC = customFov;
+                    forceApplyC = false;
+                }
+                else
+                {
+                    if (hideHud != hudAppliedC || hideHud)
+                    {
+                        ApplyHideHudC(hideHud);
+                        hudAppliedC = hideHud;
+                    }
+
+                    if (noVignette != vignetteAppliedC || noVignette)
+                    {
+                        ApplyNoVignetteC(noVignette);
+                        vignetteAppliedC = noVignette;
+                    }
+
+                    if (customFov != fovAppliedC || customFov)
+                    {
+                        ApplyFovC(customFov);
+                        fovAppliedC = customFov;
+                    }
                 }
 
                 ApplyFreeCursorC(extraFreeCursor);
@@ -183,7 +201,10 @@ namespace AeroMenu
 
                 float defaultFov = 60f;
                 try { if (Camera.main != null) defaultFov = Camera.main.fieldOfView; } catch { }
-                extraFovValue = Mathf.Clamp(PlayerPrefs.GetFloat("M_ExtrasC_extraFovValue", defaultFov), FovMinC, FovMaxC);
+                float savedFov = PlayerPrefs.GetFloat("M_ExtrasC_extraFovValue", defaultFov);
+                extraFovValue = float.IsNaN(savedFov) || float.IsInfinity(savedFov)
+                    ? defaultFov
+                    : Mathf.Clamp(savedFov, FovMinC, FovMaxC);
                 fovTextC = FormatFovC(extraFovValue);
 
                 extraFreeCursor = LoadBool("M_ExtrasC_extraFreeCursor", false);
@@ -192,11 +213,25 @@ namespace AeroMenu
                 try { fsDefault = Screen.fullScreen; } catch { }
                 extraFullscreenState = LoadBool("M_ExtrasC_extraFullscreenState", fsDefault);
 
-                // Force Tick to re-evaluate on the next frame from a clean slate.
+                // Force Tick to actively reapply every loaded value next frame.
                 hudAppliedC = false;
                 vignetteAppliedC = false;
                 fovAppliedC = false;
+                // Undo a cursor tweak applied by the previous config before
+                // re-evaluating. Without this, a reload with the option disabled
+                // leaves the cursor unlocked, and a reload with it enabled would
+                // capture the already-unlocked state as the "original" one.
+                if (cursorAppliedC)
+                {
+                    try
+                    {
+                        Cursor.lockState = cursorSavedLockC;
+                        Cursor.visible = cursorSavedVisibleC;
+                    }
+                    catch { }
+                }
                 cursorAppliedC = false;
+                forceApplyC = true;
                 cursorCapturedC = false;
 
                 // Restore the remembered fullscreen preference (best effort).

@@ -44,6 +44,6 @@ public static class ChatController_SetVisible_Patch
 {
     public static void Prefix(ref bool visible)
     {
-        if (AeroMenuGUI.alwaysChat) visible = true;
+        if (AeroMenuGUI.CanForceAlwaysChat()) visible = true;
     }
 }

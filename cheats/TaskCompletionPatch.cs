@@ -42,12 +42,12 @@ using Vector3 = UnityEngine.Vector3;
 [HarmonyPatch(typeof(GameManager), nameof(GameManager.CheckTaskCompletion))]
 public static class GameManager_CheckTaskCompletion_Patch
 {
-    public static bool Prefix(ref bool __result)
+    public static bool Prefix()
     {
         try
         {
             if (!AeroMenuGUI.neverEndGame) return true;
-            __result = false; return false;
+            return false;
         }
         catch { return true; }
     }

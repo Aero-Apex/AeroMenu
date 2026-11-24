@@ -60,7 +60,7 @@ internal static class GuardToast
 {
 	internal static void Show(string title, string detail, float duration)
 	{
-		try { AeroMenu.AeroMenuGUI.ShowNotification("[" + title + "] " + detail); } catch { }
+		try { AeroMenu.AeroMenuGUI.SendNotification(title, detail, duration); } catch { }
 	}
 }
 }

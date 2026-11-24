@@ -39,6 +39,7 @@ namespace AeroMenu
         private static float updateRetryAt;
         private static float updateNextAutoCheckAt;
         private static bool updatePrefsLoaded;
+        private static bool updateRestartPending;
 
         private static string GameDir
         {
@@ -104,7 +105,17 @@ namespace AeroMenu
             try
             {
                 if (!Directory.Exists(Plugin.AeroFolder)) Directory.CreateDirectory(Plugin.AeroFolder);
-                ApplyPendingUpdate();
+                string applyResult = ApplyPendingUpdate();
+                if (!string.IsNullOrEmpty(applyResult))
+                {
+                    updateStatus = applyResult;
+                    LogUpdater(applyResult);
+                }
+                else
+                {
+                    updateStatus = "Ready";
+                    LogUpdater("Ready");
+                }
                 // Stale helper from a previous failed update is harmless, but remove
                 // a stale pending file that is too small to be a real DLL.
                 string pending = PendingPath;
@@ -112,7 +123,6 @@ namespace AeroMenu
             }
             catch { }
             updateNextAutoCheckAt = Time.unscaledTime + 3f;
-            updateStatus = "Ready"; LogUpdater("Ready");
         }
 
         private static void LoadAutoUpdatePrefs()
@@ -127,16 +137,22 @@ namespace AeroMenu
             catch { }
         }
 
-        // Applies a staged update at startup, before the old DLL is needed again.
-        private static void ApplyPendingUpdate()
+        // Applies a staged update at startup. A loaded assembly can be locked on
+        // Windows; never silently swallow that - report it so the user can use
+        // Restart & Update, which replaces the DLL after the game has exited.
+        private static string ApplyPendingUpdate()
         {
+            string pending = PendingPath;
+            if (!File.Exists(pending)) return string.Empty;
+
             try
             {
-                string pending = PendingPath;
-                if (!File.Exists(pending)) return;
-
                 byte[] bytes = File.ReadAllBytes(pending);
-                if (!LooksLikeDll(bytes)) { File.Delete(pending); return; }
+                if (!LooksLikeDll(bytes))
+                {
+                    File.Delete(pending);
+                    return string.Empty;
+                }
 
                 string target = PluginPath;
                 string backup = BackupPath;
@@ -146,8 +162,12 @@ namespace AeroMenu
                 }
                 File.WriteAllBytes(target, bytes);
                 File.Delete(pending);
+                return "Staged update installed - restart once more to load it";
             }
-            catch { }
+            catch (Exception ex)
+            {
+                return "Staged update not installed: " + ShortError(ex) + " - use Restart & Update";
+            }
         }
 
         internal static void TickAutoUpdater()
@@ -155,9 +175,24 @@ namespace AeroMenu
             LoadAutoUpdatePrefs();
 
             if (updateBusy) return;
+            if (updateRestartPending && HasPendingUpdate())
+            {
+                updateRestartPending = false;
+                RestartAndUpdate();
+                return;
+            }
             if (updateRetryAt > 0f && Time.unscaledTime >= updateRetryAt)
             {
                 updateRetryAt = 0f;
+                StartUpdateCheck(true);
+                return;
+            }
+            // Restart & Update can be requested while another check is already
+            // running. That check may finish without staging anything, leaving
+            // the one-click request stuck; re-issue it as a forced check.
+            if (updateRestartPending && updateRetryAt <= 0f)
+            {
+                updateChecked = true;
                 StartUpdateCheck(true);
                 return;
             }
@@ -200,6 +235,15 @@ namespace AeroMenu
 
                 updateLatestVersion = tag;
                 bool newer = IsNewer(tag, Plugin.PluginVersion);
+                // A local dev build can be ahead of the published release.
+                // Never let a manual check downgrade it.
+                if (IsNewer(Plugin.PluginVersion, tag))
+                {
+                    updateRestartPending = false;
+                    updateStatus = "Local build is newer than " + tag;
+                    LogUpdater(updateStatus);
+                    return;
+                }
                 if (!newer && !manual)
                 {
                     updateStatus = "Up to date (v" + Plugin.PluginVersion + ")"; LogUpdater(updateStatus);
@@ -329,9 +373,17 @@ namespace AeroMenu
                 // already handled by Check now; tell the user in that case.
                 if (!HasPendingUpdate())
                 {
-                    updateStatus = "No update downloaded. Press Check now first.";
+                    // One click does the whole job: check/download, then restart
+                    // as soon as the staged DLL is ready.
+                    updateRestartPending = true;
+                    updateChecked = true;
+                    updateRetryAt = 0f;
+                    updateStatus = "Downloading update, then restarting...";
+                    LogUpdater(updateStatus);
+                    StartUpdateCheck(true);
                     return;
                 }
+                updateRestartPending = false;
                 if (!WriteUpdateHelper())
                 {
                     updateStatus = "Could not create update helper - update is staged for next launch.";
@@ -350,7 +402,7 @@ namespace AeroMenu
                 // Give the helper a moment to start before the game exits.
                 Thread t = new Thread(() =>
                 {
-                    Thread.Sleep(400);
+                    Thread.Sleep(1200);
                     try { UnityEngine.Object.FindObjectOfType<AeroMenuGUI>()?.FlushAllSaves(); } catch { }
                     try { AmongUsClient.Instance?.ExitGame(DisconnectReasons.ExitGame); } catch { }
                     Thread.Sleep(200);
@@ -362,6 +414,7 @@ namespace AeroMenu
             }
             catch (Exception ex)
             {
+                updateRestartPending = false;
                 updateStatus = "Restart failed: " + ShortError(ex);
             }
         }

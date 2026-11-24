@@ -492,7 +492,8 @@ private static void SetImmortalityVentState(bool enter)
             {
                 PlayerControl local = PlayerControl.LocalPlayer;
                 if (local == null || local.Data == null || ShipStatus.Instance == null) return;
-                if (local.inVent) return;
+                if (enter && local.inVent) return;
+                if (!enter && !immortalityVentStateApplied) return;
 
                 VentilationSystem.Update(enter ? VentilationSystem.Operation.Enter : VentilationSystem.Operation.Exit, ImmortalityCustomVentId);
                 immortalityVentStateApplied = enter;

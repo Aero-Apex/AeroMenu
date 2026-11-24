@@ -344,6 +344,19 @@ private static int trustedLocalCosmeticBudget;
 
 private static bool trustedLocalCosmeticPacket;
 
+// The local-outfit trust window only covers the RPCs that outfit apply
+// actually sends. Without this filter any RPC in the window bypasses
+// validation.
+private static readonly HashSet<int> TrustedCosmeticRpcIds = new HashSet<int>
+{
+	(int)RpcCalls.SetColor,
+	(int)RpcCalls.SetSkinStr,
+	(int)RpcCalls.SetHatStr,
+	(int)RpcCalls.SetVisorStr,
+	(int)RpcCalls.SetNamePlateStr,
+	(int)RpcCalls.SetPetStr
+};
+
 private static int activeInboundSenderClientId = -1;
 
 private static string activeInboundConnectionKey;
@@ -713,11 +726,10 @@ internal static bool CheckMessage(InnerNetClient client, MessageReader reader, S
 			return HarmonyControl.SkipOriginal;
 		}
 
-		if (IsTrustedLocalCosmeticApplyActive())
-		{
-			return HarmonyControl.Continue;
-		}
-
+		// Local-outfit trust is handled per-RPC in ShouldTrustLocalOutfitRpc
+		// (limited to TrustedCosmeticRpcIds). Do not let the trust window
+		// bypass validation of every inbound message here: it would skip the
+		// ban list, flood checks and GameData framing for unrelated packets.
 		PlatformSpoofGuard.InspectRawJoinMessage(client, reader);
 
 		if (BanAccessList.TryHandleJoinMessage(client, reader))

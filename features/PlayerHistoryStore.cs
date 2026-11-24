@@ -42,6 +42,90 @@ namespace AeroMenu
 {
     public partial class AeroMenuGUI : MonoBehaviour
     {
+// Encounter counts are tracked by stable identity key here instead of adding a
+// field to PlayerHistoryEntry (that model lives in MenuInputAndTabs.cs). They
+// are persisted as an extra line in AeroPlayerHistory.txt and surfaced through
+// the existing PLAYER HISTORY rows built by RebuildPlayerHistoryViewCache().
+private static readonly Dictionary<string, int> playerHistoryEncounters = new Dictionary<string, int>();
+private const int MaxTrackedPlayerHistoryEncounters = 4096;
+private const int MaxRecordedPlayerHistoryEncounters = 999;
+
+private static string GetPlayerHistoryEncounterKey(PlayerHistoryEntry entry)
+        {
+            if (entry == null) return string.Empty;
+
+            string puid = NormalizeHistoryIdentity(entry.Puid);
+            if (!string.IsNullOrEmpty(puid) && puid != "unknown") return "puid:" + puid;
+
+            string friendCode = NormalizeHistoryIdentity(entry.FriendCode);
+            if (!string.IsNullOrEmpty(friendCode) && friendCode != "hidden" && friendCode != "unknown")
+                return "fc:" + friendCode;
+
+            string name = NormalizeHistoryIdentity(entry.Name);
+            return string.IsNullOrEmpty(name) ? string.Empty : "name:" + name;
+        }
+
+private static int GetPlayerHistoryEncounterCount(PlayerHistoryEntry entry)
+        {
+            string key = GetPlayerHistoryEncounterKey(entry);
+            int count;
+            if (string.IsNullOrEmpty(key) || !playerHistoryEncounters.TryGetValue(key, out count) || count < 1)
+                return 1;
+            return count;
+        }
+
+private static void SetPlayerHistoryEncounterCount(PlayerHistoryEntry entry, int count)
+        {
+            string key = GetPlayerHistoryEncounterKey(entry);
+            if (string.IsNullOrEmpty(key)) return;
+            playerHistoryEncounters[key] = Mathf.Clamp(count, 1, MaxRecordedPlayerHistoryEncounters);
+        }
+
+// Keep the side table from growing forever after the history is cleared or keys change.
+private static void SyncPlayerHistoryEncounterKeys()
+        {
+            if (playerHistoryEntries.Count == 0)
+            {
+                playerHistoryEncounters.Clear();
+                return;
+            }
+            if (playerHistoryEncounters.Count <= MaxTrackedPlayerHistoryEncounters) return;
+
+            var liveKeys = new HashSet<string>();
+            for (int i = 0; i < playerHistoryEntries.Count; i++)
+            {
+                string key = GetPlayerHistoryEncounterKey(playerHistoryEntries[i]);
+                if (!string.IsNullOrEmpty(key)) liveKeys.Add(key);
+            }
+
+            var stale = new List<string>();
+            foreach (var pair in playerHistoryEncounters)
+            {
+                if (stale.Count >= 256) break;
+                if (!liveKeys.Contains(pair.Key)) stale.Add(pair.Key);
+            }
+            for (int i = 0; i < stale.Count; i++)
+                playerHistoryEncounters.Remove(stale[i]);
+        }
+
+private static string FormatHistoryTimestamp(DateTime value)
+        {
+            if (value == DateTime.MinValue) return "unknown";
+            return value.Date == DateTime.UtcNow.Date
+                ? value.ToString("HH:mm:ss")
+                : value.ToString("yyyy-MM-dd HH:mm");
+        }
+
+private static string FormatHistoryDuration(DateTime start, DateTime end)
+        {
+            TimeSpan span = end - start;
+            double seconds = span.TotalSeconds;
+            if (seconds < 1 || span.TotalDays > 30) return string.Empty;
+            if (span.TotalDays >= 1) return $"{(int)span.TotalDays}d {(int)span.Hours}h";
+            if (span.TotalHours >= 1) return $"{(int)span.TotalHours}h {span.Minutes}m";
+            return $"{(int)span.TotalMinutes}m {span.Seconds}s";
+        }
+
 private static void UpsertPlayerHistory(PlayerControl pc)
         {
             try
@@ -62,6 +146,7 @@ private static void UpsertPlayerHistory(PlayerControl pc)
                 string key = BuildPlayerHistoryKey(pc.Data.ClientId, fc, puid, name);
                 var item = FindPlayerHistoryEntry(key, pc.Data.ClientId, fc, puid, name);
                 bool changed = false;
+                bool startingNewSession = false;
                 if (item == null)
                 {
                     item = new PlayerHistoryEntry
@@ -77,10 +162,12 @@ private static void UpsertPlayerHistory(PlayerControl pc)
                         IsOnline = true
                     };
                     playerHistoryEntries.Add(item);
+                    SetPlayerHistoryEncounterCount(item, 1);
                     changed = true;
                 }
                 else
                 {
+                    startingNewSession = !item.IsOnline;
                     bool nameChanged = IsDifferentHistoryName(item.Name, name);
                     changed = item.Name != name ||
                               item.FriendCode != fc ||
@@ -105,6 +192,11 @@ private static void UpsertPlayerHistory(PlayerControl pc)
                     item.LastSeenUtc = DateTime.UtcNow;
                     item.LeftUtc = null;
                     item.IsOnline = true;
+                    if (startingNewSession)
+                    {
+                        SetPlayerHistoryEncounterCount(item, GetPlayerHistoryEncounterCount(item) + 1);
+                        changed = true;
+                    }
                 }
                 playerHistoryKeysById[pc.PlayerId] = key;
                 playerHistoryKeysByClientId[pc.Data.ClientId] = key;
@@ -508,11 +600,18 @@ private static void RebuildPlayerHistoryViewCache()
             foreach (var e in playerHistoryEntries.OrderByDescending(x => x.LastSeenUtc))
             {
                 string status = e.IsOnline ? "<color=#55FF77>ONLINE</color>" : "<color=#aaaaaa>LEFT</color>";
+                string leftText = e.LeftUtc.HasValue ? FormatHistoryTimestamp(e.LeftUtc.Value) : "online";
+                string times = $"Joined: {FormatHistoryTimestamp(e.FirstSeenUtc)} | Left: {leftText}";
+                if (e.LeftUtc.HasValue)
+                {
+                    string duration = FormatHistoryDuration(e.FirstSeenUtc, e.LeftUtc.Value);
+                    if (!string.IsNullOrEmpty(duration)) times += $" | {duration}";
+                }
                 playerHistoryViewRows.Add(new PlayerHistoryViewRow
                 {
                     Header = $"{FormatPlayerHistoryDisplayName(e)}  {status}",
-                    Identity = $"Lv: {e.Level} | FC: {e.FriendCode} | PUID: {e.Puid}",
-                    Times = $"Joined: {e.FirstSeenUtc:HH:mm:ss} | Left: {(e.LeftUtc.HasValue ? e.LeftUtc.Value.ToString("HH:mm:ss") : "online")}",
+                    Identity = $"Lv: {e.Level} | Met: {GetPlayerHistoryEncounterCount(e)} | FC: {e.FriendCode} | PUID: {e.Puid}",
+                    Times = times,
                     Platform = $"Platform: {FormatPlatformHistory(e)}",
                     Rpc = $"RPC: {FormatRpcHistory(e)}"
                 });
@@ -584,6 +683,12 @@ private static void EnsurePlayerHistoryLoaded()
                     {
                         current.Puid = line.Substring("PUID: ".Length).Trim();
                     }
+                    else if (current != null && line.StartsWith("Encounters: "))
+                    {
+                        int encounters;
+                        if (int.TryParse(line.Substring("Encounters: ".Length).Trim(), out encounters))
+                            SetPlayerHistoryEncounterCount(current, encounters);
+                    }
                     else if (current != null && line.StartsWith("Joined UTC: "))
                     {
                         DateTime parsed;
@@ -653,6 +758,9 @@ private static void AddLoadedPlayerHistoryEntry(PlayerHistoryEntry entry)
                 return;
             }
 
+            int loadedEncounters = GetPlayerHistoryEncounterCount(entry);
+            int mergedEncounters = GetPlayerHistoryEncounterCount(existing);
+
             if (entry.LastSeenUtc > existing.LastSeenUtc)
             {
                 if (IsDifferentHistoryName(existing.Name, entry.Name))
@@ -678,6 +786,10 @@ private static void AddLoadedPlayerHistoryEntry(PlayerHistoryEntry entry)
             {
                 MergePreviousPlayerHistoryNames(existing, entry);
             }
+
+            // Keep the highest encounter count when two records of the same player merge.
+            if (loadedEncounters > mergedEncounters)
+                SetPlayerHistoryEncounterCount(existing, loadedEncounters);
 
             foreach (byte rpc in entry.RpcCalls)
             {
@@ -754,6 +866,7 @@ private static string FormatRpcHistory(PlayerHistoryEntry entry)
 private static void WritePlayerHistoryFile()
         {
             InvalidatePlayerHistoryViewCache();
+            SyncPlayerHistoryEncounterKeys();
 
             try
             {
@@ -775,6 +888,7 @@ private static void WritePlayerHistoryFile()
                     lines.Add($"Level: {e.Level}");
                     lines.Add($"FriendCode: {e.FriendCode}");
                     lines.Add($"PUID: {e.Puid}");
+                    lines.Add($"Encounters: {GetPlayerHistoryEncounterCount(e)}");
                     lines.Add($"Joined UTC: {e.FirstSeenUtc:yyyy-MM-dd HH:mm:ss}");
                     lines.Add($"Left UTC: {left}");
                     lines.Add($"Platform: {FormatPlatformHistory(e)}");

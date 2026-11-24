@@ -484,10 +484,11 @@ private void DrawLocalIntRow(string label, float width, ref int val, int min, in
             GUILayout.Label(label, labSt, GUILayout.Width(labelW), GUILayout.Height(22f));
             if (GUILayout.Button("-", btnStyle, GUILayout.Width(24f), GUILayout.Height(22f)))
             {
-                val -= stepI;
+                int next = Mathf.Clamp(val - stepI, min, max);
+                if (next != val) lobbySettingsDirty = true;
+                val = next;
                 lobbySetInputs[key] = val.ToString();
                 lobbySetEditKey = "";
-                lobbySettingsDirty = true;
             }
             GUILayout.Space(4f);
             if (GUILayout.Button(lobbySetInputs[key], fldSt, GUILayout.Width(fieldW), GUILayout.Height(22f)))
@@ -497,19 +498,21 @@ private void DrawLocalIntRow(string label, float width, ref int val, int min, in
             }
             if (edit && ReadLobbyNumKeys(key, false))
             {
-                if (int.TryParse(lobbySetInputs[key], out int n) && n != val)
+                if (int.TryParse(lobbySetInputs[key], out int n))
                 {
-                    val = n;
-                    lobbySettingsDirty = true;
+                    int clamped = Mathf.Clamp(n, min, max);
+                    if (clamped != val) lobbySettingsDirty = true;
+                    val = clamped;
                 }
             }
             GUILayout.Space(4f);
             if (GUILayout.Button("+", btnStyle, GUILayout.Width(24f), GUILayout.Height(22f)))
             {
-                val += stepI;
+                int next = Mathf.Clamp(val + stepI, min, max);
+                if (next != val) lobbySettingsDirty = true;
+                val = next;
                 lobbySetInputs[key] = val.ToString();
                 lobbySetEditKey = "";
-                lobbySettingsDirty = true;
             }
             GUILayout.EndHorizontal();
         }

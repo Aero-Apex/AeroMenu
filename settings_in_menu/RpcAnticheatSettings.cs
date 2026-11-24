@@ -66,7 +66,7 @@ public static bool enableHostPasosBan = true;
 
 public static bool autoBanBrokenFriendCode = false;
 
-public static int chatRpcLimit = 1;
+public static int chatRpcLimit = 5;
 
 public static float chatRpcWindow = 1f;
 

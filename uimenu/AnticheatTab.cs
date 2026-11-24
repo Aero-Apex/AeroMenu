@@ -200,7 +200,9 @@ private void DrawAntiCheatTab()
             {
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(L("Timer:", "Таймер:"), toggleLabelStyle, GUILayout.Height(22), GUILayout.Width(62));
+                float oldAutoTimer = autoKickTimer;
                 autoKickTimer = GUILayout.HorizontalSlider(autoKickTimer, 1f, 15f, sliderStyle, sliderThumbStyle, GUILayout.Width(112));
+                if (Mathf.Abs(oldAutoTimer - autoKickTimer) > 0.001f) settingsDirty = true;
                 GUILayout.Space(8);
                 GUILayout.Label(autoKickTimer.ToString("0.0") + "s", menuBadgeStyle, GUILayout.Width(46), GUILayout.Height(22));
                 GUILayout.FlexibleSpace();

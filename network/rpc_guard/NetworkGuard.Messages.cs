@@ -301,6 +301,8 @@ private static void CaptureGameDataEnvelope(MessageReader reader, byte tag, Send
 		activeInboundDataFloodDetail = null;
 		activeInboundHasNetIdOverflow = false;
 		activeInboundNetIdOverflowDetail = null;
+		activeInboundPhantomFlood = false;
+		activeInboundHasPhantomNetId = false;
 		ScratchSpawnNetIds.Clear();
 		if (reader == null)
 		{
@@ -926,6 +928,12 @@ private static bool ShouldTrustLocalOutfitRpc(PlayerControl player, int callId, 
 		}
 
 		if (!IsTrustedLocalCosmeticApplyActive() || player.PlayerId != trustedLocalCosmeticPlayerId)
+		{
+			ClearTrustedLocalCosmeticApply();
+			return false;
+		}
+
+		if (!TrustedCosmeticRpcIds.Contains(callId))
 		{
 			ClearTrustedLocalCosmeticApply();
 			return false;

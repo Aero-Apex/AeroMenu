@@ -1109,17 +1109,22 @@ private static bool LooksLikeClientIdMember(string memberName)
 			return false;
 		}
 
-		string lower = memberName.Trim().ToLowerInvariant();
-		if (lower.Length == 0)
+		string trimmed = memberName.Trim();
+		if (trimmed.Length == 0)
 		{
 			return false;
 		}
 
-		if (lower.EndsWith("id", StringComparison.Ordinal))
+		// Match the C# "Id"/"ID" suffix only. A case-insensitive "id" suffix also
+		// matches ordinary words like "Valid", "Rapid" or "Grid", which can be
+		// mistaken for a client id and misattribute a packet to the wrong player.
+		if (trimmed.EndsWith("Id", StringComparison.Ordinal) ||
+			trimmed.EndsWith("ID", StringComparison.Ordinal))
 		{
 			return true;
 		}
 
+		string lower = trimmed.ToLowerInvariant();
 		for (int i = 0; i < ConnectionTokens.Length; i++)
 		{
 			if (lower.IndexOf(ConnectionTokens[i], StringComparison.Ordinal) >= 0)
@@ -1375,7 +1380,8 @@ private static bool IsDangerousChat(string text)
 		}
 
 		string lower = text.ToLowerInvariant();
-		if (lower.Contains("<size") || lower.Contains("voffset") || lower.Contains("<mark") || lower.Contains("<material") || lower.Contains("<quad"))
+		// A bare word like "voffset" in ordinary chat is not a rich-text tag.
+		if (lower.Contains("<size") || lower.Contains("<voffset") || lower.Contains("<mark") || lower.Contains("<material") || lower.Contains("<quad"))
 		{
 			return true;
 		}

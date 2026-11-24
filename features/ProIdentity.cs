@@ -192,6 +192,11 @@ namespace AeroMenu
                 proPetSpin = LoadBool("M_ProU_proPetSpin", proPetSpin);
 
                 proUPrevColorOnStart = proRandomColorOnStart;
+
+                // The toggle persists but the generated name did not; restore
+                // it on load so the feature still works after a relaunch.
+                if (proRandomName && string.IsNullOrEmpty(proURandomName))
+                    proURandomName = GenerateNicknameU();
             }
             catch { }
         }

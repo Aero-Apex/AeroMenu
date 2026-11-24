@@ -64,8 +64,8 @@ public static class RevealVotesPatch
 
     internal static void ClearVoteIcons(MeetingHud meeting)
     {
-        if (meeting == null || meeting.playerStates == null) return;
-        foreach (var item in meeting.playerStates)
+        if (meeting == null) return;
+        if (meeting.playerStates != null) foreach (var item in meeting.playerStates)
         {
             if (item == null) continue;
             var component = item.transform.GetComponent<VoteSpreader>();
@@ -73,6 +73,18 @@ public static class RevealVotesPatch
             {
                 foreach (var sprite in component.Votes) Object.DestroyImmediate(sprite.gameObject);
                 component.Votes.Clear();
+            }
+        }
+
+        // Skip votes hang off SkippedVoting, not playerStates, so they would
+        // otherwise survive every clean-up and pile up across meetings.
+        if (meeting.SkippedVoting != null)
+        {
+            var skipped = meeting.SkippedVoting.GetComponent<VoteSpreader>();
+            if (skipped != null && skipped.Votes != null && skipped.Votes.Count != 0)
+            {
+                foreach (var sprite in skipped.Votes) Object.DestroyImmediate(sprite.gameObject);
+                skipped.Votes.Clear();
             }
         }
     }

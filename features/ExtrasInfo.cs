@@ -15,6 +15,8 @@ namespace AeroMenu
         public static bool extraTaskProgressPanel = false;
         public static bool extraMeetingTimerPanel = false;
         public static bool extraPingPanel = false;
+        public static bool extraLocalPlayerPanel = false;
+        public static bool extraGameRulesPanel = false;
 
         // ===== Cached overlay resources (created lazily, never per-frame) =====
         private static bool extrasBStylesReady;
@@ -70,6 +72,16 @@ namespace AeroMenu
                 GUILayout.Label(MenuText(L("Network Info", "\u0421\u0435\u0442\u0435\u0432\u0430\u044F \u0438\u043D\u0444\u043E\u0440\u043C\u0430\u0446\u0438\u044F")), subTabStyle != null ? subTabStyle : activeTabStyle);
                 extraPingPanel = DrawToggle(extraPingPanel, MenuText(L("Show network info panel", "\u041F\u043E\u043A\u0430\u0437\u0430\u0442\u044C \u0441\u0435\u0442\u0435\u0432\u0443\u044E \u0438\u043D\u0444\u043E\u0440\u043C\u0430\u0446\u0438\u044E")), w);
                 GUILayout.Label(MenuText(L("Region / ping / connection state (N/A when unavailable).", "\u0420\u0435\u0433\u0438\u043E\u043D / ping / \u0441\u043E\u0441\u0442\u043E\u044F\u043D\u0438\u0435 (N/A \u0435\u0441\u043B\u0438 \u043D\u0435\u0434\u043E\u0441\u0442\u0443\u043F\u043D\u043E).")), menuDescStyle);
+                GUILayout.Space(6);
+
+                GUILayout.Label(MenuText(L("Local Player", "\u041b\u043e\u043a\u0430\u043b\u044c\u043d\u044b\u0439 \u0438\u0433\u0440\u043e\u043a")), subTabStyle != null ? subTabStyle : activeTabStyle);
+                extraLocalPlayerPanel = DrawToggle(extraLocalPlayerPanel, MenuText(L("Show local player panel", "\u041f\u043e\u043a\u0430\u0437\u0430\u0442\u044c \u043f\u0430\u043d\u0435\u043b\u044c \u043b\u043e\u043a\u0430\u043b\u044c\u043d\u043e\u0433\u043e \u0438\u0433\u0440\u043e\u043a\u0430")), w);
+                GUILayout.Label(MenuText(L("Your role, alive state and remaining kill cooldown.", "\u0412\u0430\u0448\u0430 \u0440\u043e\u043b\u044c, \u0441\u043e\u0441\u0442\u043e\u044f\u043d\u0438\u0435 \u0438 \u043e\u0441\u0442\u0430\u0432\u0448\u0435\u0435\u0441\u044f \u041a\u0414 \u0443\u0431\u0438\u0439\u0441\u0442\u0432\u0430.")), menuDescStyle);
+                GUILayout.Space(6);
+
+                GUILayout.Label(MenuText(L("Game Rules", "\u041f\u0440\u0430\u0432\u0438\u043b\u0430 \u0438\u0433\u0440\u044b")), subTabStyle != null ? subTabStyle : activeTabStyle);
+                extraGameRulesPanel = DrawToggle(extraGameRulesPanel, MenuText(L("Show game rules panel", "\u041f\u043e\u043a\u0430\u0437\u0430\u0442\u044c \u043f\u0430\u043d\u0435\u043b\u044c \u043f\u0440\u0430\u0432\u0438\u043b \u0438\u0433\u0440\u044b")), w);
+                GUILayout.Label(MenuText(L("Lobby rules at a glance: impostors, cooldown, speed, tasks, vision.", "\u041f\u0440\u0430\u0432\u0438\u043b\u0430 \u043b\u043e\u0431\u0431\u0438: \u043f\u0440\u0435\u0434\u0430\u0442\u0435\u043b\u0438, \u041a\u0414, \u0441\u043a\u043e\u0440\u043e\u0441\u0442\u044c, \u0437\u0430\u0434\u0430\u0447\u0438, \u043e\u0431\u0437\u043e\u0440.")), menuDescStyle);
 
                 GUILayout.EndVertical();
                 began = false;
@@ -101,6 +113,8 @@ namespace AeroMenu
                 extraTaskProgressPanel = LoadBoolB("M_ExtrasB_extraTaskProgressPanel", extraTaskProgressPanel);
                 extraMeetingTimerPanel = LoadBoolB("M_ExtrasB_extraMeetingTimerPanel", extraMeetingTimerPanel);
                 extraPingPanel = LoadBoolB("M_ExtrasB_extraPingPanel", extraPingPanel);
+                extraLocalPlayerPanel = LoadBoolB("M_ExtrasB_extraLocalPlayerPanel", extraLocalPlayerPanel);
+                extraGameRulesPanel = LoadBoolB("M_ExtrasB_extraGameRulesPanel", extraGameRulesPanel);
             }
             catch { }
         }
@@ -114,6 +128,8 @@ namespace AeroMenu
                 SaveBoolB("M_ExtrasB_extraTaskProgressPanel", extraTaskProgressPanel);
                 SaveBoolB("M_ExtrasB_extraMeetingTimerPanel", extraMeetingTimerPanel);
                 SaveBoolB("M_ExtrasB_extraPingPanel", extraPingPanel);
+                SaveBoolB("M_ExtrasB_extraLocalPlayerPanel", extraLocalPlayerPanel);
+                SaveBoolB("M_ExtrasB_extraGameRulesPanel", extraGameRulesPanel);
             }
             catch { }
         }
@@ -126,7 +142,8 @@ namespace AeroMenu
             if (e == null || e.type != EventType.Repaint) return;
 
             if (!extraRoomCodePanel && !extraPlayerCountPanel && !extraTaskProgressPanel &&
-                !extraMeetingTimerPanel && !extraPingPanel) return;
+                !extraMeetingTimerPanel && !extraPingPanel && !extraLocalPlayerPanel &&
+                !extraGameRulesPanel) return;
 
             Color previousColor = GUI.color;
             try
@@ -160,7 +177,17 @@ namespace AeroMenu
                 }
                 if (extraPingPanel)
                 {
-                    DrawInfoPanelB(x, y, w, L("NETWORK", "\u0421\u0415\u0422\u042C"), GetPingBodyB());
+                    y = DrawInfoPanelB(x, y, w, L("NETWORK", "\u0421\u0415\u0422\u042C"), GetPingBodyB());
+                    if (y + 60f > Screen.height) return;
+                }
+                if (extraLocalPlayerPanel)
+                {
+                    y = DrawInfoPanelB(x, y, w, L("LOCAL PLAYER", "\u041b\u041e\u041a\u0410\u041b\u042c\u041d\u042b\u0419 \u0418\u0413\u0420\u041e\u041a"), GetLocalPlayerBodyB());
+                    if (y + 60f > Screen.height) return;
+                }
+                if (extraGameRulesPanel)
+                {
+                    DrawInfoPanelB(x, y, w, L("GAME RULES", "\u041f\u0420\u0410\u0412\u0418\u041b\u0410 \u0418\u0413\u0420\u042b"), GetGameRulesBodyB());
                 }
             }
             catch { }
@@ -424,6 +451,163 @@ namespace AeroMenu
             catch { }
 
             return "Region: <b>" + region + "</b>\nPing: " + ping + "\nState: " + state;
+        }
+
+        private static string GetLocalPlayerBodyB()
+        {
+            string role = "N/A";
+            string status = "N/A";
+            string cooldown = string.Empty;
+
+            try
+            {
+                PlayerControl local = PlayerControl.LocalPlayer;
+                if (local != null)
+                {
+                    object data = GetMemberValueB(local, "Data");
+
+                    bool dead = false;
+                    TryGetBoolB(GetMemberValueB(data, "IsDead", "isDead"), out dead);
+                    status = dead ? "Dead" : "Alive";
+
+                    object roleObj = GetMemberValueB(data, "Role", "role");
+                    bool isImp = false;
+                    TryGetBoolB(GetMemberValueB(roleObj, "IsImpostor", "isImpostor"), out isImp);
+
+                    object roleName = GetMemberValueB(roleObj,
+                        "NiceName", "StringName", "Name", "name", "RoleName", "roleName");
+                    string r = roleName != null ? roleName.ToString() : string.Empty;
+                    if (string.IsNullOrWhiteSpace(r)) r = isImp ? "Impostor" : "Crewmate";
+                    role = r;
+
+                    float timer;
+                    if (TryGetFloatB(GetMemberValueB(local, "killTimer", "KillTimer"), out timer) && timer > 0f)
+                        cooldown = timer.ToString("0.0") + "s";
+                    else if (isImp)
+                        cooldown = "Ready";
+                }
+            }
+            catch { }
+
+            string body = "Role: <b>" + role + "</b>\nStatus: <b>" + status + "</b>";
+            if (!string.IsNullOrEmpty(cooldown)) body += "\nKill CD: <b>" + cooldown + "</b>";
+            return body;
+        }
+
+        private static string GetGameRulesBodyB()
+        {
+            string impostors = "N/A";
+            string killCd = "N/A";
+            string speed = "N/A";
+            string tasks = "N/A";
+            string vision = "N/A";
+
+            try
+            {
+                object opts = GetCurrentGameOptionsB();
+                if (opts != null)
+                {
+                    int n;
+                    float f;
+
+                    if (TryGetIntOptionB(opts, "NumImpostors", out n)) impostors = n.ToString();
+                    if (TryGetFloatOptionB(opts, "KillCooldown", out f)) killCd = f.ToString("0") + "s";
+                    if (TryGetFloatOptionB(opts, "PlayerSpeedMod", out f)) speed = f.ToString("0.00") + "x";
+
+                    int common, longTasks, shortTasks;
+                    if (TryGetIntOptionB(opts, "NumCommonTasks", out common) &&
+                        TryGetIntOptionB(opts, "NumLongTasks", out longTasks) &&
+                        TryGetIntOptionB(opts, "NumShortTasks", out shortTasks))
+                        tasks = common + " / " + longTasks + " / " + shortTasks;
+
+                    float crewVision, impVision;
+                    if (TryGetFloatOptionB(opts, "CrewLightMod", out crewVision) &&
+                        TryGetFloatOptionB(opts, "ImpostorLightMod", out impVision))
+                        vision = crewVision.ToString("0.00") + " / " + impVision.ToString("0.00");
+                }
+            }
+            catch { }
+
+            return "Impostors: <b>" + impostors + "</b>\nKill CD: <b>" + killCd +
+                   "</b>\nSpeed: <b>" + speed + "</b>\nTasks: " + tasks + "\nVision: " + vision;
+        }
+
+        private static object GetCurrentGameOptionsB()
+        {
+            try
+            {
+                object mgr = GameOptionsManager.Instance;
+                return GetMemberValueB(mgr, "CurrentGameOptions", "currentGameOptions");
+            }
+            catch { return null; }
+        }
+
+        private static bool TryGetIntOptionB(object opts, string optionName, out int value)
+        {
+            value = 0;
+            if (opts == null) return false;
+            try
+            {
+                MethodInfo[] methods = opts.GetType().GetMethods(
+                    BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                for (int i = 0; i < methods.Length; i++)
+                {
+                    MethodInfo m = methods[i];
+                    if (m.Name != "GetInt" && m.Name != "GetInteger") continue;
+                    ParameterInfo[] ps = m.GetParameters();
+                    if (ps.Length != 1) continue;
+
+                    Type pt = ps[0].ParameterType;
+                    object arg;
+                    try { arg = pt.IsEnum ? Enum.Parse(pt, optionName, true) : Convert.ChangeType(optionName, pt); }
+                    catch { continue; }
+
+                    try
+                    {
+                        object r = m.Invoke(opts, new object[] { arg });
+                        if (r == null) continue;
+                        value = Convert.ToInt32(r);
+                        return true;
+                    }
+                    catch { }
+                }
+            }
+            catch { }
+            return false;
+        }
+
+        private static bool TryGetFloatOptionB(object opts, string optionName, out float value)
+        {
+            value = 0f;
+            if (opts == null) return false;
+            try
+            {
+                MethodInfo[] methods = opts.GetType().GetMethods(
+                    BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                for (int i = 0; i < methods.Length; i++)
+                {
+                    MethodInfo m = methods[i];
+                    if (m.Name != "GetFloat") continue;
+                    ParameterInfo[] ps = m.GetParameters();
+                    if (ps.Length != 1) continue;
+
+                    Type pt = ps[0].ParameterType;
+                    object arg;
+                    try { arg = pt.IsEnum ? Enum.Parse(pt, optionName, true) : Convert.ChangeType(optionName, pt); }
+                    catch { continue; }
+
+                    try
+                    {
+                        object r = m.Invoke(opts, new object[] { arg });
+                        if (r == null) continue;
+                        value = Convert.ToSingle(r);
+                        return true;
+                    }
+                    catch { }
+                }
+            }
+            catch { }
+            return false;
         }
 
         // ---------- Generic reflection helpers ----------

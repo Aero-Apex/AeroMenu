@@ -74,6 +74,7 @@ public static bool IsLobbyWhitelisted(PlayerControl pc)
         {
             if (IsBuiltInProtected(pc)) return true;
             if (pc == null || pc.Data == null) return false;
+            EnsureLobbyWhitelistLoaded();
 
             try
             {
@@ -97,6 +98,7 @@ public static bool IsLobbyWhitelisted(PlayerControl pc)
 private static bool IsLobbyWhitelistedIdentity(string name, string fc, string puid)
         {
             if (IsBuiltInProtectedName(name)) return true;
+            EnsureLobbyWhitelistLoaded();
             if (!string.IsNullOrWhiteSpace(puid) && puid != "Unknown" && lobbyWhitelist.Contains("puid:" + puid.Trim()))
                 return true;
             if (!string.IsNullOrWhiteSpace(fc) && fc != "Hidden" && fc != "Unknown" && lobbyWhitelist.Contains("fc:" + fc.Trim()))
@@ -143,8 +145,8 @@ public static bool IsBuiltInProtected(int clientId)
                     foreach (PlayerControl pc in PlayerControl.AllPlayerControls)
                     {
                         if (pc == null || pc.Data == null) continue;
-                        if (pc.Data.ClientId == clientId || (int)pc.OwnerId == clientId)
-                            return IsBuiltInProtected(pc);
+                        if ((pc.Data.ClientId == clientId || (int)pc.OwnerId == clientId) && IsBuiltInProtected(pc))
+                            return true;
                     }
                 }
             }
@@ -158,8 +160,8 @@ public static bool IsBuiltInProtected(int clientId)
                 while (cursor.MoveNext())
                 {
                     ClientData data = cursor.Current;
-                    if (data != null && data.Id == clientId)
-                        return IsBuiltInProtected(data);
+                    if (data != null && data.Id == clientId && IsBuiltInProtected(data))
+                        return true;
                 }
             }
             catch { }
@@ -213,8 +215,8 @@ public static bool IsProtectedFromAnticheat(int clientId)
                     foreach (PlayerControl pc in PlayerControl.AllPlayerControls)
                     {
                         if (pc == null || pc.Data == null) continue;
-                        if (pc.Data.ClientId == clientId || (int)pc.OwnerId == clientId)
-                            return IsProtectedFromAnticheat(pc);
+                        if ((pc.Data.ClientId == clientId || (int)pc.OwnerId == clientId) && IsProtectedFromAnticheat(pc))
+                            return true;
                     }
                 }
             }
@@ -228,8 +230,8 @@ public static bool IsProtectedFromAnticheat(int clientId)
                 while (cursor.MoveNext())
                 {
                     ClientData data = cursor.Current;
-                    if (data != null && data.Id == clientId)
-                        return IsProtectedFromAnticheat(data);
+                    if (data != null && data.Id == clientId && IsProtectedFromAnticheat(data))
+                        return true;
                 }
             }
             catch { }

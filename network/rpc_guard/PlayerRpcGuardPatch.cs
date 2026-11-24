@@ -59,7 +59,7 @@ using UnityEngine;
 [HarmonyPatch(typeof(PlayerControl), "HandleRpc")]
 internal static class PlayerRpcProtectionPatch
 {
-	public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] int callId, [HarmonyArgument(1)] MessageReader reader)
+	public static bool Prefix(PlayerControl __instance, [HarmonyArgument(0)] byte callId, [HarmonyArgument(1)] MessageReader reader)
 	{
 		if (!AeroMenu.AeroMenuGUI.oldAntiCheatVersion) return true;
 		using (AeroNetGuard.NetGuardProfiler.Sample("Net.CheckRpc"))

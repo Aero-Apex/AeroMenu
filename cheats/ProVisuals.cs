@@ -223,7 +223,8 @@ namespace AeroMenu
 
         private static void EnsureStylesO()
         {
-            if (proOStylesReadyO && proOWhiteTexO != null && proOArrowTexO != null) return;
+            if (proOStylesReadyO && proOWhiteTexO != null && proODarkTexO != null &&
+                proOArrowTexO != null && proOLabelStyleO != null) return;
             try
             {
                 if (proOWhiteTexO == null)

@@ -42,6 +42,9 @@ namespace AeroMenu
                 case EventType.MouseDown:
                     if (r.Contains(e.mousePosition))
                     {
+                        // Clear the legacy "isEditingX" flags too, otherwise typing
+                        // here also feeds whichever pseudo-input was still active.
+                        ClearAllEditingFlags();
                         aeroFocusedField = id;
                         e.Use();
                     }

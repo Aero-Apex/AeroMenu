@@ -140,7 +140,7 @@ namespace AeroMenu
             try
             {
                 Event e = Event.current;
-                if (e != null && e.type != EventType.Repaint) return;
+                if (e == null || e.type != EventType.Repaint) return;
 
                 EnsurePanelStylesG();
                 EnsureWhiteTextureG();

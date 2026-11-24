@@ -188,7 +188,11 @@ namespace AeroMenu
 
                     if (GUILayout.Button(MenuText(L("Apply Preset", "Применить пресет")),
                             btnStyle, GUILayout.Height(24)))
-                        ApplyGamePresetP();
+                    {
+                        if (proGamePreset) ApplyGamePresetP();
+                        else ShowNotification("<color=#FFAA00>[PRESET]</color> " +
+                            L("Enable Game preset first.", "Сначала включите пресет игры."));
+                    }
 
                     string name = GamePresetNamesP[Mathf.Clamp(proGamePresetIndex, 0, GamePresetNamesP.Length - 1)];
                     GUILayout.Label(MenuText(L("Selected: ", "Выбран: ") + name +

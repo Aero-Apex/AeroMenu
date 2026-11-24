@@ -106,7 +106,7 @@ private static void FixSendModeObj(object obj)
                 if (chat.freeChatField != null && chat.freeChatField.textArea != null && chat.freeChatField.textArea.hasFocus)
                     return true;
 
-                return true;
+                return false;
             }
             catch { return false; }
         }

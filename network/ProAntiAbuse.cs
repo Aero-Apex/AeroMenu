@@ -203,8 +203,10 @@ namespace AeroMenu
                 if (client == null) return;
 
                 object result;
-                if (ProSTryInvokeS(client, "KickClient", new object[] { owner }, out result)) return;
-                ProSTryInvokeS(client, "KickClient", new object[] { owner, "Abnormal NetId", false }, out result);
+                // AmongUsClient (InnerNetClient) exposes KickPlayer(int, bool);
+                // there is no KickClient method, so the old name never kicked.
+                if (ProSTryInvokeS(client, "KickPlayer", new object[] { owner, false }, out result)) return;
+                ProSTryInvokeS(client, "KickPlayer", new object[] { owner }, out result);
             }
             catch { }
         }

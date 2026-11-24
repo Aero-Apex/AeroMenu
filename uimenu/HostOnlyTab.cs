@@ -419,8 +419,13 @@ public static void AddToBanList(string friendCode, string puid, string name, str
                 bool hasFc = HasBanId(fc);
                 bool hasPuid = HasBanId(productId);
                 if (!hasFc && !hasPuid) return;
-                if (hasFc && bannedFriendCodes.Contains(fc)) return;
-                if (hasPuid && bannedProductUserIds.Contains(productId)) return;
+                bool knownFc = hasFc && bannedFriendCodes.Contains(fc);
+                bool knownPuid = hasPuid && bannedProductUserIds.Contains(productId);
+                if (knownFc && knownPuid) return;
+                // One identifier can already be banned while the other is new;
+                // record the new one instead of dropping the whole entry.
+                if (knownFc && !hasPuid) return;
+                if (knownPuid && !hasFc) return;
 
                 string date = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ");
                 string entry = $"{fc}|{productId}|{name}|{date}|{reason}";
@@ -1092,89 +1097,94 @@ private void DrawHostOnlyTab()
 
 private void DrawVisualsInGame()
         {
+            // Two hard-coded 210px toggles overflowed the card on narrow windows.
+            // Size each toggle from the real card width (32px padding + a small gap).
+            float visualsCardWidth = GetMenuWorkWidth(220f, 760f);
+            int visualsToggleWidth = Mathf.RoundToInt(Mathf.Clamp((visualsCardWidth - 38f) * 0.5f, 82f, 360f));
+
             GUILayout.BeginVertical(menuCardStyle);
             DrawMenuSectionHeader(L("VISIBILITY", "ВИДИМОСТЬ"));
             GUILayout.BeginHorizontal();
-            seeGhosts = DrawToggle(seeGhosts, L("See Ghosts", "Видеть призраков"), 210);
-            seePhantoms = DrawToggle(seePhantoms, L("See Phantoms", "Видеть фантомов"), 210);
+            seeGhosts = DrawToggle(seeGhosts, L("See Ghosts", "Видеть призраков"), visualsToggleWidth);
+            seePhantoms = DrawToggle(seePhantoms, L("See Phantoms", "Видеть фантомов"), visualsToggleWidth);
             GUILayout.EndHorizontal();
             GUILayout.Space(5);
 
             GUILayout.BeginHorizontal();
-            seeRoles = DrawToggle(seeRoles, L("See Roles", "Видеть роли"), 210);
-            SeePlayersInVent = DrawToggle(SeePlayersInVent, L("See Players In Vents", "Видеть игроков в люках"), 210);
+            seeRoles = DrawToggle(seeRoles, L("See Roles", "Видеть роли"), visualsToggleWidth);
+            SeePlayersInVent = DrawToggle(SeePlayersInVent, L("See Players In Vents", "Видеть игроков в люках"), visualsToggleWidth);
             GUILayout.EndHorizontal();
             GUILayout.Space(5);
 
             GUILayout.BeginHorizontal();
             bool previousSeeProtections = seeProtections;
-            seeProtections = DrawToggle(seeProtections, L("See Protections", "Видеть щиты"), 210);
+            seeProtections = DrawToggle(seeProtections, L("See Protections", "Видеть щиты"), visualsToggleWidth);
             if (!previousSeeProtections && seeProtections)
                 PlayerControl_TurnOnProtection_Patch.RefreshVisibleProtections();
-            fullBright = DrawToggle(fullBright, L("Full Bright (No Shadows)", "Полная яркость (Нет теней)"), 210);
+            fullBright = DrawToggle(fullBright, L("Full Bright (No Shadows)", "Полная яркость (Нет теней)"), visualsToggleWidth);
             GUILayout.EndHorizontal();
             GUILayout.Space(10);
 
             DrawMenuSectionHeader("ESP");
             GUILayout.BeginHorizontal();
-            showPlayerInfo = DrawToggle(showPlayerInfo, L("Show Player Info", "Информация об игроках"), 210);
-            showEspFriendCode = DrawToggle(showEspFriendCode, L("Show FC In ESP", "FriendCode в ESP"), 210);
+            showPlayerInfo = DrawToggle(showPlayerInfo, L("Show Player Info", "Информация об игроках"), visualsToggleWidth);
+            showEspFriendCode = DrawToggle(showEspFriendCode, L("Show FC In ESP", "FriendCode в ESP"), visualsToggleWidth);
             GUILayout.EndHorizontal();
             GUILayout.Space(5);
 
             GUILayout.BeginHorizontal();
-            showEspBoxes = DrawToggle(showEspBoxes, "ESP Boxes", 210);
-            espShimmerMode = DrawToggle(espShimmerMode, "ESP Shimmer", 210);
+            showEspBoxes = DrawToggle(showEspBoxes, "ESP Boxes", visualsToggleWidth);
+            espShimmerMode = DrawToggle(espShimmerMode, "ESP Shimmer", visualsToggleWidth);
             GUILayout.EndHorizontal();
             GUILayout.Space(5);
 
             GUILayout.BeginHorizontal();
-            showEspVoteKicks = DrawToggle(showEspVoteKicks, "Vote Kicks ESP", 210);
+            showEspVoteKicks = DrawToggle(showEspVoteKicks, "Vote Kicks ESP", visualsToggleWidth);
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
             GUILayout.Space(5);
 
             GUILayout.BeginHorizontal();
-            revealMeetingRoles = DrawToggle(revealMeetingRoles, L("Reveal Roles (Meeting)", "Роли на собрании"), 210);
-            RevealVotesEnabled = DrawToggle(RevealVotesEnabled, L("Reveal Votes (Meeting)", "Голоса на собрании"), 210);
+            revealMeetingRoles = DrawToggle(revealMeetingRoles, L("Reveal Roles (Meeting)", "Роли на собрании"), visualsToggleWidth);
+            RevealVotesEnabled = DrawToggle(RevealVotesEnabled, L("Reveal Votes (Meeting)", "Голоса на собрании"), visualsToggleWidth);
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
             GUILayout.Space(5);
 
             GUILayout.BeginHorizontal();
-            forceVote = DrawToggle(forceVote, L("Force Vote", "Голосовать всегда"), 210);
+            forceVote = DrawToggle(forceVote, L("Force Vote", "Голосовать всегда"), visualsToggleWidth);
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
             GUILayout.Space(5);
 
             GUILayout.BeginHorizontal();
-            seeKillCooldown = DrawToggle(seeKillCooldown, L("See Kill Cooldown", "Видеть килл-кд"), 210);
-            moreLobbyInfo = DrawToggle(moreLobbyInfo, L("Lobby Host Info", "Информация о хосте лобби"), 210);
+            seeKillCooldown = DrawToggle(seeKillCooldown, L("See Kill Cooldown", "Видеть килл-кд"), visualsToggleWidth);
+            moreLobbyInfo = DrawToggle(moreLobbyInfo, L("Lobby Host Info", "Информация о хосте лобби"), visualsToggleWidth);
             GUILayout.EndHorizontal();
             GUILayout.Space(10);
 
             DrawMenuSectionHeader("RADAR");
             GUILayout.BeginHorizontal();
-            showRadar = DrawToggle(showRadar, "Show Radar", 210);
-            radarDrawIcons = DrawToggle(radarDrawIcons, "Draw Icons", 210, "radarDrawIcons");
+            showRadar = DrawToggle(showRadar, "Show Radar", visualsToggleWidth);
+            radarDrawIcons = DrawToggle(radarDrawIcons, "Draw Icons", visualsToggleWidth, "radarDrawIcons");
             GUILayout.EndHorizontal();
             GUILayout.Space(5);
 
             GUILayout.BeginHorizontal();
-            showRadarDeadBodies = DrawToggle(showRadarDeadBodies, "Show Dead Bodies", 210);
-            showRadarGhosts = DrawToggle(showRadarGhosts, "Show Ghosts", 210);
+            showRadarDeadBodies = DrawToggle(showRadarDeadBodies, "Show Dead Bodies", visualsToggleWidth);
+            showRadarGhosts = DrawToggle(showRadarGhosts, "Show Ghosts", visualsToggleWidth);
             GUILayout.EndHorizontal();
             GUILayout.Space(5);
 
             GUILayout.BeginHorizontal();
-            radarRightClickTp = DrawToggle(radarRightClickTp, "Right Click TP", 210);
-            hideRadarInMeeting = DrawToggle(hideRadarInMeeting, "Hide In Meeting", 210);
+            radarRightClickTp = DrawToggle(radarRightClickTp, "Right Click TP", visualsToggleWidth);
+            hideRadarInMeeting = DrawToggle(hideRadarInMeeting, "Hide In Meeting", visualsToggleWidth);
             GUILayout.EndHorizontal();
             GUILayout.Space(5);
 
             GUILayout.BeginHorizontal();
-            lockRadar = DrawToggle(lockRadar, "Lock Position", 210);
-            realisticRadar = DrawToggle(realisticRadar, "Realistic Mode", 210);
+            lockRadar = DrawToggle(lockRadar, "Lock Position", visualsToggleWidth);
+            realisticRadar = DrawToggle(realisticRadar, "Realistic Mode", visualsToggleWidth);
             GUILayout.EndHorizontal();
             GUILayout.Space(6);
 
@@ -1199,13 +1209,13 @@ private void DrawVisualsInGame()
 
             DrawMenuSectionHeader("REPLAY");
             GUILayout.BeginHorizontal();
-            showReplay = DrawToggle(showReplay, "Show Replay", 210);
-            replayDrawIcons = DrawToggle(replayDrawIcons, "Draw Icons", 210, "replayDrawIcons");
+            showReplay = DrawToggle(showReplay, "Show Replay", visualsToggleWidth);
+            replayDrawIcons = DrawToggle(replayDrawIcons, "Draw Icons", visualsToggleWidth, "replayDrawIcons");
             GUILayout.EndHorizontal();
             GUILayout.Space(5);
 
             GUILayout.BeginHorizontal();
-            replayOnlyLastSeconds = DrawToggle(replayOnlyLastSeconds, "Only Last Seconds", 210);
+            replayOnlyLastSeconds = DrawToggle(replayOnlyLastSeconds, "Only Last Seconds", visualsToggleWidth);
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
             GUILayout.Space(4);
@@ -1221,39 +1231,39 @@ private void DrawVisualsInGame()
 
             DrawMenuSectionHeader(L("TRACERS", "ТРАССЕРЫ"));
             GUILayout.BeginHorizontal();
-            showTracers = DrawToggle(showTracers, L("All Tracers", "Все трассеры"), 210);
-            showCrewmateTracers = DrawToggle(showCrewmateTracers, L("Crewmate Tracers", "Трассеры экипажа"), 210);
+            showTracers = DrawToggle(showTracers, L("All Tracers", "Все трассеры"), visualsToggleWidth);
+            showCrewmateTracers = DrawToggle(showCrewmateTracers, L("Crewmate Tracers", "Трассеры экипажа"), visualsToggleWidth);
             GUILayout.EndHorizontal();
             GUILayout.Space(5);
 
             GUILayout.BeginHorizontal();
-            showImpostorTracers = DrawToggle(showImpostorTracers, L("Impostor Tracers", "Трассеры предателей"), 210);
-            showDeadTracers = DrawToggle(showDeadTracers, L("Dead / Ghost Tracers", "Трассеры мёртвых"), 210);
+            showImpostorTracers = DrawToggle(showImpostorTracers, L("Impostor Tracers", "Трассеры предателей"), visualsToggleWidth);
+            showDeadTracers = DrawToggle(showDeadTracers, L("Dead / Ghost Tracers", "Трассеры мёртвых"), visualsToggleWidth);
             GUILayout.EndHorizontal();
             GUILayout.Space(5);
 
             GUILayout.BeginHorizontal();
-            showBodyTracers = DrawToggle(showBodyTracers, L("Body Tracers", "Трассеры трупов"), 210);
+            showBodyTracers = DrawToggle(showBodyTracers, L("Body Tracers", "Трассеры трупов"), visualsToggleWidth);
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
             GUILayout.Space(10);
 
             DrawMenuSectionHeader(L("OTHER", "ДРУГОЕ"));
             GUILayout.BeginHorizontal();
-            alwaysShowLobbyTimer = DrawToggle(alwaysShowLobbyTimer, L("Always Show Lobby Timer", "Всегда показывать таймер лобби"), 210);
-            rainbowLobbyTimer = DrawToggle(rainbowLobbyTimer, L("Rainbow Lobby Timer", "Радужный таймер лобби"), 210);
+            alwaysShowLobbyTimer = DrawToggle(alwaysShowLobbyTimer, L("Always Show Lobby Timer", "Всегда показывать таймер лобби"), visualsToggleWidth);
+            rainbowLobbyTimer = DrawToggle(rainbowLobbyTimer, L("Rainbow Lobby Timer", "Радужный таймер лобби"), visualsToggleWidth);
             GUILayout.EndHorizontal();
             GUILayout.Space(5);
 
             GUILayout.BeginHorizontal();
-            alwaysChat = DrawToggle(alwaysChat, L("Always Show Chat", "Всегда показывать чат"), 210);
-            readGhostChat = DrawToggle(readGhostChat, L("Read Ghost Chat", "Читать чат призраков"), 210);
+            alwaysChat = DrawToggle(alwaysChat, L("Always Show Chat", "Всегда показывать чат"), visualsToggleWidth);
+            readGhostChat = DrawToggle(readGhostChat, L("Read Ghost Chat", "Читать чат призраков"), visualsToggleWidth);
             GUILayout.EndHorizontal();
             GUILayout.Space(5);
 
             GUILayout.BeginHorizontal();
-            freecam = DrawToggle(freecam, L("Freecam (WASD)", "Свободная камера (WASD)"), 210);
-            cameraZoom = DrawToggle(cameraZoom, L("Camera Zoom (Scroll)", "Зум камеры (Колесико)"), 210);
+            freecam = DrawToggle(freecam, L("Freecam (WASD)", "Свободная камера (WASD)"), visualsToggleWidth);
+            cameraZoom = DrawToggle(cameraZoom, L("Camera Zoom (Scroll)", "Зум камеры (Колесико)"), visualsToggleWidth);
             GUILayout.EndHorizontal();
 
             GUILayout.EndVertical();

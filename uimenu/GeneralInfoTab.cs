@@ -97,6 +97,43 @@ private void DrawGeneralInfoTab()
                 GUILayout.Label($"{L("Menu key", "Menu key")}: <b>{menuKeyText}</b>{L(" (Windows: Insert / F3 | macOS: ` / F3)", " (Windows: Insert / F3 | macOS: ` / F3)")}", textStyle);
                 GUILayout.Label(L("Right Click: teleport to cursor", "Right Click: teleport to cursor"), textStyle);
                 GUILayout.Label(L("F9: magnet cursor", "F9: magnet cursor"), textStyle);
+
+                // Live read-only snapshot of the current session.
+                GUILayout.Space(8);
+                GUILayout.Label($"<b><color=#{accentHex}>{L("Live Session", "Текущая сессия")}</color></b>", textStyle);
+                GUILayout.Label(GetGeneralInfoSessionText(), textStyle);
+
+                // Copyable one-line summary for support / bug reports.
+                GUILayout.Space(8);
+                GUILayout.Label($"<b><color=#{accentHex}>{L("Copy Session Info", "Скопировать данные сессии")}</color></b>", textStyle);
+                LoadGeneralInfoReport();
+
+                GUIStyle reportFieldStyle = pseudoInputStyle ?? inputBlockStyle ?? GUI.skin.textField;
+                GUIStyle reportButtonStyle = btnStyle ?? GUI.skin.button;
+                GUILayout.Label(MenuText(L("Optional note (included when copied):", "Заметка (включается при копировании):")), menuDescStyle);
+                string typedNote = AeroTextField(generalInfoReportNote ?? string.Empty, reportFieldStyle, GUILayout.Height(24));
+                if (!string.Equals(typedNote, generalInfoReportNote, StringComparison.Ordinal))
+                {
+                    generalInfoReportNote = typedNote ?? string.Empty;
+                    try { PlayerPrefs.SetString(GeneralInfoReportNoteKey, generalInfoReportNote); }
+                    catch { }
+                }
+
+                GUILayout.BeginHorizontal();
+                if (GUILayout.Button(MenuText(L("Refresh", "Обновить")), reportButtonStyle, GUILayout.Width(104), GUILayout.Height(24)))
+                    RefreshGeneralInfoReport();
+                if (GUILayout.Button(MenuText(L("Copy to Clipboard", "Скопировать")), reportButtonStyle, GUILayout.Width(150), GUILayout.Height(24)))
+                    CopyGeneralInfoReport();
+                GUILayout.FlexibleSpace();
+                GUILayout.EndHorizontal();
+
+                string typedReport = AeroTextField(generalInfoReportText ?? string.Empty, reportFieldStyle, GUILayout.Height(24));
+                if (!string.Equals(typedReport, generalInfoReportText, StringComparison.Ordinal))
+                    generalInfoReportText = typedReport ?? string.Empty;
+
+                GUILayout.Label(MenuText(L(
+                    "Builds a one-line summary of your player, room and network info that you can copy for bug reports.",
+                    "Создаёт однострочную сводку об игроке, комнате и сети, которую можно скопировать для отчёта.")), menuDescStyle);
                 GUILayout.EndVertical();
             }
             else
@@ -120,6 +157,166 @@ private void DrawGeneralInfoTab()
             {
                 EndMultiTabContent(oldMatrix, oldColor);
             }
+        }
+
+        // ===== General / Information state =====
+        private const string GeneralInfoReportNoteKey = "M_GeneralInfoReportNote";
+        private static bool generalInfoReportLoaded;
+        private static string generalInfoReportNote = string.Empty;
+        private static string generalInfoReportText = string.Empty;
+
+        private static string generalInfoSessionCache = string.Empty;
+        private static float generalInfoSessionNextRefresh;
+
+        private static void LoadGeneralInfoReport()
+        {
+            if (generalInfoReportLoaded) return;
+            generalInfoReportLoaded = true;
+            try
+            {
+                generalInfoReportNote = PlayerPrefs.GetString(GeneralInfoReportNoteKey, string.Empty) ?? string.Empty;
+            }
+            catch { generalInfoReportNote = string.Empty; }
+
+            if (string.IsNullOrEmpty(generalInfoReportText))
+                RefreshGeneralInfoReportSilent();
+        }
+
+        private static string GetGeneralInfoSessionText()
+        {
+            float now = Time.realtimeSinceStartup;
+            if (now >= generalInfoSessionNextRefresh)
+            {
+                generalInfoSessionNextRefresh = now + 0.5f;
+                generalInfoSessionCache = BuildGeneralInfoSessionText(true);
+            }
+            return generalInfoSessionCache;
+        }
+
+        private static void RefreshGeneralInfoReport()
+        {
+            RefreshGeneralInfoReportSilent();
+            ShowNotification(L("<color=#66CCFF>[INFO]</color> Session summary refreshed.",
+                               "<color=#66CCFF>[ИНФО]</color> Сводка сессии обновлена."));
+        }
+
+        private static void RefreshGeneralInfoReportSilent()
+        {
+            StringBuilder sb = new StringBuilder(BuildGeneralInfoSessionText(false));
+            string note = (generalInfoReportNote ?? string.Empty).Replace("\r", " ").Replace("\n", " ").Trim();
+            if (note.Length > 0)
+                sb.Append(" | Note: ").Append(SanitizeGeneralInfoValue(note, 200));
+            generalInfoReportText = sb.ToString();
+        }
+
+        private static void CopyGeneralInfoReport()
+        {
+            if (string.IsNullOrWhiteSpace(generalInfoReportText))
+                RefreshGeneralInfoReportSilent();
+            try
+            {
+                GUIUtility.systemCopyBuffer = generalInfoReportText ?? string.Empty;
+                ShowNotification(L("<color=#00FFAA>[INFO]</color> Session summary copied to clipboard.",
+                                   "<color=#00FFAA>[ИНФО]</color> Сводка сессии скопирована в буфер."));
+            }
+            catch { }
+        }
+
+        // Keeps player-supplied text from injecting rich-text tags and from
+        // growing the one-line report without bound.
+        private static string SanitizeGeneralInfoValue(string value, int maxLength)
+        {
+            if (string.IsNullOrEmpty(value)) return "N/A";
+            string cleaned = value.Replace("<", string.Empty).Replace(">", string.Empty)
+                                  .Replace("\r", " ").Replace("\n", " ");
+            if (cleaned.Length > maxLength) cleaned = cleaned.Substring(0, maxLength) + "...";
+            return cleaned;
+        }
+
+        private static string BuildGeneralInfoSessionText(bool rich)
+        {
+            string player = "N/A";
+            string friendCode = "N/A";
+            string platform = "N/A";
+            string room = "N/A";
+            string players = "N/A";
+            string region = "N/A";
+            string ping = "N/A";
+
+            try
+            {
+                PlayerControl local = PlayerControl.LocalPlayer;
+                if (local != null && local.Data != null)
+                {
+                    player = SanitizeGeneralInfoValue(local.Data.PlayerName, 64);
+                    uint rawLevel = local.Data.PlayerLevel;
+                    if (rawLevel != uint.MaxValue && rawLevel < 10000)
+                        player += " (Lv " + (rawLevel + 1) + ")";
+                    friendCode = SanitizeGeneralInfoValue(GetDisplayedFriendCode(local.Data, "N/A"), 64);
+
+                    AmongUsClient clientRoot = AmongUsClient.Instance;
+                    if (clientRoot != null)
+                    {
+                        ClientData localClient = clientRoot.GetClientFromCharacter(local);
+                        if (localClient != null) platform = SanitizeGeneralInfoValue(GetPlatform(localClient), 32);
+                    }
+                }
+
+                object clientObj = AmongUsClient.Instance;
+                int gameId;
+                if (TryGetIntB(GetMemberValueB(clientObj, "GameId", "gameId"), out gameId) && gameId != 0)
+                {
+                    string code = FormatGameIdB(gameId);
+                    room = SanitizeGeneralInfoValue(string.IsNullOrWhiteSpace(code) ? gameId.ToString() : code, 24);
+                }
+
+                var allPlayers = PlayerControl.AllPlayerControls;
+                if (allPlayers != null)
+                {
+                    int connected = 0;
+                    int alive = 0;
+                    foreach (PlayerControl pc in allPlayers)
+                    {
+                        if (pc == null) continue;
+                        connected++;
+                        if (pc.Data != null)
+                        {
+                            bool dead;
+                            if (!TryGetBoolB(GetMemberValueB(pc.Data, "IsDead", "isDead"), out dead) || !dead)
+                                alive++;
+                        }
+                        if (connected >= 64) break;
+                    }
+                    if (connected > 0) players = alive + " / " + connected;
+                }
+
+                int pingMs;
+                if (TryGetIntB(GetMemberValueB(clientObj, "Ping", "ping", "AveragePing", "averagePing"), out pingMs))
+                    ping = pingMs + " ms";
+
+                object regionObj = GetMemberValueB(clientObj, "Region", "region", "CurrentRegion", "currentRegion");
+                object regionName = GetMemberValueB(regionObj, "name", "Name", "regionName", "RegionName");
+                if (regionName != null) region = SanitizeGeneralInfoValue(regionName.ToString(), 32);
+            }
+            catch { }
+
+            StringBuilder sb = new StringBuilder();
+            AppendGeneralInfoField(sb, rich, L("Player", "Игрок"), player);
+            AppendGeneralInfoField(sb, rich, L("Friend code", "Код друга"), friendCode);
+            AppendGeneralInfoField(sb, rich, L("Platform", "Платформа"), platform);
+            AppendGeneralInfoField(sb, rich, L("Room", "Комната"), room);
+            AppendGeneralInfoField(sb, rich, L("Alive / connected", "Живы / подключено"), players);
+            AppendGeneralInfoField(sb, rich, L("Region", "Регион"), region);
+            AppendGeneralInfoField(sb, rich, L("Ping", "Пинг"), ping);
+            return sb.ToString();
+        }
+
+        private static void AppendGeneralInfoField(StringBuilder sb, bool rich, string label, string value)
+        {
+            if (sb.Length > 0) sb.Append(rich ? "\n" : " | ");
+            string safe = SanitizeGeneralInfoValue(value, 64);
+            if (rich) sb.Append(label).Append(": <b>").Append(safe).Append("</b>");
+            else sb.Append(label).Append(": ").Append(safe);
         }
 
 [HarmonyPatch(typeof(ChatController), nameof(ChatController.AddChat))]

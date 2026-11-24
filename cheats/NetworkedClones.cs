@@ -409,6 +409,7 @@ namespace AeroMenu
         {
             switch (ch)
             {
+                case 'A': return new[] { "010", "101", "111", "101", "101" };
                 case 'E': return new[] { "111", "100", "111", "100", "111" };
                 case 'I': return new[] { "111", "010", "010", "010", "111" };
                 case 'K': return new[] { "101", "110", "100", "110", "101" };

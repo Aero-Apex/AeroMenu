@@ -65,12 +65,20 @@ private void TryKillAuraTick()
                 return;
             }
 
-            if (AmongUsClient.Instance == null || AmongUsClient.Instance.GameState != InnerNetClient.GameStates.Started) return;
+            if (AmongUsClient.Instance == null || AmongUsClient.Instance.GameState != InnerNetClient.GameStates.Started)
+            {
+                killAuraTimer = 0f;
+                return;
+            }
             PlayerControl localPlayer = PlayerControl.LocalPlayer;
             if (localPlayer == null || localPlayer.Data == null || localPlayer.Data.Role == null) return;
             if (localPlayer.Data.IsDead) return;
             if (!RoleManager.IsImpostorRole(localPlayer.Data.RoleType) && !localPlayer.Data.Role.IsImpostor) return;
-            if (MeetingHud.Instance != null || IntroCutscene.Instance != null || ExileController.Instance != null) return;
+            if (MeetingHud.Instance != null || IntroCutscene.Instance != null || ExileController.Instance != null)
+            {
+                killAuraTimer = 0f;
+                return;
+            }
             if (localPlayer.inVent || localPlayer.onLadder || localPlayer.inMovingPlat) return;
 
             bool hostCooldownBypass = AmongUsClient.Instance.AmHost && (noKillCooldownHostOnly || noAbilityCooldown);
@@ -108,9 +116,21 @@ private void TryHostAutoKillRandomTick()
                 return;
             }
 
-            if (AmongUsClient.Instance == null || !AmongUsClient.Instance.AmHost || AmongUsClient.Instance.GameState != InnerNetClient.GameStates.Started) return;
-            if (ShipStatus.Instance == null || LobbyBehaviour.Instance != null) return;
-            if (IsMeetingOrExileActive() || IntroCutscene.Instance != null) return;
+            if (AmongUsClient.Instance == null || !AmongUsClient.Instance.AmHost || AmongUsClient.Instance.GameState != InnerNetClient.GameStates.Started)
+            {
+                hostAutoKillTimer = 0f;
+                return;
+            }
+            if (ShipStatus.Instance == null || LobbyBehaviour.Instance != null)
+            {
+                hostAutoKillTimer = 0f;
+                return;
+            }
+            if (IsMeetingOrExileActive() || IntroCutscene.Instance != null)
+            {
+                hostAutoKillTimer = 0f;
+                return;
+            }
 
             PlayerControl localPlayer = PlayerControl.LocalPlayer;
             if (localPlayer == null || localPlayer.Data == null) return;
@@ -166,9 +186,21 @@ private void TryHostAutoKillTargetTick()
                 return;
             }
 
-            if (AmongUsClient.Instance == null || !AmongUsClient.Instance.AmHost || AmongUsClient.Instance.GameState != InnerNetClient.GameStates.Started) return;
-            if (ShipStatus.Instance == null || LobbyBehaviour.Instance != null) return;
-            if (IsMeetingOrExileActive() || IntroCutscene.Instance != null) return;
+            if (AmongUsClient.Instance == null || !AmongUsClient.Instance.AmHost || AmongUsClient.Instance.GameState != InnerNetClient.GameStates.Started)
+            {
+                hostAutoKillTargetTimer = 0f;
+                return;
+            }
+            if (ShipStatus.Instance == null || LobbyBehaviour.Instance != null)
+            {
+                hostAutoKillTargetTimer = 0f;
+                return;
+            }
+            if (IsMeetingOrExileActive() || IntroCutscene.Instance != null)
+            {
+                hostAutoKillTargetTimer = 0f;
+                return;
+            }
 
             PlayerControl localPlayer = PlayerControl.LocalPlayer;
             if (localPlayer == null || localPlayer.Data == null) return;

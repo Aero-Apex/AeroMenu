@@ -92,9 +92,10 @@ namespace AeroMenu
                     return true;
 
                 bool shouldBlock = AmongUsClient.Instance != null && AmongUsClient.Instance.AmHost && (AeroMenuGUI.disableVoteKicks || AeroMenuGUI.banVoteKickVoters);
+                Hazel.MessageReader copy = null;
                 try
                 {
-                    Hazel.MessageReader copy = Hazel.MessageReader.Get(reader);
+                    copy = Hazel.MessageReader.Get(reader);
                     int firstClientId = copy.ReadInt32();
                     int targetClientId = copy.ReadInt32();
                     int voterClientId = AeroNetGuard.NetworkGuard.ResolveCurrentRpcSenderClientId(__instance, callId);
@@ -114,6 +115,10 @@ namespace AeroMenu
                 {
                     if (shouldBlock)
                         AeroMenuGUI.ShowNotification("<color=#FFAC1C>[VOTEKICK BLOCK]</color> Vote-kick blocked, sender could not be resolved.");
+                }
+                finally
+                {
+                    try { copy?.Recycle(); } catch { }
                 }
 
                 return !shouldBlock;

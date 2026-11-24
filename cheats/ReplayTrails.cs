@@ -303,7 +303,13 @@ namespace AeroMenu
                 {
                     if (s == null) return null;
                     byte[] buf = new byte[s.Length];
-                    s.Read(buf, 0, buf.Length);
+                    int read = 0;
+                    while (read < buf.Length)
+                    {
+                        int n = s.Read(buf, read, buf.Length - read);
+                        if (n <= 0) break;
+                        read += n;
+                    }
                     Texture2D tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
                     if (!tex.LoadImage(buf)) return null;
                     tex.hideFlags = HideFlags.HideAndDontSave;

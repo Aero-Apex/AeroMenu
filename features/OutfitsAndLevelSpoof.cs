@@ -424,6 +424,9 @@ private static void CopyOutfitFromPlayer(PlayerControl source)
 
                 var outfit = source.Data.DefaultOutfit;
                 AeroNetGuard.NetworkGuard.TrustLocalCosmeticApply(PlayerControl.LocalPlayer);
+                // "Copy Outfit" also shows the source colour in the list, so the
+                // colour belongs to the outfit and must be copied as well.
+                PlayerControl.LocalPlayer.RpcSetColor((byte)Mathf.Clamp(outfit.ColorId, 0, MaxOutfitColorId()));
                 PlayerControl.LocalPlayer.RpcSetSkin(outfit.SkinId);
                 PlayerControl.LocalPlayer.RpcSetHat(outfit.HatId);
                 PlayerControl.LocalPlayer.RpcSetVisor(outfit.VisorId);
@@ -505,8 +508,10 @@ public static void ApplyLevelSpoofValue(uint displayLevel, bool save = true)
             if (!TryGetStoredLevelRaw(out uint currentRaw))
                 currentRaw = 0;
 
-            uint spoofRaw = displayLevel > 0 ? displayLevel - 1 : 0;
-            levelSpoofRestoreLevel = currentRaw == spoofRaw ? 0u : currentRaw;
+            // The real level may legitimately equal the requested raw value
+            // (e.g. spoofing display level 35 while already level 34). Zeroing
+            // it here would wipe the player's real level on restore.
+            levelSpoofRestoreLevel = currentRaw;
             hasLevelSpoofRestoreLevel = true;
             PlayerPrefs.SetInt("M_LevelSpoofRestoreLevel", (int)Mathf.Min(levelSpoofRestoreLevel, int.MaxValue));
             PlayerPrefs.Save();

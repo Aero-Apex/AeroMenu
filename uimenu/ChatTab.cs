@@ -66,6 +66,16 @@ private static int portableChatLogVersion = 0;
 
 private int seenPortableChatLogVersion = -1;
 
+private const int ChatTextToolMaxChars = 120;
+
+private const int ChatLogSearchMaxResults = 60;
+
+private static string chatTextToolInput = string.Empty;
+
+private static string chatLogSearchQuery = string.Empty;
+
+private static bool chatToolStateLoaded;
+
 private Vector2 symbolScrollPos = Vector2.zero;
 
 private static readonly string[][] chatSymbolRows = new string[][]
@@ -274,6 +284,9 @@ private void DrawChatSettingsContent()
             GUILayout.EndHorizontal();
 
             GUILayout.Space(10);
+            DrawChatTextTools(hexColor);
+
+            GUILayout.Space(10);
             GUILayout.EndVertical();
 
             GUILayout.Space(10);
@@ -300,6 +313,37 @@ private void DrawPortableChatTab(float width = 0f)
             GUILayout.Label(L("Read recent messages and send chat without opening the game chat panel.", "Читайте последние сообщения и отправляйте чат без открытия игровой панели."), menuDescStyle);
             GUILayout.Space(8);
 
+            EnsureChatToolState();
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(L("Search:", "Поиск:"), toggleLabelStyle11, GUILayout.Width(52), GUILayout.Height(24));
+            string typedQuery = AeroTextField(chatLogSearchQuery ?? string.Empty, chatFieldStyle ?? inputBlockStyle ?? GUI.skin.textField, GUILayout.Height(24));
+            if (typedQuery.Length > ChatTextToolMaxChars) typedQuery = typedQuery.Substring(0, ChatTextToolMaxChars);
+            if (!string.Equals(typedQuery, chatLogSearchQuery, StringComparison.Ordinal))
+            {
+                chatLogSearchQuery = typedQuery;
+                SaveChatToolState();
+            }
+            if (GUILayout.Button("x", btnStyle, GUILayout.Width(24), GUILayout.Height(24)) && !string.IsNullOrEmpty(chatLogSearchQuery))
+            {
+                chatLogSearchQuery = string.Empty;
+                SaveChatToolState();
+            }
+            GUILayout.EndHorizontal();
+            GUILayout.Space(4);
+
+            string needle = string.IsNullOrWhiteSpace(chatLogSearchQuery) ? string.Empty : chatLogSearchQuery.Trim();
+            bool hasQuery = needle.Length > 0;
+            int matchCount = 0;
+            if (hasQuery)
+            {
+                for (int i = 0; i < portableChatLogs.Count; i++)
+                {
+                    if (portableChatLogs[i].IndexOf(needle, StringComparison.OrdinalIgnoreCase) >= 0)
+                        matchCount++;
+                }
+            }
+
             float logHeight = Mathf.Clamp(windowRect.height - 235f, 120f, 285f);
             if (seenPortableChatLogVersion != portableChatLogVersion)
             {
@@ -315,13 +359,38 @@ private void DrawPortableChatTab(float width = 0f)
                 GUILayout.Label(L("No messages yet.", "Сообщений пока нет."), portableEmptyStyle, GUILayout.ExpandWidth(true));
                 GUILayout.FlexibleSpace();
             }
+            else if (hasQuery && matchCount == 0)
+            {
+                GUILayout.FlexibleSpace();
+                GUILayout.Label(L("No matching messages.", "Совпадений нет."), portableEmptyStyle, GUILayout.ExpandWidth(true));
+                GUILayout.FlexibleSpace();
+            }
             else
             {
-                foreach (string log in portableChatLogs)
+                int shown = 0;
+                for (int i = 0; i < portableChatLogs.Count && shown < ChatLogSearchMaxResults; i++)
+                {
+                    string log = portableChatLogs[i];
+                    if (hasQuery && log.IndexOf(needle, StringComparison.OrdinalIgnoreCase) < 0) continue;
                     GUILayout.Label(log, portableRowStyle);
+                    shown++;
+                }
+                if (hasQuery && matchCount > ChatLogSearchMaxResults)
+                    GUILayout.Label(L("Showing first 60 matches.", "Показаны первые 60 совпадений."), portableEmptyStyle);
             }
             GUILayout.EndScrollView();
             GUILayout.EndVertical();
+
+            if (hasQuery)
+            {
+                GUILayout.Space(4);
+                GUILayout.BeginHorizontal();
+                GUILayout.Label($"{L("Matches:", "Совпадений:")} <b>{matchCount}</b>", toggleLabelStyle11, GUILayout.Height(24));
+                if (GUILayout.Button(L("Copy Matches", "Скопировать совпадения"), btnStyle, GUILayout.Width(140), GUILayout.Height(24)))
+                    CopyMatchingChatLogs(needle);
+                GUILayout.FlexibleSpace();
+                GUILayout.EndHorizontal();
+            }
 
             GUILayout.Space(8);
             DrawChatTextInput(ref portableChatInput, ref isEditingPortableChat, L("Type a message...", "Введите сообщение..."), 120);
@@ -530,6 +599,13 @@ private bool TrySendCustomChatMessage(string rawText)
             try
             {
                 string message = rawText.Trim();
+                // Whisper commands must stay private; the generic send below
+                // would broadcast them to the whole lobby.
+                if (HushWhisper.TryHandleRaw(message, out string whisperEcho))
+                {
+                    AddPortableChatLog(PlayerControl.LocalPlayer, whisperEcho);
+                    return true;
+                }
                 if (enableChatHistory) ChatHistory.Remember(message);
                 PlayerControl.LocalPlayer.RpcSendChat(message);
                 AddPortableChatLog(PlayerControl.LocalPlayer, message);
@@ -572,6 +648,163 @@ private static void TrySpellCheckNotify(string text)
                     string joined = string.Join(", ", suspicious);
                     ShowNotification($"<color=#FFCC66>[SPELL]</color> Check words: {joined}");
                 }
+            }
+            catch { }
+        }
+
+private static void EnsureChatToolState()
+        {
+            if (chatToolStateLoaded) return;
+            chatToolStateLoaded = true;
+            try
+            {
+                chatTextToolInput = PlayerPrefs.GetString("M_ChatTextToolInput", string.Empty) ?? string.Empty;
+                chatLogSearchQuery = PlayerPrefs.GetString("M_ChatLogSearchQuery", string.Empty) ?? string.Empty;
+                if (chatTextToolInput.Length > ChatTextToolMaxChars)
+                    chatTextToolInput = chatTextToolInput.Substring(0, ChatTextToolMaxChars);
+                if (chatLogSearchQuery.Length > ChatTextToolMaxChars)
+                    chatLogSearchQuery = chatLogSearchQuery.Substring(0, ChatTextToolMaxChars);
+            }
+            catch { }
+        }
+
+private static void SaveChatToolState()
+        {
+            try
+            {
+                PlayerPrefs.SetString("M_ChatTextToolInput", chatTextToolInput ?? string.Empty);
+                PlayerPrefs.SetString("M_ChatLogSearchQuery", chatLogSearchQuery ?? string.Empty);
+            }
+            catch { }
+        }
+
+private void DrawChatTextTools(string hexColor)
+        {
+            EnsureChatToolState();
+            GUILayout.Label($"<b><color=#{hexColor}>{L("TEXT TOOLS", "ИНСТРУМЕНТЫ ТЕКСТА")}</color></b>", toggleLabelStyle);
+            GUILayout.Space(4);
+            GUILayout.Label(L("Clean pasted text before sending. Send keeps /w, /pm and /msg private.", "Очищайте вставленный текст перед отправкой. Отправка сохраняет приватность /w, /pm и /msg."), richWrapLabelStyle11);
+            GUILayout.Space(4);
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(L("Text:", "Текст:"), toggleLabelStyle11, GUILayout.Width(42), GUILayout.Height(24));
+            GUIStyle fieldStyle = chatFieldStyle ?? inputBlockStyle ?? GUI.skin.textField;
+            string typed = AeroTextField(chatTextToolInput ?? string.Empty, fieldStyle, GUILayout.Height(24));
+            if (typed.Length > ChatTextToolMaxChars) typed = typed.Substring(0, ChatTextToolMaxChars);
+            if (!string.Equals(typed, chatTextToolInput, StringComparison.Ordinal))
+                SetChatToolText(typed);
+            GUILayout.EndHorizontal();
+            GUILayout.Space(4);
+
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button(L("Strip Tags", "Убрать теги"), btnStyle, GUILayout.Height(24)))
+                SetChatToolText(StripChatToolTags(chatTextToolInput));
+            if (GUILayout.Button(L("Tidy", "Упорядочить"), btnStyle, GUILayout.Height(24)))
+                SetChatToolText(TidyChatToolText(chatTextToolInput));
+            if (GUILayout.Button("UPPER", btnStyle, GUILayout.Width(64), GUILayout.Height(24)))
+                SetChatToolText((chatTextToolInput ?? string.Empty).ToUpperInvariant());
+            if (GUILayout.Button("lower", btnStyle, GUILayout.Width(64), GUILayout.Height(24)))
+                SetChatToolText((chatTextToolInput ?? string.Empty).ToLowerInvariant());
+            if (GUILayout.Button(L("Clear", "Очистить"), btnStyle, GUILayout.Width(64), GUILayout.Height(24)))
+                SetChatToolText(string.Empty);
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+            GUILayout.Space(4);
+
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button(L("Send Text", "Отправить"), btnStyle, GUILayout.Width(120), GUILayout.Height(26)))
+            {
+                // Route through the shared sender so whisper commands stay private.
+                if (TrySendCustomChatMessage(chatTextToolInput))
+                    SetChatToolText(string.Empty);
+            }
+            if (GUILayout.Button(L("Copy", "Копировать"), btnStyle, GUILayout.Width(90), GUILayout.Height(26)))
+            {
+                if (!string.IsNullOrEmpty(chatTextToolInput))
+                {
+                    GUIUtility.systemCopyBuffer = chatTextToolInput;
+                    ShowNotification(L("<color=#00FFAA>[CHAT]</color> Copied text to clipboard.", "<color=#00FFAA>[ЧАТ]</color> Текст скопирован."));
+                }
+            }
+            if (GUILayout.Button(L("To Chat Input", "В ввод чата"), btnStyle, GUILayout.Width(120), GUILayout.Height(26)))
+            {
+                customChatMessage = chatTextToolInput ?? string.Empty;
+                customChatInputFocused = true;
+                ShowNotification(L("<color=#00FFAA>[CHAT]</color> Moved text to chat input.", "<color=#00FFAA>[ЧАТ]</color> Текст перенесён в ввод чата."));
+            }
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+
+            if (!string.IsNullOrEmpty(chatTextToolInput))
+            {
+                GUILayout.Space(4);
+                GUILayout.Label($"<color=#{hexColor}>{L("Preview:", "Предпросмотр:")}</color> {CleanPortableChatText(chatTextToolInput, ChatTextToolMaxChars)}", richWrapLabelStyle11);
+            }
+        }
+
+private static void SetChatToolText(string value)
+        {
+            chatTextToolInput = value ?? string.Empty;
+            if (chatTextToolInput.Length > ChatTextToolMaxChars)
+                chatTextToolInput = chatTextToolInput.Substring(0, ChatTextToolMaxChars);
+            SaveChatToolState();
+        }
+
+private static string StripChatToolTags(string text)
+        {
+            if (string.IsNullOrEmpty(text)) return string.Empty;
+            var sb = new StringBuilder(text.Length);
+            bool inTag = false;
+            for (int i = 0; i < text.Length && sb.Length < ChatTextToolMaxChars; i++)
+            {
+                char c = text[i];
+                if (c == '<') { inTag = true; continue; }
+                if (c == '>' && inTag) { inTag = false; continue; }
+                if (!inTag) sb.Append(c);
+            }
+            return sb.ToString();
+        }
+
+private static string TidyChatToolText(string text)
+        {
+            string clean = StripChatToolTags(text);
+            if (clean.Length == 0) return string.Empty;
+            var sb = new StringBuilder(clean.Length);
+            bool pendingSpace = false;
+            for (int i = 0; i < clean.Length && sb.Length < ChatTextToolMaxChars; i++)
+            {
+                char c = clean[i];
+                if (char.IsWhiteSpace(c))
+                {
+                    if (sb.Length > 0) pendingSpace = true;
+                    continue;
+                }
+                if (pendingSpace) { sb.Append(' '); pendingSpace = false; }
+                sb.Append(c);
+            }
+            return sb.ToString();
+        }
+
+private static void CopyMatchingChatLogs(string needle)
+        {
+            if (string.IsNullOrEmpty(needle)) return;
+            try
+            {
+                var sb = new StringBuilder();
+                int copied = 0;
+                for (int i = 0; i < portableChatLogs.Count && copied < ChatLogSearchMaxResults; i++)
+                {
+                    string log = portableChatLogs[i];
+                    if (log.IndexOf(needle, StringComparison.OrdinalIgnoreCase) < 0) continue;
+                    string clean = CleanPortableChatText(log, 240);
+                    if (string.IsNullOrEmpty(clean)) continue;
+                    if (sb.Length > 0) sb.Append('\n');
+                    sb.Append(clean);
+                    copied++;
+                }
+                if (copied == 0) return;
+                GUIUtility.systemCopyBuffer = sb.ToString();
+                ShowNotification($"<color=#00FFAA>[CHAT]</color> {L("Copied", "Скопировано")} {copied} {L("matching messages.", "совпадений.")}");
             }
             catch { }
         }

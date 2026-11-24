@@ -294,14 +294,13 @@ namespace AeroMenu
             }
             catch { }
 
-            // InnerNetClient.GameStates.Ended == 4 in the shipped game assembly.
+            // Compare against the enum: the numeric value of GameStates.Ended
+            // is not stable across game versions, so a hard-coded int misses.
             try
             {
                 AmongUsClient client = AmongUsClient.Instance;
                 if (client == null) return false;
-                object state = GetMemberV(client, "GameState", "gameState", "State", "state");
-                if (state == null) return false;
-                return Convert.ToInt32(state) == 4;
+                return client.GameState == InnerNetClient.GameStates.Ended;
             }
             catch { return false; }
         }
@@ -459,7 +458,6 @@ namespace AeroMenu
 
             int gameId = CurrentGameIdV();
             if (gameId == copiedForGameIdV) return;
-            copiedForGameIdV = gameId;
 
             string code = "";
             try { code = GetCurrentRoomCodeForStatus(); }
@@ -467,6 +465,9 @@ namespace AeroMenu
             if (string.IsNullOrWhiteSpace(code) ||
                 string.Equals(code, "No room", StringComparison.OrdinalIgnoreCase)) return;
 
+            // Only mark this game as handled once a code was actually copied;
+            // otherwise an early tick with no code suppresses the retry.
+            copiedForGameIdV = gameId;
             try { GUIUtility.systemCopyBuffer = code; }
             catch { }
 
