@@ -492,7 +492,9 @@ private bool CanRunHostBind(string actionName)
         }
     }
 
-    [HarmonyPatch(typeof(AmongUsClient), nameof(AmongUsClient.ReportPlayer))]
+    // ReportPlayer is declared on InnerNetClient, not AmongUsClient; Harmony's
+    // target resolver does not walk base types for [HarmonyPatch(typeof(...))].
+    [HarmonyPatch(typeof(InnerNetClient), "ReportPlayer")]
     public static class AeroReportLog_ReportPlayer_Patch
     {
         public static void Postfix(object[] __args)
